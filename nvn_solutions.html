@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
@@ -910,7 +910,10 @@
         aiOutput.style.display = "none";
       });
 
-      restoreCachedData();
+      restoreCachedData().then(() => {
+        // Tự động load dữ liệu từ URL khi mở trang
+        loadJsonButton.click();
+      });
 
       function setImportLoading(isLoading, message = "Đang xử lý...") {
         uploadBox.classList.toggle("is-loading", isLoading);

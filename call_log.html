@@ -748,7 +748,10 @@
         }
       });
 
-      restoreCachedData();
+      restoreCachedData().then(() => {
+        // Tự động load dữ liệu từ URL khi mở trang
+        loadJsonButton.click();
+      });
 
       /* ─── Helpers ─── */
       function scheduleRender() {
