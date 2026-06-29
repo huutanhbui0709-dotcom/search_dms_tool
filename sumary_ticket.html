@@ -1,0 +1,1853 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Summary Ticket</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* ── Tokens ── */
+      :root {
+        --bg: #f5f3ff;
+        --surface: #ffffff;
+        --border: #e9e3ff;
+        --border-strong: #cbd5e1;
+        --text-primary: #1e1b4b;
+        --text-secondary: #4f46e5;
+        --text-muted: #818cf8;
+        --accent: #6366f1;
+        --accent-dark: #4f46e5;
+        --accent-bg: #eef2ff;
+        --accent-border: #c7d2fe;
+        --header-bg: #1e1b4b;
+        --header-text: #f5f3ff;
+        --mark-bg: #fbbf24;
+        --row-alt: #faf5ff;
+        --radius-sm: 6px;
+        --radius-md: 10px;
+        --radius-lg: 14px;
+        --shadow-sm:
+          0 1px 3px rgba(99, 102, 241, 0.07), 0 1px 2px rgba(99, 102, 241, 0.05);
+        --shadow-md: 0 4px 12px rgba(99, 102, 241, 0.08);
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text-primary);
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      /* ── Layout ── */
+      .page {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 28px 20px;
+      }
+
+      /* ── Hero ── */
+      .hero {
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+      }
+      .hero-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius-md);
+        background: var(--header-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 20px;
+      }
+      .hero h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 3px;
+        letter-spacing: -0.3px;
+      }
+      .hero p {
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+
+      /* ── Card ── */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        margin-bottom: 14px;
+        padding: 18px 20px;
+        box-shadow: var(--shadow-sm);
+      }
+      .section-label {
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .section-label svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      /* ── Upload zone ── */
+      .upload-zone {
+        border: 2px dashed var(--accent-border);
+        border-radius: var(--radius-md);
+        padding: 28px 20px;
+        text-align: center;
+        background: var(--row-alt);
+        position: relative;
+        transition: border-color 0.18s;
+        cursor: pointer;
+      }
+      .upload-zone:hover {
+        border-color: var(--accent);
+      }
+      .upload-zone-icon {
+        font-size: 30px;
+        margin-bottom: 8px;
+        opacity: 0.5;
+        display: block;
+      }
+      .upload-zone strong {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: block;
+        margin-bottom: 3px;
+      }
+      .upload-zone small {
+        color: var(--text-secondary);
+        font-size: 12px;
+      }
+      .upload-zone input[type="file"] {
+        margin-top: 14px;
+        font-size: 13px;
+        cursor: pointer;
+        width: auto;
+      }
+      .url-loader {
+        border-top: 1px solid var(--border);
+        display: grid;
+        gap: 8px;
+        grid-template-columns: minmax(240px, 1fr) auto;
+        margin-top: 16px;
+        padding-top: 16px;
+      }
+      button {
+        background: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-sm);
+        color: #ffffff;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 9px 13px;
+        white-space: nowrap;
+        transition:
+          background-color 0.15s,
+          border-color 0.15s;
+      }
+      button:hover {
+        background: var(--accent-dark);
+        border-color: var(--accent-dark);
+      }
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+      .upload-zone.is-loading {
+        pointer-events: none;
+      }
+      .upload-overlay {
+        display: none;
+        position: absolute;
+        inset: 0;
+        background: rgba(248, 250, 252, 0.95);
+        border-radius: calc(var(--radius-md) - 1px);
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 10px;
+        color: var(--accent-dark);
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .upload-zone.is-loading .upload-overlay {
+        display: flex;
+      }
+      .spinner {
+        width: 26px;
+        height: 26px;
+        border: 2.5px solid var(--accent-border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ── Toggles ── */
+      .panel-toggles {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      .panel-toggle {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+      }
+      .panel-toggle.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #ffffff;
+      }
+
+      /* ── Grid Config ── */
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .sheet-field {
+        margin-bottom: 14px;
+      }
+
+      /* ── Control panel ── */
+      .control-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        align-items: start;
+      }
+      .field-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+        display: block;
+      }
+      select,
+      input[type="text"] {
+        width: 100%;
+        padding: 9px 11px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        background: var(--surface);
+        color: var(--text-primary);
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+      select:focus,
+      input[type="text"]:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+      }
+
+      /* ── Filter chips layout ── */
+      .filter-row {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+      .filter-block {
+        flex: 1;
+        min-width: 180px;
+      }
+      .filter-block label.field-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 5px;
+      }
+
+      /* Result badge */
+      .result-badge {
+        background: var(--accent-bg);
+        border: 1px solid var(--accent-border);
+        border-radius: 999px;
+        color: var(--accent-dark);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 8px 14px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        align-self: flex-end;
+      }
+
+      /* ── Split Dashboard Layout ── */
+      .data-layout {
+        display: grid;
+        grid-template-columns: 580px 1fr;
+        gap: 16px;
+        align-items: start;
+        display: none;
+      }
+
+      /* ── Table Wrapper ── */
+      .table-wrap {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+      }
+      .table-scroller {
+        max-height: 520px;
+        overflow: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 13px;
+      }
+
+      th {
+        background: var(--header-bg);
+        color: var(--header-text);
+        font-weight: 600;
+        font-size: 12px;
+        letter-spacing: 0.03em;
+        padding: 11px 13px;
+        text-align: left;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        white-space: nowrap;
+      }
+
+      td {
+        border-bottom: 1px solid var(--border);
+        padding: 10px 13px;
+        vertical-align: top;
+        color: var(--text-primary);
+        line-height: 1.5;
+        cursor: pointer;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:nth-child(even) td {
+        background: var(--row-alt);
+      }
+      tr:hover td {
+        background: var(--accent-bg);
+        transition: background 0.1s;
+      }
+      tr.selected-row td {
+        background: var(--accent-bg) !important;
+        border-left: 3px solid var(--accent-dark);
+      }
+
+      mark {
+        background: var(--mark-bg);
+        border-radius: 3px;
+        color: #78350f;
+        padding: 0 2px;
+        font-weight: 600;
+      }
+
+      /* Badge Trạng thái / Phân loại */
+      .badge-status {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        text-align: center;
+        white-space: nowrap;
+      }
+      .badge-status-neutral {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+      }
+      .badge-status-green {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+      }
+      .badge-status-yellow {
+        background: #fef9c3;
+        color: #a16207;
+        border: 1px solid #fef08a;
+      }
+      .badge-status-red {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fca5a5;
+      }
+      .badge-status-blue {
+        background: #dbeafe;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+      }
+
+      /* Đặc trưng cột */
+      td.col-id {
+        font-weight: 600;
+        color: var(--accent-dark);
+        white-space: nowrap;
+      }
+      td.col-date {
+        white-space: nowrap;
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+      th.col-date {
+        cursor: pointer;
+        user-select: none;
+      }
+      th.col-date.active-filter {
+        color: #fbbf24;
+      }
+      .date-filter-trigger {
+        align-items: center;
+        display: inline-flex;
+        gap: 6px;
+      }
+
+      /* Notice */
+      .table-notice {
+        padding: 12px 16px;
+        background: var(--accent-bg);
+        border-top: 1px solid var(--accent-border);
+        font-size: 12px;
+        color: var(--accent-dark);
+        text-align: center;
+      }
+      .empty-row td {
+        text-align: center;
+        color: var(--text-muted);
+        padding: 32px;
+      }
+
+      /* ── Ticket Detail Sticky Card ── */
+      .detail-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        box-shadow: var(--shadow-sm);
+        position: sticky;
+        top: 20px;
+      }
+      .detail-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+      }
+      .detail-card-header h2 {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+      }
+      .detail-badge {
+        background: var(--accent-bg);
+        color: var(--accent-dark);
+        border: 1px solid var(--accent-border);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 9px;
+        border-radius: 999px;
+      }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: 140px 1fr;
+        gap: 12px 16px;
+        font-size: 13px;
+        max-height: 440px;
+        overflow-y: auto;
+      }
+      .dlabel {
+        font-weight: 600;
+        color: var(--text-secondary);
+        word-break: break-word;
+      }
+      .dval {
+        color: var(--text-primary);
+        white-space: pre-wrap;
+        word-break: break-word;
+        line-height: 1.5;
+      }
+
+      /* ── Popover ── */
+      .date-filter-popover {
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        display: none;
+        gap: 8px;
+        padding: 10px;
+        position: fixed;
+        width: 230px;
+        z-index: 20;
+      }
+      .date-filter-popover.open {
+        display: grid;
+      }
+      .date-filter-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+      .date-filter-actions button {
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 7px 9px;
+      }
+      .date-filter-actions button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #ffffff;
+      }
+
+      /* ── Empty state ── */
+      .empty-state {
+        text-align: center;
+        padding: 48px 20px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+      }
+      .empty-state-icon {
+        font-size: 36px;
+        margin-bottom: 12px;
+        opacity: 0.35;
+        display: block;
+      }
+      .empty-state p {
+        color: var(--text-secondary);
+        font-size: 14px;
+      }
+
+      /* Responsive */
+      @media (max-width: 950px) {
+        .data-layout {
+          grid-template-columns: 1fr;
+        }
+        .url-loader {
+          grid-template-columns: 1fr;
+        }
+        .filter-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .result-badge {
+          align-self: flex-start;
+        }
+        .grid4 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-icon">🎫</div>
+        <div>
+          <h1>Summary Ticket</h1>
+          <p>
+            Tự động tổng hợp, tìm kiếm và tra cứu nhanh trạng thái phiếu hỗ trợ.
+          </p>
+        </div>
+      </div>
+
+      <!-- Upload Zone -->
+      <div class="card">
+        <div class="section-label">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          Nguồn Dữ Liệu
+        </div>
+        <div class="upload-zone" id="uploadBox">
+          <span class="upload-zone-icon">📥</span>
+          <strong>Chọn file báo cáo Ticket Excel</strong>
+          <small>Hỗ trợ kéo thả file .xlsx / .csv</small>
+          <input id="fileInput" type="file" accept=".xlsx,.csv" />
+          <div class="url-loader">
+            <input
+              id="jsonUrlInput"
+              type="text"
+              placeholder="Dán URL JSON API Ticket..."
+              value="https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnQN5Ey1jOYeZlWkeylVXeS8Sp0lVQ9RpaZhdZemTNfS3Z1zOkfELUUjLdwL5nkviFCHVi5bSzaXrtTHzsOe-7EBOJBP2LJG-pbvz7-0159f3FIbgAt2Cql86JoHlpDftvdJ48TD_EC-_VpneIoa_cIuNIpdjnFYmn1-8z6kp61Y6oQa6SAu3AVqN_4z346n44nt8Q9JHX4EDjQHXa8IE4nm0P5qBBbJ2wL62Ptz8xbSKxE43UpnmpA6GaDWsHe03PpE_7BiZrFCl6KkoqnhNdqIgHOCqQ&amp;lib=Md7LAhvTqClNnYJkEV3dtMvD8R0iiSsw_"
+            />
+            <button id="loadJsonButton" type="button">Tải từ URL</button>
+          </div>
+          <div class="upload-overlay" id="uploadLoading">
+            <div class="spinner"></div>
+            <div id="uploadLoadingText">Đang tải dữ liệu...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toggles -->
+      <div class="panel-toggles" id="panelToggles" style="display: none">
+        <button class="panel-toggle" id="toggleColumnPanelButton" type="button">
+          Hiện cấu hình cột
+        </button>
+      </div>
+
+      <!-- Column Configuration Panel -->
+      <div class="card" id="columnPanel" style="display: none">
+        <div class="section-label">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <line x1="9" y1="3" x2="9" y2="21" />
+            <line x1="15" y1="3" x2="15" y2="21" />
+          </svg>
+          Chọn cột hiển thị lên bảng
+        </div>
+        <div class="sheet-field" id="sheetChooser">
+          <div class="field">
+            <label class="field-label" for="sheetSelect">Chọn Sheet</label>
+            <select id="sheetSelect"></select>
+          </div>
+        </div>
+        <div class="grid4">
+          <div class="field">
+            <label class="field-label">Cột hiển thị 1</label>
+            <select id="col1"></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Cột hiển thị 2</label>
+            <select id="col2"></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Cột hiển thị 3</label>
+            <select id="col3"></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Cột hiển thị 4</label>
+            <select id="col4"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="card" id="controlPanel" style="display: none">
+        <div class="control-layout">
+          <div>
+            <div class="section-label">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              Lọc phiếu hỗ trợ
+            </div>
+            <div class="filter-row">
+              <div class="filter-block">
+                <label class="field-label" for="codeSearchInput"
+                  >Tìm kiếm Ticket</label
+                >
+                <input
+                  id="codeSearchInput"
+                  type="text"
+                  placeholder="Tìm theo mã hoặc tên ticket..."
+                />
+              </div>
+              <!-- Ô tìm kiếm Chi tiết lỗi bổ sung -->
+              <div class="filter-block">
+                <label class="field-label" for="errorSearchInput"
+                  >Tìm kiếm Chi tiết lỗi</label
+                >
+                <input
+                  id="errorSearchInput"
+                  type="text"
+                  placeholder="Tìm theo nội dung, mô tả lỗi..."
+                />
+              </div>
+              <div class="filter-block">
+                <label class="field-label" for="classificationFilterInput"
+                  >Phân loại</label
+                >
+                <select id="classificationFilterInput">
+                  <option value="">-- Tất cả --</option>
+                </select>
+              </div>
+              <div class="result-badge" id="countBadge">0 kết quả</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Split Layout -->
+      <div class="data-layout" id="dataLayout">
+        <!-- Table left side -->
+        <div class="table-wrap" id="tableWrap">
+          <div class="table-scroller">
+            <table>
+              <thead id="tableHead"></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+          <div
+            class="table-notice"
+            id="tableNotice"
+            style="display: none"
+          ></div>
+        </div>
+
+        <!-- Detail card right side (Sticky) -->
+        <div class="detail-card" id="ticketDetail" style="display: none"></div>
+      </div>
+
+      <!-- Date Popover Filter -->
+      <div class="date-filter-popover" id="dateFilterPopover">
+        <label class="field-label" for="dateFilterInput">Lọc theo ngày</label>
+        <input id="dateFilterInput" type="date" />
+        <div class="date-filter-actions">
+          <button id="clearDateFilterButton" type="button">Xóa</button>
+          <button class="primary" id="applyDateFilterButton" type="button">
+            Lọc
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyBox">
+        <span class="empty-state-icon">📋</span>
+        <p>
+          Chưa nạp dữ liệu. Vui lòng bấm "Tải từ URL" hoặc kéo thả file Excel
+          Ticket.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      /* ─── State ─── */
+      let workbookData = null,
+        rows = [],
+        headers = [],
+        columnLabels = {},
+        searchIndex = [],
+        dateColumn = "",
+        dateFilterValue = "",
+        renderTimer = null;
+
+      const MAX_RENDER_ROWS = 150;
+      const CACHE_KEY = "dms_summary_ticket_cache_v1";
+      const CACHE_DB_NAME = "dms_search_cache_db";
+      const CACHE_STORE_NAME = "snapshots";
+
+      /* ─── DOM elements ─── */
+      const fileInput = document.getElementById("fileInput");
+      const uploadBox = document.getElementById("uploadBox");
+      const uploadLoadingText = document.getElementById("uploadLoadingText");
+      const jsonUrlInput = document.getElementById("jsonUrlInput");
+      const loadJsonButton = document.getElementById("loadJsonButton");
+      const panelToggles = document.getElementById("panelToggles");
+      const toggleColumnPanelButton = document.getElementById(
+        "toggleColumnPanelButton",
+      );
+      const columnPanel = document.getElementById("columnPanel");
+      const sheetChooser = document.getElementById("sheetChooser");
+      const sheetSelect = document.getElementById("sheetSelect");
+      const controlPanel = document.getElementById("controlPanel");
+      const codeSearchInput = document.getElementById("codeSearchInput");
+      const errorSearchInput = document.getElementById("errorSearchInput");
+      const classificationFilterInput = document.getElementById(
+        "classificationFilterInput",
+      );
+      const countBadge = document.getElementById("countBadge");
+      const dataLayout = document.getElementById("dataLayout");
+      const tableWrap = document.getElementById("tableWrap");
+      const tableHead = document.getElementById("tableHead");
+      const tableBody = document.getElementById("tableBody");
+      const tableNotice = document.getElementById("tableNotice");
+      const ticketDetail = document.getElementById("ticketDetail");
+      const dateFilterPopover = document.getElementById("dateFilterPopover");
+      const dateFilterInput = document.getElementById("dateFilterInput");
+      const applyDateFilterButton = document.getElementById(
+        "applyDateFilterButton",
+      );
+      const clearDateFilterButton = document.getElementById(
+        "clearDateFilterButton",
+      );
+      const emptyBox = document.getElementById("emptyBox");
+
+      const selects = ["col1", "col2", "col3", "col4"].map((id) =>
+        document.getElementById(id),
+      );
+
+      /* ─── Events ─── */
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+        setLoading(true, "Đang xử lý workbook...");
+        try {
+          if (file.name.toLowerCase().endsWith(".csv")) {
+            workbookData = null;
+            sheetChooser.style.display = "none";
+            rows = parseCSV(await file.text());
+          } else {
+            workbookData = await loadXLSXWorkbook(file);
+            setupSheetSelector();
+            rows = await parseXLSXSheet(workbookData, workbookData.sheets[0]);
+          }
+          await applyLoadedRows("Tải file offline");
+        } catch (err) {
+          alert("Không nạp được file báo cáo này.\n" + err.message);
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      loadJsonButton.addEventListener("click", async () => {
+        const url = jsonUrlInput.value.trim();
+        if (!url) {
+          alert("Vui lòng dán link URL JSON Ticket.");
+          return;
+        }
+        setLoading(true, "Đang gọi dữ liệu API từ URL...");
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          workbookData = null;
+          rows = buildRowsFromJson(data);
+          await applyLoadedRows("JSON URL API");
+        } catch (err) {
+          alert("Tải dữ liệu từ URL thất bại.\n" + err.message);
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      sheetSelect.addEventListener("change", async () => {
+        if (!workbookData) return;
+        const sheet = workbookData.sheets.find(
+          (s) => s.path === sheetSelect.value,
+        );
+        if (!sheet) return;
+        setLoading(true, `Đang đọc dữ liệu sheet "${sheet.name}"...`);
+        try {
+          rows = await parseXLSXSheet(workbookData, sheet);
+          await applyLoadedRows(sheet.name);
+        } catch (err) {
+          alert("Chuyển sheet thất bại.\n" + err.message);
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      toggleColumnPanelButton.addEventListener("click", () => {
+        const isOpen = columnPanel.style.display !== "none";
+        columnPanel.style.display = isOpen ? "none" : "block";
+        toggleColumnPanelButton.classList.toggle("active", !isOpen);
+        toggleColumnPanelButton.textContent = isOpen
+          ? "Hiện cấu hình cột"
+          : "Ẩn cấu hình cột";
+      });
+
+      codeSearchInput.addEventListener("input", scheduleRender);
+      errorSearchInput.addEventListener("input", scheduleRender);
+      classificationFilterInput.addEventListener("change", scheduleRender);
+
+      selects.forEach((sel) =>
+        sel.addEventListener("change", () => {
+          renderTable();
+          saveCachedData();
+        }),
+      );
+
+      tableHead.addEventListener("click", (event) => {
+        const dateHeader = event.target.closest("[data-date-filter]");
+        if (!dateHeader) return;
+        toggleDateFilter(dateHeader);
+      });
+
+      applyDateFilterButton.addEventListener("click", () => {
+        dateFilterValue = dateFilterInput.value;
+        dateFilterPopover.classList.remove("open");
+        renderTable();
+        saveCachedData();
+      });
+
+      clearDateFilterButton.addEventListener("click", () => {
+        dateFilterValue = "";
+        dateFilterInput.value = "";
+        dateFilterPopover.classList.remove("open");
+        renderTable();
+        saveCachedData();
+      });
+
+      document.addEventListener("click", (event) => {
+        if (
+          !dateFilterPopover.contains(event.target) &&
+          !event.target.closest("[data-date-filter]")
+        ) {
+          dateFilterPopover.classList.remove("open");
+        }
+      });
+
+      tableBody.addEventListener("click", (event) => {
+        const rowEl = event.target.closest("tr");
+        if (!rowEl || rowEl.classList.contains("empty-row")) return;
+
+        const activeIndex = parseInt(rowEl.dataset.index, 10);
+        if (!isNaN(activeIndex)) {
+          // Highlight active row
+          Array.from(tableBody.querySelectorAll("tr")).forEach((tr) =>
+            tr.classList.remove("selected-row"),
+          );
+          rowEl.classList.add("selected-row");
+          renderTicketDetail(rows[activeIndex]);
+        }
+      });
+
+      restoreCachedData().then(() => {
+        // Tự động load dữ liệu từ URL khi mở trang
+        loadJsonButton.click();
+      });
+
+      /* ─── Helpers ─── */
+      function scheduleRender() {
+        clearTimeout(renderTimer);
+        renderTimer = setTimeout(() => {
+          renderTable();
+          saveCachedData();
+        }, 120);
+      }
+
+      function toggleDateFilter(anchor) {
+        const Skinner = anchor.getBoundingClientRect();
+        dateFilterInput.value = dateFilterValue;
+        dateFilterPopover.style.left =
+          Math.min(Skinner.left, window.innerWidth - 250) + "px";
+        dateFilterPopover.style.top = Skinner.bottom + 8 + "px";
+        dateFilterPopover.classList.toggle("open");
+      }
+
+      function setLoading(isLoading, message = "Đang tải...") {
+        uploadBox.classList.toggle("is-loading", isLoading);
+        uploadLoadingText.textContent = message;
+        fileInput.disabled = isLoading;
+        loadJsonButton.disabled = isLoading;
+        sheetSelect.disabled = isLoading;
+      }
+
+      function setupSheetSelector() {
+        sheetSelect.innerHTML = "";
+        workbookData.sheets.forEach((sheet) => {
+          const o = document.createElement("option");
+          o.value = sheet.path;
+          o.textContent = sheet.name;
+          sheetSelect.appendChild(o);
+        });
+        sheetChooser.style.display =
+          workbookData.sheets.length > 1 ? "block" : "none";
+      }
+
+      async function applyLoadedRows(sourceName, options = {}) {
+        if (!rows.length) {
+          alert("Nguồn dữ liệu này trống rỗng hoặc không phân tích được.");
+          return;
+        }
+        headers = Object.keys(rows[0]);
+        if (!options.keepFilters) {
+          dateFilterValue = "";
+          dateFilterInput.value = "";
+        }
+        dateFilterPopover.classList.remove("open");
+        dateColumn =
+          findColumnByKeywords(["ngay", "date", "created", "raise"]) || "";
+        buildRowSearchIndex();
+        setupColumnSelectors();
+        updateClassificationDropdown();
+
+        panelToggles.style.display = "flex";
+        controlPanel.style.display = "block";
+        dataLayout.style.display = "grid";
+        emptyBox.style.display = "none";
+
+        if (!workbookData) {
+          sheetSelect.innerHTML = `<option value="json">${sourceName || "API Endpoint"}</option>`;
+          sheetChooser.style.display = "block";
+        }
+        renderTable();
+        if (!options.skipCache) {
+          await saveCachedData(sourceName);
+        }
+      }
+
+      function setupColumnSelectors() {
+        const targetKeywords = [
+          ["ticket", "ma", "id", "code", "ten"],
+          ["phan loai", "classification", "type", "loai"],
+          ["ngay", "date", "created", "raise"],
+          ["trang thai", "status"],
+        ];
+
+        selects.forEach((select, index) => {
+          select.innerHTML = "";
+          headers.forEach((h) => {
+            const o = document.createElement("option");
+            o.value = h;
+            o.textContent = columnLabels[h] || h;
+            select.appendChild(o);
+          });
+
+          const keywords = targetKeywords[index];
+          let pi = headers.findIndex((h) => {
+            const labelClean = getColumnTitleForSearch(h);
+            return keywords.some((kw) => labelClean === kw);
+          });
+
+          if (pi === -1) {
+            pi = headers.findIndex((h) => {
+              const labelClean = normalizeForSearch(columnLabels[h] || h);
+              return keywords.some((kw) => labelClean.includes(kw));
+            });
+          }
+
+          select.selectedIndex =
+            pi === -1 ? Math.min(index, headers.length - 1) : pi;
+        });
+      }
+
+      function getSelectedColumns() {
+        return selects.map((s) => s.value).filter(Boolean);
+      }
+
+      function getColumnTitleForSearch(header) {
+        const label = columnLabels[header] || header;
+        return normalizeForSearch(
+          label.includes(" - ")
+            ? label.split(" - ").slice(1).join(" - ")
+            : label,
+        );
+      }
+
+      function updateClassificationDropdown() {
+        const classCol = findColumnByKeywords([
+          "phan loai",
+          "classification",
+          "type",
+          "loai",
+        ]);
+        classificationFilterInput.innerHTML =
+          '<option value="">-- Tất cả --</option>';
+        if (!classCol || !rows.length) return;
+
+        const uniqueClasses = new Map();
+        rows.forEach((row) => {
+          const rawVal = String(row[classCol] || "").trim();
+          if (rawVal) {
+            let cleanVal = rawVal;
+            // Chuẩn hóa dạng chữ: Viết hoa chữ cái đầu cho Issue và Request
+            if (rawVal.toLowerCase() === "issue") {
+              cleanVal = "Issue";
+            } else if (rawVal.toLowerCase() === "request") {
+              cleanVal = "Request";
+            } else {
+              cleanVal = rawVal.charAt(0).toUpperCase() + rawVal.slice(1);
+            }
+            uniqueClasses.set(cleanVal.toLowerCase(), cleanVal);
+          }
+        });
+
+        Array.from(uniqueClasses.values())
+          .sort()
+          .forEach((cls) => {
+            const o = document.createElement("option");
+            o.value = cls;
+            o.textContent = cls;
+            classificationFilterInput.appendChild(o);
+          });
+      }
+
+      /* ─── Search Index ─── */
+      function buildRowSearchIndex() {
+        searchIndex = rows.map((row) => {
+          const byColumn = {};
+          headers.forEach((col) => {
+            byColumn[col] = buildSearchText(row[col] || "");
+          });
+          return {
+            allText: headers.map((col) => byColumn[col]).join(" "),
+            byColumn,
+          };
+        });
+      }
+
+      function findColumnByKeywords(keywords) {
+        return (
+          headers.find((h) => {
+            // Chuẩn hóa loại bỏ toàn bộ khoảng trắng để so khớp chính xác hơn
+            const l = normalizeForSearch(columnLabels[h] || h).replace(
+              /\s+/g,
+              "",
+            );
+            return keywords.some((kw) => {
+              const kwClean = normalizeForSearch(kw).replace(/\s+/g, "");
+              return l.includes(kwClean);
+            });
+          }) || ""
+        );
+      }
+
+      function getRowDateValue(row) {
+        if (!dateColumn) return 0;
+        return parseDisplayDate(row[dateColumn]);
+      }
+
+      function parseDisplayDate(value) {
+        const text = String(value || "").trim();
+        const m = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) return Date.UTC(+m[3], +m[2] - 1, +m[1]);
+        const num = Number(text);
+        if (Number.isFinite(num) && num > 0) return num;
+        const parsed = Date.parse(text);
+        return Number.isNaN(parsed) ? 0 : parsed;
+      }
+
+      function displayDateToInputValue(value) {
+        const text = String(value || "").trim();
+        const m = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) {
+          return `${m[3]}-${String(m[2]).padStart(2, "0")}-${String(m[1]).padStart(2, "0")}`;
+        }
+        const parsed = Date.parse(text);
+        if (Number.isNaN(parsed)) return "";
+        const date = new Date(parsed);
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      }
+
+      /* ─── Render Engine ─── */
+      function renderTable() {
+        clearTimeout(renderTimer);
+
+        const codeQuery = normalizeForSearch(codeSearchInput.value);
+        const errorQuery = normalizeForSearch(errorSearchInput.value);
+        const classQuery = classificationFilterInput.value;
+
+        const codeCol = findColumnByKeywords([
+          "ticket",
+          "ma",
+          "id",
+          "code",
+          "ten",
+        ]);
+        const errorCol = findColumnByKeywords([
+          "chi tiet loi",
+          "noi dung loi",
+          "error",
+          "mo ta",
+          "description",
+          "detail",
+          "tv:",
+          "ta:",
+        ]);
+        const classCol = findColumnByKeywords([
+          "phan loai",
+          "classification",
+          "type",
+          "loai",
+        ]);
+
+        const codeTokens = getSearchTokens(codeQuery);
+        const errorTokens = getSearchTokens(errorQuery);
+
+        const filtered = rows
+          .map((row, index) => ({ row, index, entry: searchIndex[index] }))
+          .filter(({ row, entry }) => {
+            // Lọc theo ô tìm kiếm Ticket
+            if (codeTokens.length) {
+              const txt = codeCol ? entry.byColumn[codeCol] : entry.allText;
+              if (!codeTokens.every((t) => txt.includes(t))) return false;
+            }
+            // Lọc theo ô tìm kiếm Chi tiết lỗi
+            if (errorTokens.length) {
+              // Chỉ quét riêng trên cột lỗi được tìm thấy (Không lấy allText để tránh quét lan sang Tên Ticket)
+              const txt = errorCol ? entry.byColumn[errorCol] : "";
+              if (!errorTokens.every((t) => txt.includes(t))) return false;
+            }
+            // Lọc không phân biệt hoa thường khi so sánh bộ lọc Phân loại
+            if (classQuery && classCol) {
+              const rowVal = String(row[classCol] || "")
+                .trim()
+                .toLowerCase();
+              const filterVal = classQuery.toLowerCase();
+              if (rowVal !== filterVal) return false;
+            }
+            if (dateFilterValue && dateColumn) {
+              if (displayDateToInputValue(row[dateColumn]) !== dateFilterValue)
+                return false;
+            }
+            return true;
+          });
+
+        if (dateColumn) {
+          filtered.sort(
+            (a, b) => getRowDateValue(b.row) - getRowDateValue(a.row),
+          );
+        }
+
+        const visible = filtered.slice(0, MAX_RENDER_ROWS);
+        const selectedCols = getSelectedColumns();
+
+        /* Build Header */
+        tableHead.innerHTML =
+          "<tr>" +
+          selectedCols
+            .map((col, i) => {
+              const cls = getColumnClass(col);
+              if (col === dateColumn) {
+                const act = dateFilterValue ? " active-filter" : "";
+                return `<th class="${cls}${act}" data-date-filter="true"><span class="date-filter-trigger">${escapeHTML(columnLabels[col] || col)} ▾</span></th>`;
+              }
+              return `<th class="${cls}">${escapeHTML(columnLabels[col] || col)}</th>`;
+            })
+            .join("") +
+          "</tr>";
+
+        /* Build Data Rows */
+        if (!filtered.length) {
+          tableBody.innerHTML = `<tr class="empty-row"><td colspan="${selectedCols.length}">Không tìm thấy ticket nào khớp với bộ lọc.</td></tr>`;
+          tableNotice.style.display = "none";
+          renderTicketDetail(null);
+        } else {
+          tableBody.innerHTML = visible
+            .map(
+              ({ row, index }) =>
+                `<tr data-index="${index}">` +
+                selectedCols
+                  .map((col) => {
+                    const cls = getColumnClass(col);
+                    return `<td class="${cls}">${highlightCell(row, col)}</td>`;
+                  })
+                  .join("") +
+                "</tr>",
+            )
+            .join("");
+
+          if (filtered.length > MAX_RENDER_ROWS) {
+            tableNotice.textContent = `Hiển thị ${MAX_RENDER_ROWS} / ${filtered.length} kết quả. Gõ thêm từ khóa để thu hẹp tìm kiếm.`;
+            tableNotice.style.display = "block";
+          } else {
+            tableNotice.style.display = "none";
+          }
+
+          // Auto selection: Hiển thị dòng đầu tiên làm mặc định lên panel chi tiết
+          renderTicketDetail(filtered[0].row);
+          const firstRow = tableBody.querySelector("tr");
+          if (firstRow) firstRow.classList.add("selected-row");
+        }
+
+        countBadge.textContent = filtered.length + " kết quả";
+      }
+
+      function getColumnClass(col) {
+        if (col === dateColumn) return "col-date";
+        const codeCol = findColumnByKeywords([
+          "ticket",
+          "ma",
+          "id",
+          "code",
+          "ten",
+        ]);
+        if (col === codeCol) return "col-id";
+        return "";
+      }
+
+      function highlightCell(row, col) {
+        const val = String(row[col] || "");
+        const classCol = findColumnByKeywords([
+          "phan loai",
+          "classification",
+          "type",
+          "loai",
+        ]);
+
+        if (col === classCol) {
+          const valClean = val.toLowerCase();
+          let badgeClass = "badge-status-neutral";
+          if (valClean.includes("issue") || valClean.includes("loi")) {
+            badgeClass = "badge-status-red";
+          } else if (
+            valClean.includes("request") ||
+            valClean.includes("yeu cau")
+          ) {
+            badgeClass = "badge-status-blue";
+          }
+          return `<span class="badge-status ${badgeClass}">${escapeHTML(val)}</span>`;
+        }
+
+        return highlightMultiple(val);
+      }
+
+      function renderTicketDetail(row) {
+        if (!row) {
+          ticketDetail.style.display = "none";
+          ticketDetail.innerHTML = "";
+          return;
+        }
+
+        const fields = headers
+          .map((col) => ({
+            label: columnLabels[col] || col,
+            val: String(row[col] || "").trim(),
+          }))
+          .filter((f) => f.val);
+
+        ticketDetail.innerHTML = `
+          <div class="detail-card-header">
+            <h2>🎫 Chi Tiết Ticket</h2>
+            <span class="detail-badge">Chi tiết dòng</span>
+          </div>
+          <div class="detail-grid">
+            ${fields
+              .map(
+                (f) => `
+              <div class="dlabel">${escapeHTML(f.label)}</div>
+              <div class="dval">${highlightMultiple(f.val)}</div>
+            `,
+              )
+              .join("")}
+          </div>
+        `;
+        ticketDetail.style.display = "block";
+      }
+
+      /* ─── Highlighting ─── */
+      function highlightMultiple(value) {
+        const plain = String(value);
+        const keywords = [
+          codeSearchInput.value.trim(),
+          errorSearchInput.value.trim(),
+        ].filter(Boolean);
+
+        if (!keywords.length) return escapeHTML(plain);
+
+        const ranges = [];
+        keywords.forEach((kw) => {
+          let pos = 0;
+          const normPlain = normalize(plain);
+          const normKw = normalize(kw);
+          if (!normKw) return;
+
+          while ((pos = normPlain.indexOf(normKw, pos)) !== -1) {
+            ranges.push([pos, pos + kw.length]);
+            pos += normKw.length;
+          }
+        });
+
+        if (!ranges.length) return escapeHTML(plain);
+
+        ranges.sort((a, b) => a[0] - b[0]);
+        const merged = [];
+        ranges.forEach((r) => {
+          const last = merged[merged.length - 1];
+          if (!last || r[0] > last[1]) {
+            merged.push([...r]);
+          } else {
+            last[1] = Math.max(last[1], r[1]);
+          }
+        });
+
+        let html = "";
+        let cursor = 0;
+        merged.forEach(([start, end]) => {
+          html += escapeHTML(plain.slice(cursor, start));
+          html += "<mark>" + escapeHTML(plain.slice(start, end)) + "</mark>";
+          cursor = end;
+        });
+        html += escapeHTML(plain.slice(cursor));
+        return html;
+      }
+
+      function buildRowsFromJson(data) {
+        if (!Array.isArray(data)) {
+          throw new Error("Dữ liệu nạp từ JSON URL phải là dạng một mảng.");
+        }
+
+        const allKeys = data.length > 0 ? Object.keys(data[0]) : [];
+        const isGeneric = allKeys.some((k) => /^column[A-Z]$/i.test(k));
+
+        let headerMap = {};
+        let startIndex = 0;
+
+        if (isGeneric) {
+          const firstRow = data[0] || {};
+          const isHeader = Object.values(firstRow).some((val) => {
+            const v = String(val).toLowerCase();
+            return (
+              v.includes("ticket") ||
+              v.includes("mã") ||
+              v.includes("ngày") ||
+              v.includes("trạng thái") ||
+              v.includes("status")
+            );
+          });
+
+          if (isHeader) {
+            allKeys.forEach((k) => {
+              headerMap[k] = String(firstRow[k] || k).trim();
+            });
+            startIndex = 1;
+          } else {
+            allKeys.forEach((k, idx) => {
+              headerMap[k] = `Cột ${indexToColumnName(idx)}`;
+            });
+          }
+        } else {
+          allKeys.forEach((k) => {
+            headerMap[k] = k;
+          });
+        }
+
+        headers = allKeys;
+        columnLabels = headerMap;
+
+        return data.slice(startIndex).filter((item) => {
+          return Object.values(item).some((v) => String(v || "").trim());
+        });
+      }
+
+      // Tách từ khóa
+      function getSearchTokens(val) {
+        return buildSearchText(val)
+          .split(/\s+/)
+          .filter((t) => t.length > 0);
+      }
+
+      function buildSearchText(val) {
+        return normalizeForSearch(String(val || ""));
+      }
+
+      function normalize(v) {
+        return String(v)
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+      }
+      function normalizeForSearch(v) {
+        return normalize(v)
+          .replace(/[^a-z0-9]+/g, " ")
+          .trim();
+      }
+
+      // Đổi chữ ký tự đặc biệt khi in
+      function escapeHTML(val) {
+        return String(val)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      /* ─── Cache System (IndexedDB) ─── */
+      async function saveCachedData(sourceName = "Dữ liệu ticket") {
+        if (!rows.length) return;
+        try {
+          await idbSet(CACHE_KEY, {
+            rows,
+            columnLabels,
+            sourceName,
+            savedAt: Date.now(),
+            filters: {
+              code: codeSearchInput.value,
+              error: errorSearchInput.value,
+              classification: classificationFilterInput.value,
+            },
+            dateFilterValue,
+          });
+        } catch (err) {
+          console.warn("Lưu cache thất bại.", err);
+        }
+      }
+
+      async function restoreCachedData() {
+        try {
+          const cached = await idbGet(CACHE_KEY);
+          if (!cached || !Array.isArray(cached.rows) || !cached.rows.length)
+            return;
+
+          workbookData = null;
+          rows = cached.rows;
+          columnLabels = cached.columnLabels || {};
+          codeSearchInput.value = cached.filters?.code || "";
+          errorSearchInput.value = cached.filters?.error || "";
+          await applyLoadedRows(cached.sourceName || "Dữ liệu đã lưu", {
+            keepFilters: true,
+            skipCache: true,
+          });
+          classificationFilterInput.value =
+            cached.filters?.classification || "";
+          renderTable();
+        } catch (err) {
+          console.warn("Khôi phục cache thất bại.", err);
+        }
+      }
+
+      function openCacheDb() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(CACHE_DB_NAME, 1);
+          request.onupgradeneeded = () => {
+            request.result.createObjectStore(CACHE_STORE_NAME);
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function idbGet(key) {
+        const db = await openCacheDb();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(CACHE_STORE_NAME, "readonly");
+          const req = tx.objectStore(CACHE_STORE_NAME).get(key);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => reject(req.error);
+          tx.oncomplete = () => db.close();
+        });
+      }
+
+      async function idbSet(key, val) {
+        const db = await openCacheDb();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(CACHE_STORE_NAME, "readwrite");
+          const req = tx.objectStore(CACHE_STORE_NAME).put(val, key);
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+          tx.oncomplete = () => db.close();
+        });
+      }
+
+      /* ─── XLSX & CSV Offline Engine ─── */
+      function parseCSV(text) {
+        const lines = [];
+        let row = [],
+          cell = "",
+          inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+          const char = text[i],
+            next = text[i + 1];
+          if (char === '"' && inQuotes && next === '"') {
+            cell += '"';
+            i++;
+          } else if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === "," && !inQuotes) {
+            row.push(cell);
+            cell = "";
+          } else if ((char === "\n" || char === "\r") && !inQuotes) {
+            if (char === "\r" && next === "\n") i++;
+            row.push(cell);
+            lines.push(row);
+            row = [];
+            cell = "";
+          } else {
+            cell += char;
+          }
+        }
+        if (cell || row.length) {
+          row.push(cell);
+          lines.push(row);
+        }
+        return buildRowsFromMatrix(lines);
+      }
+
+      async function loadXLSXWorkbook(file) {
+        if (!("DecompressionStream" in window))
+          throw new Error("Trình duyệt không hỗ trợ giải nén XLSX trực tiếp.");
+        const buffer = await file.arrayBuffer();
+        const entries = readZipEntries(buffer);
+        const workbookXML = await getZipText(entries, "xl/workbook.xml");
+        const relsXML = await getZipText(entries, "xl/_rels/workbook.xml.rels");
+        const sharedXML = entries["xl/sharedStrings.xml"]
+          ? await getZipText(entries, "xl/sharedStrings.xml")
+          : "";
+        return {
+          entries,
+          sharedStrings: parseSharedStrings(sharedXML),
+          sheets: getWorkbookSheets(workbookXML, relsXML),
+        };
+      }
+
+      async function parseXLSXSheet(workbook, sheet) {
+        const xml = await getZipText(workbook.entries, sheet.path);
+        const matrix = parseSheet(xml, workbook.sharedStrings);
+        return buildRowsFromMatrix(matrix);
+      }
+
+      function buildRowsFromMatrix(matrix) {
+        const clean = matrix
+          .map((row) => row.map((c) => String(c || "").trim()))
+          .filter((row) => row.some(Boolean));
+        if (!clean.length) return [];
+        const hi = findHeaderRowIndex(clean);
+        const headerRow = clean[hi] || [];
+        const dataRows = clean.slice(hi + 1);
+        const colCount = Math.max(
+          ...clean.map((r) => r.length),
+          headerRow.length,
+        );
+
+        headers = Array.from({ length: colCount }, (_, i) => "__col_" + i);
+        columnLabels = {};
+
+        headers.forEach((key, index) => {
+          const colLetter = indexToColumnName(index);
+          const title = headerRow[index] || "";
+          columnLabels[key] = title
+            ? `Cột ${colLetter} - ${title}`
+            : `Cột ${colLetter}`;
+        });
+
+        return dataRows
+          .filter((row) => row.some(Boolean))
+          .map((row) => {
+            const obj = {};
+            headers.forEach((key, i) => {
+              obj[key] = formatCellValue(columnLabels[key], row[i] || "");
+            });
+            return obj;
+          });
+      }
+
+      function findHeaderRowIndex(matrix) {
+        let best = 0,
+          bestScore = -Infinity;
+        matrix.slice(0, 25).forEach((row, i) => {
+          const text = row.map(normalizeForSearch).join(" ");
+          const score =
+            (text.includes("ticket") ? 15 : 0) +
+            (text.includes("trang thai") || text.includes("phan loai")
+              ? 10
+              : 0) +
+            (text.includes("ngay") ? 8 : 0) -
+            i * 0.1;
+          if (score > bestScore) {
+            bestScore = score;
+            best = i;
+          }
+        });
+        return best;
+      }
+
+      function formatCellValue(header, value) {
+        if (
+          normalizeForSearch(header).includes("ngay") &&
+          /^\d+(\.\d+)?$/.test(value)
+        ) {
+          return excelDateToText(Number(value));
+        }
+        return value;
+      }
+
+      function excelDateToText(serial) {
+        const date = new Date(Date.UTC(1899, 11, 30));
+        date.setUTCDate(date.getUTCDate() + Math.floor(serial));
+        return `${String(date.getUTCDate()).padStart(2, "0")}/${String(date.getUTCMonth() + 1).padStart(2, "0")}/${date.getUTCFullYear()}`;
+      }
+
+      function readZipEntries(buffer) {
+        const view = new DataView(buffer),
+          bytes = new Uint8Array(buffer),
+          entries = {};
+        let eocd = -1;
+        for (let i = bytes.length - 22; i >= 0; i--) {
+          if (view.getUint32(i, true) === 0x06054b50) {
+            eocd = i;
+            break;
+          }
+        }
+        if (eocd === -1) throw new Error("File ZIP / XLSX lỗi.");
+        const cdOffset = view.getUint32(eocd + 16, true),
+          total = view.getUint16(eocd + 10, true);
+        let ptr = cdOffset;
+        for (let i = 0; i < total; i++) {
+          if (view.getUint32(ptr, true) !== 0x02014b50) break;
+          const method = view.getUint16(ptr + 10, true),
+            cs = view.getUint32(ptr + 20, true),
+            fnl = view.getUint16(ptr + 28, true),
+            el = view.getUint16(ptr + 30, true),
+            cl = view.getUint16(ptr + 32, true),
+            lho = view.getUint32(ptr + 42, true);
+          const name = new TextDecoder().decode(
+            bytes.slice(ptr + 46, ptr + 46 + fnl),
+          );
+          const lnl = view.getUint16(lho + 26, true),
+            lel = view.getUint16(lho + 28, true),
+            ds = lho + 30 + lnl + lel;
+          entries[name] = { method, data: bytes.slice(ds, ds + cs) };
+          ptr += 46 + fnl + el + cl;
+        }
+        return entries;
+      }
+
+      async function getZipText(entries, path) {
+        const entry = entries[path];
+        if (!entry) throw new Error("Chỉ mục lỗi: " + path);
+        let output;
+        if (entry.method === 0) {
+          output = entry.data;
+        } else if (entry.method === 8) {
+          const stream = new Blob([entry.data])
+            .stream()
+            .pipeThrough(new DecompressionStream("deflate-raw"));
+          output = new Uint8Array(await new Response(stream).arrayBuffer());
+        } else {
+          throw new Error("Kiểu nén chưa hỗ trợ: " + entry.method);
+        }
+        return new TextDecoder("utf-8").decode(output);
+      }
+
+      function getWorkbookSheets(workbookXML, relsXML) {
+        const wbDoc = new DOMParser().parseFromString(
+          workbookXML,
+          "application/xml",
+        );
+        const rDoc = new DOMParser().parseFromString(
+          relsXML,
+          "application/xml",
+        );
+        const rmap = {};
+        Array.from(rDoc.querySelectorAll("Relationship")).forEach((r) => {
+          const id = r.getAttribute("Id"),
+            target = r.getAttribute("Target");
+          if (id && target) rmap[id] = normalizeWorkbookTarget(target);
+        });
+        return Array.from(wbDoc.querySelectorAll("sheet"))
+          .map((s, i) => {
+            const relId =
+              s.getAttribute("r:id") ||
+              s.getAttribute("id") ||
+              s.getAttributeNS(
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+                "id",
+              );
+            return {
+              name: s.getAttribute("name") || `Sheet ${i + 1}`,
+              path: rmap[relId] || `xl/worksheets/sheet${i + 1}.xml`,
+            };
+          })
+          .filter((s) => s.path);
+      }
+
+      function normalizeWorkbookTarget(target) {
+        let p = target;
+        if (p.startsWith("/")) p = p.slice(1);
+        if (!p.startsWith("xl/")) p = "xl/" + p;
+        return p.replaceAll("\\", "/");
+      }
+
+      function parseSharedStrings(xml) {
+        if (!xml) return [];
+        return Array.from(
+          new DOMParser()
+            .parseFromString(xml, "application/xml")
+            .querySelectorAll("si"),
+        ).map((si) =>
+          Array.from(si.querySelectorAll("t"))
+            .map((t) => t.textContent)
+            .join(""),
+        );
+      }
+
+      function parseSheet(xml, sharedStrings) {
+        const doc = new DOMParser().parseFromString(xml, "application/xml"),
+          result = [];
+        Array.from(doc.querySelectorAll("sheetData row")).forEach((rowNode) => {
+          const row = [];
+          Array.from(rowNode.querySelectorAll("c")).forEach((cell) => {
+            const ref = cell.getAttribute("r") || "",
+              ci = columnNameToIndex(ref.replace(/[0-9]/g, "")),
+              type = cell.getAttribute("t"),
+              vn = cell.querySelector("v");
+            let value = vn ? vn.textContent : "";
+            if (type === "s") value = sharedStrings[Number(value)] || "";
+            else if (type === "inlineStr")
+              value = Array.from(cell.querySelectorAll("t"))
+                .map((t) => t.textContent)
+                .join("");
+            row[ci] = value;
+          });
+          result.push(row.map((v) => v || ""));
+        });
+        return result;
+      }
+
+      function columnNameToIndex(name) {
+        let i = 0;
+        for (let c = 0; c < name.length; c++)
+          i = i * 26 + name.charCodeAt(c) - 64;
+        return i - 1;
+      }
+      function indexToColumnName(i) {
+        let n = "",
+          c = i + 1;
+        while (c > 0) {
+          const r = (c - 1) % 26;
+          n = String.fromCharCode(65 + r) + n;
+          c = Math.floor((c - 1) / 26);
+        }
+        return n;
+      }
+    </script>
+  </body>
+</html>

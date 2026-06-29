@@ -1,0 +1,1476 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Call Log</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* ── Tokens ── */
+      :root {
+        --bg: #f0f4f8;
+        --surface: #ffffff;
+        --border: #e2e8f0;
+        --border-strong: #cbd5e1;
+        --text-primary: #0f172a;
+        --text-secondary: #64748b;
+        --text-muted: #94a3b8;
+        --accent: #0ea5e9;
+        --accent-dark: #0284c7;
+        --accent-bg: #e0f2fe;
+        --accent-border: #bae6fd;
+        --header-bg: #1e293b;
+        --header-text: #f8fafc;
+        --mark-bg: #fbbf24;
+        --row-alt: #f8fafc;
+        --green: #16a34a;
+        --green-bg: #dcfce7;
+        --green-border: #86efac;
+        --radius-sm: 6px;
+        --radius-md: 10px;
+        --radius-lg: 14px;
+        --shadow-sm:
+          0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text-primary);
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      /* ── Layout ── */
+      .page {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 28px 20px;
+      }
+
+      /* ── Hero ── */
+      .hero {
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+      }
+      .hero-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius-md);
+        background: var(--header-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 20px;
+      }
+      .hero h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 3px;
+        letter-spacing: -0.3px;
+      }
+      .hero p {
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+
+      /* ── Card ── */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        margin-bottom: 14px;
+        padding: 18px 20px;
+        box-shadow: var(--shadow-sm);
+      }
+      .section-label {
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .section-label svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      /* ── Upload zone ── */
+      .upload-zone {
+        border: 2px dashed var(--border-strong);
+        border-radius: var(--radius-md);
+        padding: 28px 20px;
+        text-align: center;
+        background: var(--row-alt);
+        position: relative;
+        transition: border-color 0.18s;
+        cursor: pointer;
+      }
+      .upload-zone:hover {
+        border-color: var(--accent);
+      }
+      .upload-zone-icon {
+        font-size: 30px;
+        margin-bottom: 8px;
+        opacity: 0.5;
+        display: block;
+      }
+      .upload-zone strong {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: block;
+        margin-bottom: 3px;
+      }
+      .upload-zone small {
+        color: var(--text-secondary);
+        font-size: 12px;
+      }
+      .upload-zone input[type="file"] {
+        margin-top: 14px;
+        font-size: 13px;
+        cursor: pointer;
+        width: auto;
+      }
+      .url-loader {
+        border-top: 1px solid var(--border);
+        display: grid;
+        gap: 8px;
+        grid-template-columns: minmax(240px, 1fr) auto;
+        margin-top: 16px;
+        padding-top: 16px;
+      }
+      button {
+        background: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-sm);
+        color: #ffffff;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 9px 13px;
+        white-space: nowrap;
+      }
+      button:hover {
+        background: var(--accent-dark);
+        border-color: var(--accent-dark);
+      }
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+      .upload-zone.is-loading {
+        pointer-events: none;
+      }
+      .upload-overlay {
+        display: none;
+        position: absolute;
+        inset: 0;
+        background: rgba(248, 250, 252, 0.95);
+        border-radius: calc(var(--radius-md) - 1px);
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 10px;
+        color: var(--accent-dark);
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .upload-zone.is-loading .upload-overlay {
+        display: flex;
+      }
+      .spinner {
+        width: 26px;
+        height: 26px;
+        border: 2.5px solid var(--accent-border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ── Control panel ── */
+      .control-layout {
+        display: grid;
+        grid-template-columns: 1fr 200px;
+        gap: 16px;
+        align-items: start;
+      }
+      .field-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+        display: block;
+      }
+      select,
+      input[type="text"] {
+        width: 100%;
+        padding: 9px 11px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        background: var(--surface);
+        color: var(--text-primary);
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+      select:focus,
+      input[type="text"]:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+      }
+
+      /* ── Filter chips layout ── */
+      .filter-row {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+      .filter-block {
+        flex: 1;
+        min-width: 140px;
+      }
+      .filter-block label.field-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 5px;
+      }
+      .filter-block input {
+        border-radius: var(--radius-sm);
+      }
+      .filter-block input:focus {
+        border-color: var(--accent);
+      }
+
+      /* Result badge */
+      .result-badge {
+        background: var(--accent-bg);
+        border: 1px solid var(--accent-border);
+        border-radius: 999px;
+        color: var(--accent-dark);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 8px 14px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        align-self: flex-end;
+      }
+
+      /* ── Table ── */
+      .table-wrap {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        display: none;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 14px;
+      }
+      .table-scroller {
+        max-height: 580px;
+        overflow: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 13px;
+      }
+
+      th {
+        background: var(--header-bg);
+        color: var(--header-text);
+        font-weight: 600;
+        font-size: 12px;
+        letter-spacing: 0.03em;
+        padding: 11px 13px;
+        text-align: left;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        white-space: nowrap;
+      }
+      th:first-child {
+        border-radius: 0;
+      }
+
+      td {
+        border-bottom: 1px solid var(--border);
+        padding: 10px 13px;
+        vertical-align: top;
+        color: var(--text-primary);
+        line-height: 1.5;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:nth-child(even) td {
+        background: var(--row-alt);
+      }
+      tr:hover td {
+        background: var(--accent-bg);
+        transition: background 0.1s;
+      }
+
+      mark {
+        background: var(--mark-bg);
+        border-radius: 3px;
+        color: #78350f;
+        padding: 0 2px;
+        font-weight: 600;
+      }
+
+      /* Date column */
+      td.col-date {
+        white-space: nowrap;
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+      th.col-date {
+        cursor: pointer;
+        user-select: none;
+      }
+      th.col-date.active-filter {
+        color: #facc15;
+      }
+      .date-filter-trigger {
+        align-items: center;
+        display: inline-flex;
+        gap: 6px;
+      }
+      .date-filter-popover {
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        display: none;
+        gap: 8px;
+        padding: 10px;
+        position: fixed;
+        width: 230px;
+        z-index: 20;
+      }
+      .date-filter-popover.open {
+        display: grid;
+      }
+      .date-filter-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+      .date-filter-actions button {
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 7px 9px;
+      }
+      .date-filter-actions button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #ffffff;
+      }
+
+      /* Dist code */
+      td.col-dist {
+        font-weight: 600;
+        color: var(--accent-dark);
+      }
+
+      /* Call details — full wrap */
+      td.col-details {
+        max-width: 420px;
+        word-break: break-word;
+      }
+
+      /* Info / notice row */
+      .table-notice {
+        padding: 12px 16px;
+        background: var(--accent-bg);
+        border-top: 1px solid var(--accent-border);
+        font-size: 12px;
+        color: var(--accent-dark);
+        text-align: center;
+      }
+      .empty-row td {
+        text-align: center;
+        color: var(--text-muted);
+        padding: 32px;
+      }
+
+      /* ── Empty state ── */
+      .empty-state {
+        text-align: center;
+        padding: 48px 20px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+      }
+      .empty-state-icon {
+        font-size: 36px;
+        margin-bottom: 12px;
+        opacity: 0.35;
+        display: block;
+      }
+      .empty-state p {
+        color: var(--text-secondary);
+        font-size: 14px;
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 800px) {
+        .control-layout {
+          grid-template-columns: 1fr;
+        }
+        .url-loader {
+          grid-template-columns: 1fr;
+        }
+        .filter-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .result-badge {
+          align-self: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-icon">📋</div>
+        <div>
+          <h1>Call Log</h1>
+          <p>
+            Import file Excel, lọc theo NPP, NVBH hoặc hotline để tra cứu lịch
+            sử cuộc gọi.
+          </p>
+        </div>
+      </div>
+
+      <!-- Upload -->
+      <div class="card">
+        <div class="section-label">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          Tải dữ liệu
+        </div>
+        <div class="upload-zone" id="uploadBox">
+          <span class="upload-zone-icon">📊</span>
+          <strong>Chọn file Call Log Excel</strong>
+          <small>Hỗ trợ file .xlsx — Chrome / Edge</small>
+          <input id="fileInput" type="file" accept=".xlsx" />
+          <div class="url-loader">
+            <input
+              id="jsonUrlInput"
+              type="text"
+              placeholder="Dán URL JSON Call Log..."
+              value="https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnQriClrMCaJ9F8HHot9e9Ga_-KJ6CrQ7Q6Wrzup3qPLY3ww8uHqom8bNpiQK7ZRc9jIkd6wc-3kOJYrVYutIqQR99LlysYPyfl1cvDD2QleXX1BFUu74q9wClKTKVunKZyqJ6Gjn-_6bSO-7wBd_nfBRcFBu__1jkBsgSd433Zzm-EJMGrIUOSZm76cRwJ6mD7dTK3FEc8gdJMS4kNskDdlZhZMQbGxE7zZW18NvIaiNqYiDnRoS1szvu49MZI3oB6Y4DJ2gndNTrbN9BU&amp;lib=MbAocym1j8DklnQRpycQv5_D8R0iiSsw_"
+            />
+            <button id="loadJsonButton" type="button">Tải từ URL</button>
+          </div>
+          <div class="upload-overlay" id="uploadLoading">
+            <div class="spinner"></div>
+            <div id="uploadLoadingText">Đang đọc file...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="card" id="controlPanel" style="display: none">
+        <div class="control-layout">
+          <div>
+            <div class="section-label">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              Tìm kiếm
+            </div>
+            <div class="filter-row">
+              <div class="filter-block">
+                <label class="field-label" for="nppSearchInput">NPP</label>
+                <input
+                  id="nppSearchInput"
+                  type="text"
+                  placeholder="Tên / mã NPP..."
+                />
+              </div>
+              <div class="filter-block">
+                <label class="field-label" for="nvbhSearchInput">NVBH</label>
+                <input
+                  id="nvbhSearchInput"
+                  type="text"
+                  placeholder="Mã nhân viên..."
+                />
+              </div>
+              <div class="filter-block">
+                <label class="field-label" for="hotlineSearchInput"
+                  >Hotline</label
+                >
+                <input
+                  id="hotlineSearchInput"
+                  type="text"
+                  placeholder="Số điện thoại..."
+                />
+              </div>
+              <div class="result-badge" id="countBadge">0 kết quả</div>
+            </div>
+          </div>
+          <div>
+            <label class="field-label" for="sheetSelect">
+              <svg
+                style="
+                  width: 12px;
+                  height: 12px;
+                  vertical-align: -1px;
+                  margin-right: 3px;
+                "
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <line x1="9" y1="3" x2="9" y2="21" />
+                <line x1="15" y1="3" x2="15" y2="21" />
+                <line x1="3" y1="9" x2="21" y2="9" />
+              </svg>
+              Chọn Sheet
+            </label>
+            <select id="sheetSelect"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap" id="tableWrap">
+        <div class="table-scroller">
+          <table>
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div class="table-notice" id="tableNotice" style="display: none"></div>
+      </div>
+
+      <div class="date-filter-popover" id="dateFilterPopover">
+        <label class="field-label" for="dateFilterInput">Lọc theo ngày</label>
+        <input id="dateFilterInput" type="date" />
+        <div class="date-filter-actions">
+          <button id="clearDateFilterButton" type="button">Xóa lọc</button>
+          <button class="primary" id="applyDateFilterButton" type="button">
+            Áp dụng
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyBox">
+        <span class="empty-state-icon">📋</span>
+        <p>Chưa có dữ liệu. Hãy chọn file Excel Call Log để bắt đầu.</p>
+      </div>
+    </div>
+    <script>
+      /* ─── State ─── */
+      let workbookData = null,
+        rows = [],
+        headers = [],
+        displayColumns = [],
+        searchIndex = [],
+        dateColumn = "",
+        dateFilterValue = "",
+        renderTimer = null;
+      const MAX_RENDER_ROWS = 300;
+      const CACHE_KEY = "dms_call_log_cache_v1";
+      const CACHE_DB_NAME = "dms_search_cache_db";
+      const CACHE_STORE_NAME = "snapshots";
+
+      /* ─── DOM refs ─── */
+      const fileInput = document.getElementById("fileInput");
+      const uploadBox = document.getElementById("uploadBox");
+      const uploadLoadingText = document.getElementById("uploadLoadingText");
+      const jsonUrlInput = document.getElementById("jsonUrlInput");
+      const loadJsonButton = document.getElementById("loadJsonButton");
+      const controlPanel = document.getElementById("controlPanel");
+      const sheetSelect = document.getElementById("sheetSelect");
+      const nppInput = document.getElementById("nppSearchInput");
+      const nvbhInput = document.getElementById("nvbhSearchInput");
+      const hotlineInput = document.getElementById("hotlineSearchInput");
+      const filterInputs = [nppInput, nvbhInput, hotlineInput];
+      const countBadge = document.getElementById("countBadge");
+      const tableWrap = document.getElementById("tableWrap");
+      const tableHead = document.getElementById("tableHead");
+      const tableBody = document.getElementById("tableBody");
+      const tableNotice = document.getElementById("tableNotice");
+      const dateFilterPopover = document.getElementById("dateFilterPopover");
+      const dateFilterInput = document.getElementById("dateFilterInput");
+      const applyDateFilterButton = document.getElementById(
+        "applyDateFilterButton",
+      );
+      const clearDateFilterButton = document.getElementById(
+        "clearDateFilterButton",
+      );
+      const emptyBox = document.getElementById("emptyBox");
+
+      /* ─── Events ─── */
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+        setLoading(true, "Đang đọc workbook...");
+        try {
+          workbookData = await loadXLSXWorkbook(file);
+          setupSheetSelector();
+          await loadSheet(workbookData.sheets[0]);
+        } catch (err) {
+          alert("Không đọc được file Call Log.\n" + err.message);
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      loadJsonButton.addEventListener("click", async () => {
+        const url = jsonUrlInput.value.trim();
+        if (!url) {
+          alert("Vui lòng dán URL JSON Call Log.");
+          return;
+        }
+
+        setLoading(true, "Đang tải JSON từ URL...");
+        try {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const data = await response.json();
+          workbookData = null;
+          rows = buildRowsFromJson(data);
+          await applyLoadedRows("JSON URL");
+        } catch (err) {
+          alert("Không tải được JSON từ URL.\n" + err.message);
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      sheetSelect.addEventListener("change", async () => {
+        if (!workbookData) return;
+        const sheet = workbookData.sheets.find(
+          (s) => s.path === sheetSelect.value,
+        );
+        if (!sheet) return;
+        setLoading(true, `Đang đọc sheet "${sheet.name}"...`);
+        try {
+          await loadSheet(sheet);
+        } catch (err) {
+          alert("Không đọc được sheet đã chọn.\n" + err.message);
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      filterInputs.forEach((inp) =>
+        inp.addEventListener("input", scheduleRender),
+      );
+
+      tableHead.addEventListener("click", (event) => {
+        const dateHeader = event.target.closest("[data-date-filter]");
+        if (!dateHeader) return;
+        toggleDateFilter(dateHeader);
+      });
+
+      applyDateFilterButton.addEventListener("click", () => {
+        dateFilterValue = dateFilterInput.value;
+        dateFilterPopover.classList.remove("open");
+        renderTable();
+        saveCachedData();
+      });
+
+      clearDateFilterButton.addEventListener("click", () => {
+        dateFilterValue = "";
+        dateFilterInput.value = "";
+        dateFilterPopover.classList.remove("open");
+        renderTable();
+        saveCachedData();
+      });
+
+      document.addEventListener("click", (event) => {
+        if (
+          !dateFilterPopover.contains(event.target) &&
+          !event.target.closest("[data-date-filter]")
+        ) {
+          dateFilterPopover.classList.remove("open");
+        }
+      });
+
+      restoreCachedData();
+
+      /* ─── Helpers ─── */
+      function scheduleRender() {
+        clearTimeout(renderTimer);
+        renderTimer = setTimeout(() => {
+          renderTable();
+          saveCachedData();
+        }, 120);
+      }
+
+      function toggleDateFilter(anchor) {
+        const rect = anchor.getBoundingClientRect();
+        dateFilterInput.value = dateFilterValue;
+        dateFilterPopover.style.left =
+          Math.min(rect.left, window.innerWidth - 250) + "px";
+        dateFilterPopover.style.top = rect.bottom + 8 + "px";
+        dateFilterPopover.classList.toggle("open");
+      }
+
+      function setLoading(isLoading, message = "Đang xử lý...") {
+        uploadBox.classList.toggle("is-loading", isLoading);
+        uploadLoadingText.textContent = message;
+        fileInput.disabled = isLoading;
+        loadJsonButton.disabled = isLoading;
+        sheetSelect.disabled = isLoading;
+      }
+
+      function setupSheetSelector() {
+        sheetSelect.innerHTML = "";
+        workbookData.sheets.forEach((sheet) => {
+          const o = document.createElement("option");
+          o.value = sheet.path;
+          o.textContent = sheet.name;
+          sheetSelect.appendChild(o);
+        });
+      }
+
+      async function loadSheet(sheet) {
+        rows = await parseXLSXSheet(workbookData, sheet);
+        await applyLoadedRows(sheet.name);
+      }
+
+      async function applyLoadedRows(sourceName, options = {}) {
+        if (!rows.length) {
+          alert("Nguồn dữ liệu này không có dữ liệu đọc được.");
+          return;
+        }
+        headers = Object.keys(rows[0]);
+        displayColumns = findDisplayColumns();
+        if (!options.keepFilters) {
+          dateFilterValue = "";
+          dateFilterInput.value = "";
+        }
+        dateFilterPopover.classList.remove("open");
+        /* BUG FIX: normalize header comparison properly */
+        dateColumn =
+          headers.find((h) => normalizeForSearch(h) === "date") || "";
+        searchIndex = rows.map((row) => buildCallLogIndex(row));
+        controlPanel.style.display = "block";
+        tableWrap.style.display = "block";
+        emptyBox.style.display = "none";
+        setupSingleSourceSheet(sourceName);
+        renderTable();
+        if (!options.skipCache) {
+          await saveCachedData(sourceName);
+        }
+      }
+
+      async function saveCachedData(sourceName = "Dữ liệu đã lưu") {
+        if (!rows.length) return;
+        try {
+          await idbSet(CACHE_KEY, {
+            rows,
+            sourceName,
+            savedAt: Date.now(),
+            filters: {
+              npp: nppInput.value,
+              nvbh: nvbhInput.value,
+              hotline: hotlineInput.value,
+            },
+            dateFilterValue,
+          });
+          localStorage.removeItem(CACHE_KEY);
+        } catch (err) {
+          console.warn("Không lưu được dữ liệu Call Log vào trình duyệt.", err);
+        }
+      }
+
+      async function restoreCachedData() {
+        try {
+          const cached =
+            (await idbGet(CACHE_KEY)) || readLegacyLocalStorageCache();
+          if (!cached) return;
+          if (!Array.isArray(cached.rows) || !cached.rows.length) return;
+
+          workbookData = null;
+          rows = cached.rows;
+          nppInput.value = cached.filters?.npp || "";
+          nvbhInput.value = cached.filters?.nvbh || "";
+          hotlineInput.value = cached.filters?.hotline || "";
+          dateFilterValue = cached.dateFilterValue || "";
+          dateFilterInput.value = dateFilterValue;
+          await applyLoadedRows(cached.sourceName || "Dữ liệu đã lưu", {
+            keepFilters: true,
+            skipCache: true,
+          });
+        } catch (err) {
+          console.warn("Không khôi phục được dữ liệu Call Log.", err);
+        }
+      }
+
+      function readLegacyLocalStorageCache() {
+        try {
+          const raw = localStorage.getItem(CACHE_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (err) {
+          console.warn("Không đọc được cache cũ của Call Log.", err);
+          return null;
+        }
+      }
+
+      function openCacheDb() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(CACHE_DB_NAME, 1);
+          request.onupgradeneeded = () => {
+            request.result.createObjectStore(CACHE_STORE_NAME);
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function idbGet(key) {
+        const db = await openCacheDb();
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction(CACHE_STORE_NAME, "readonly");
+          const request = transaction.objectStore(CACHE_STORE_NAME).get(key);
+          request.onsuccess = () => resolve(request.result || null);
+          request.onerror = () => reject(request.error);
+          transaction.oncomplete = () => db.close();
+          transaction.onerror = () => db.close();
+        });
+      }
+
+      async function idbSet(key, value) {
+        const db = await openCacheDb();
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction(CACHE_STORE_NAME, "readwrite");
+          const request = transaction.objectStore(CACHE_STORE_NAME).put(value, key);
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+          transaction.oncomplete = () => db.close();
+          transaction.onerror = () => db.close();
+        });
+      }
+
+      function setupSingleSourceSheet(name) {
+        if (workbookData) return;
+        sheetSelect.innerHTML = "";
+        const option = document.createElement("option");
+        option.value = "json";
+        option.textContent = name || "JSON URL";
+        sheetSelect.appendChild(option);
+      }
+
+      /* ─── Column detection ─── */
+      function findDisplayColumns() {
+        /* BUG FIX: use partial-match fallback so columns are found even with spacing/case differences */
+        const targets = ["dist code", "hotline", "date", "call details"];
+        return targets
+          .map((target) => {
+            let col = headers.find((h) => normalizeForSearch(h) === target);
+            if (!col)
+              col = headers.find((h) => normalizeForSearch(h).includes(target));
+            return col;
+          })
+          .filter(Boolean);
+      }
+
+      function findColumn(name) {
+        const n = normalizeForSearch(name);
+        return (
+          headers.find((h) => normalizeForSearch(h) === n) ||
+          headers.find((h) => normalizeForSearch(h).includes(n))
+        );
+      }
+
+      /* ─── Search index ─── */
+      function buildCallLogIndex(row) {
+        const distNameCol = findColumn("dist name");
+        const hotlineCol = findColumn("hotline");
+        const detailsCol = findColumn("call details");
+        const nvbhFromDetails = extractNvbhFromCallDetails(row[detailsCol]);
+        return {
+          npp: buildSearchText([row[distNameCol], row[detailsCol]].join(" ")),
+          nvbh: buildSearchText(nvbhFromDetails),
+          hotline: buildSearchText(
+            [row[hotlineCol], row[detailsCol]].join(" "),
+          ),
+        };
+      }
+
+      function extractNvbhFromCallDetails(value) {
+        const text = String(value || "");
+        const match = text.match(/_([^_]+)_Hotline\b/i);
+        return match ? match[1].trim() : "";
+      }
+
+      /* ─── Date sorting ─── */
+      function getRowDateValue(row) {
+        if (!dateColumn) return 0;
+        return parseDisplayDate(row[dateColumn]);
+      }
+
+      function parseDisplayDate(value) {
+        const text = String(value || "").trim();
+        /* dd/mm/yyyy */
+        const m = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) return Date.UTC(+m[3], +m[2] - 1, +m[1]);
+        /* Excel serial */
+        const num = Number(text);
+        if (Number.isFinite(num) && num > 0) return num;
+        const parsed = Date.parse(text);
+        return Number.isNaN(parsed) ? 0 : parsed;
+      }
+
+      function matchesDateFilter(row) {
+        if (!dateFilterValue || !dateColumn) return true;
+        return displayDateToInputValue(row[dateColumn]) === dateFilterValue;
+      }
+
+      function displayDateToInputValue(value) {
+        const text = String(value || "").trim();
+        const m = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) {
+          return `${m[3]}-${String(m[2]).padStart(2, "0")}-${String(m[1]).padStart(2, "0")}`;
+        }
+
+        const parsed = Date.parse(text);
+        if (Number.isNaN(parsed)) return "";
+        const date = new Date(parsed);
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      }
+
+      /* ─── Render ─── */
+      function renderTable() {
+        clearTimeout(renderTimer);
+        const filters = {
+          npp: getSearchTokens(nppInput.value),
+          nvbh: getSearchTokens(nvbhInput.value),
+          hotline: getSearchTokens(hotlineInput.value),
+        };
+        const filtered = searchIndex
+          .map((entry, i) => ({ row: rows[i], entry }))
+          .filter(({ entry }) => matchesFilters(entry, filters))
+          .filter(({ row }) => matchesDateFilter(row))
+          .sort((a, b) => getRowDateValue(b.row) - getRowDateValue(a.row));
+
+        const visible = filtered.slice(0, MAX_RENDER_ROWS);
+
+        /* Header */
+        tableHead.innerHTML =
+          "<tr>" +
+          displayColumns
+            .map((col, i) => {
+              const cls = getColumnClass(col, i);
+              if (normalizeForSearch(col) === "date") {
+                const active = dateFilterValue ? " active-filter" : "";
+                return `<th class="${cls}${active}" data-date-filter="true"><span class="date-filter-trigger">${escapeHTML(col)} ▾</span></th>`;
+              }
+              return `<th class="${cls}">${escapeHTML(col)}</th>`;
+            })
+            .join("") +
+          "</tr>";
+
+        /* Rows */
+        if (!filtered.length) {
+          tableBody.innerHTML = `<tr class="empty-row"><td colspan="${displayColumns.length}">Không tìm thấy dữ liệu phù hợp.</td></tr>`;
+          tableNotice.style.display = "none";
+        } else {
+          tableBody.innerHTML = visible
+            .map(({ row }) => {
+              return (
+                "<tr>" +
+                displayColumns
+                  .map((col, i) => {
+                    const cls = getColumnClass(col, i);
+                    return `<td class="${cls}">${highlightCell(row, col)}</td>`;
+                  })
+                  .join("") +
+                "</tr>"
+              );
+            })
+            .join("");
+          if (filtered.length > MAX_RENDER_ROWS) {
+            tableNotice.textContent = `Hiển thị ${MAX_RENDER_ROWS} / ${filtered.length} kết quả. Gõ thêm từ khóa để lọc hẹp hơn.`;
+            tableNotice.style.display = "block";
+          } else {
+            tableNotice.style.display = "none";
+          }
+        }
+
+        countBadge.textContent = filtered.length + " kết quả";
+      }
+
+      function getColumnClass(col, i) {
+        const n = normalizeForSearch(col);
+        if (n === "date") return "col-date";
+        if (n === "dist code" || n.includes("dist code")) return "col-dist";
+        if (n === "call details" || n.includes("call details"))
+          return "col-details";
+        return "";
+      }
+
+      function highlightCell(row, col) {
+        const value = row[col] || "";
+        const n = normalizeForSearch(col);
+        if (n === "hotline" || n.includes("hotline")) {
+          return highlight(value, [hotlineInput.value.trim()].filter(Boolean));
+        }
+        if (n === "call details" || n.includes("call details")) {
+          return highlightCallDetails(value);
+        }
+        return escapeHTML(value);
+      }
+
+      function highlightCallDetails(value) {
+        const plain = String(value || "");
+        const ranges = [];
+
+        ranges.push(...findTokenRanges(plain, getSearchTokens(nppInput.value)));
+        ranges.push(...findNvbhRanges(plain, getSearchTokens(nvbhInput.value)));
+
+        return renderHighlightedRanges(plain, ranges);
+      }
+
+      function buildRowsFromJson(data) {
+        if (!Array.isArray(data)) {
+          throw new Error("JSON phải là một mảng dữ liệu.");
+        }
+
+        return data
+          .map((item) => {
+            return {
+              "Dist code": item.columnB || item["Dist code"] || "",
+              Hotline: item.columnF || item.Hotline || "",
+              Date: item.columnG || item.Date || "",
+              "Call Details": item.columnN || item["Call Details"] || "",
+            };
+          })
+          .filter((row) => {
+            const isHeader =
+              normalizeForSearch(row["Dist code"]) === "dist code" &&
+              normalizeForSearch(row.Hotline) === "hotline";
+            return !isHeader && Object.values(row).some((value) => String(value || "").trim());
+          });
+      }
+
+      function matchesFilters(entry, filters) {
+        return Object.entries(filters).every(([key, tokens]) => {
+          if (!tokens.length) return true;
+          const text = entry[key] || "";
+          return tokens.every((t) => text.includes(t));
+        });
+      }
+
+      function getSearchTokens(value) {
+        return buildSearchText(value)
+          .split(/\s+/)
+          .filter((t) => t.length > 0);
+      }
+
+      function buildSearchText(value) {
+        return normalizeForSearch(String(value || ""));
+      }
+
+      function normalize(value) {
+        return String(value)
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+      }
+      function normalizeForSearch(value) {
+        return normalize(value)
+          .replace(/[^a-z0-9]+/g, " ")
+          .trim();
+      }
+
+      /* ─── Highlight ─── */
+      function highlight(value, keywords) {
+        const plain = String(value);
+        if (!keywords.length) return escapeHTML(plain);
+        const tokens = new Set(keywords.flatMap((k) => getSearchTokens(k)));
+        if (!tokens.size) return escapeHTML(plain);
+
+        return renderHighlightedRanges(plain, findTokenRanges(plain, [...tokens]));
+      }
+
+      function findTokenRanges(plain, tokens) {
+        if (!tokens.length) return [];
+        const ranges = [];
+        const pattern = /[A-Za-zÀ-ỹ0-9]+/g;
+        let match;
+
+        while ((match = pattern.exec(plain))) {
+          const part = match[0];
+          const normalizedPart = normalizeForSearch(part);
+          tokens.forEach((token) => {
+            const index = normalizedPart.indexOf(token);
+            if (index !== -1) {
+              ranges.push([match.index + index, match.index + index + token.length]);
+            }
+          });
+        }
+
+        return ranges;
+      }
+
+      function findNvbhRanges(plain, tokens) {
+        if (!tokens.length) return [];
+        const nvbhMatch = String(plain).match(/_([^_]+)_Hotline\b/i);
+        if (!nvbhMatch) return [];
+
+        const nvbhValue = nvbhMatch[1];
+        const nvbhStart = nvbhMatch.index + 1;
+        const normalizedNvbh = normalizeForSearch(nvbhValue);
+        const ranges = [];
+
+        tokens.forEach((token) => {
+          const index = normalizedNvbh.indexOf(token);
+          if (index !== -1) {
+            ranges.push([nvbhStart + index, nvbhStart + index + token.length]);
+          }
+        });
+
+        return ranges;
+      }
+
+      function renderHighlightedRanges(plain, ranges) {
+        if (!ranges.length) return escapeHTML(plain);
+
+        ranges.sort((a, b) => a[0] - b[0]);
+        const merged = [];
+        ranges.forEach((range) => {
+          const last = merged[merged.length - 1];
+          if (!last || range[0] > last[1]) {
+            merged.push([...range]);
+          } else {
+            last[1] = Math.max(last[1], range[1]);
+          }
+        });
+
+        let html = "";
+        let cursor = 0;
+        merged.forEach(([start, end]) => {
+          html += escapeHTML(plain.slice(cursor, start));
+          html += "<mark>" + escapeHTML(plain.slice(start, end)) + "</mark>";
+          cursor = end;
+        });
+        html += escapeHTML(plain.slice(cursor));
+        return html;
+      }
+
+      function highlightBySegments(value, keywords) {
+        const plain = String(value);
+        if (!keywords.length) return escapeHTML(plain);
+        const tokens = new Set(keywords.flatMap((k) => getSearchTokens(k)));
+        if (!tokens.size) return escapeHTML(plain);
+
+        return plain
+          .split(/([A-Za-zÀ-ỹ0-9]+)/g)
+          .map((part) => {
+            if (!part) return "";
+            const normalizedPart = normalizeForSearch(part);
+            const shouldMark = [...tokens].some((token) => {
+              return normalizedPart === token || normalizedPart.includes(token);
+            });
+            return shouldMark
+              ? "<mark>" + escapeHTML(part) + "</mark>"
+              : escapeHTML(part);
+          })
+          .join("");
+      }
+
+      function escapeHTML(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      /* ─── XLSX parsing (same core logic, bug fixes applied) ─── */
+      async function loadXLSXWorkbook(file) {
+        if (!("DecompressionStream" in window))
+          throw new Error("Trình duyệt chưa hỗ trợ đọc XLSX.");
+        const buffer = await file.arrayBuffer();
+        const entries = readZipEntries(buffer);
+        const workbookXML = await getZipText(entries, "xl/workbook.xml");
+        const relsXML = await getZipText(entries, "xl/_rels/workbook.xml.rels");
+        const sharedXML = entries["xl/sharedStrings.xml"]
+          ? await getZipText(entries, "xl/sharedStrings.xml")
+          : "";
+        return {
+          entries,
+          sharedStrings: parseSharedStrings(sharedXML),
+          sheets: getWorkbookSheets(workbookXML, relsXML),
+        };
+      }
+
+      async function parseXLSXSheet(workbook, sheet) {
+        const xml = await getZipText(workbook.entries, sheet.path);
+        const matrix = parseSheet(xml, workbook.sharedStrings);
+        return buildRowsFromMatrix(matrix);
+      }
+
+      function buildRowsFromMatrix(matrix) {
+        const clean = matrix
+          .map((row) => row.map((c) => String(c || "").trim()))
+          .filter((row) => row.some(Boolean));
+        if (!clean.length) return [];
+        const hi = findHeaderRowIndex(clean);
+        const headerRow = clean[hi] || [];
+        const dataRows = clean.slice(hi + 1);
+        const colCount = Math.max(
+          ...clean.map((r) => r.length),
+          headerRow.length,
+        );
+        const keys = Array.from(
+          { length: colCount },
+          (_, i) => headerRow[i] || `Cột ${indexToColumnName(i)}`,
+        );
+        return dataRows
+          .filter((row) => row.some(Boolean))
+          .map((row) => {
+            const obj = {};
+            keys.forEach((key, i) => {
+              obj[key] = formatCellValue(key, row[i] || "");
+            });
+            return obj;
+          });
+      }
+
+      function findHeaderRowIndex(matrix) {
+        let best = 0,
+          bestScore = -Infinity;
+        matrix.slice(0, 30).forEach((row, i) => {
+          const text = row.map(normalizeForSearch).join(" ");
+          const score =
+            (text.includes("hotline") ? 10 : 0) +
+            (text.includes("date") ? 8 : 0) +
+            (text.includes("call details") ? 20 : 0) -
+            i * 0.1;
+          if (score > bestScore) {
+            bestScore = score;
+            best = i;
+          }
+        });
+        return best;
+      }
+
+      function formatCellValue(header, value) {
+        if (
+          normalizeForSearch(header) === "date" &&
+          /^\d+(\.\d+)?$/.test(value)
+        ) {
+          return excelDateToText(Number(value));
+        }
+        return value;
+      }
+
+      function excelDateToText(serial) {
+        const date = new Date(Date.UTC(1899, 11, 30));
+        date.setUTCDate(date.getUTCDate() + Math.floor(serial));
+        return `${String(date.getUTCDate()).padStart(2, "0")}/${String(date.getUTCMonth() + 1).padStart(2, "0")}/${date.getUTCFullYear()}`;
+      }
+
+      function readZipEntries(buffer) {
+        const view = new DataView(buffer),
+          bytes = new Uint8Array(buffer),
+          entries = {};
+        let eocd = -1;
+        for (let i = bytes.length - 22; i >= 0; i--) {
+          if (view.getUint32(i, true) === 0x06054b50) {
+            eocd = i;
+            break;
+          }
+        }
+        if (eocd === -1) throw new Error("ZIP không hợp lệ.");
+        const cdOffset = view.getUint32(eocd + 16, true),
+          total = view.getUint16(eocd + 10, true);
+        let ptr = cdOffset;
+        for (let i = 0; i < total; i++) {
+          if (view.getUint32(ptr, true) !== 0x02014b50) break;
+          const method = view.getUint16(ptr + 10, true),
+            cs = view.getUint32(ptr + 20, true),
+            fnl = view.getUint16(ptr + 28, true),
+            el = view.getUint16(ptr + 30, true),
+            cl = view.getUint16(ptr + 32, true),
+            lho = view.getUint32(ptr + 42, true);
+          const name = new TextDecoder().decode(
+            bytes.slice(ptr + 46, ptr + 46 + fnl),
+          );
+          const lnl = view.getUint16(lho + 26, true),
+            lel = view.getUint16(lho + 28, true),
+            ds = lho + 30 + lnl + lel;
+          entries[name] = { method, data: bytes.slice(ds, ds + cs) };
+          ptr += 46 + fnl + el + cl;
+        }
+        return entries;
+      }
+
+      async function getZipText(entries, path) {
+        const entry = entries[path];
+        if (!entry) throw new Error("Không tìm thấy file trong ZIP: " + path);
+        let output;
+        if (entry.method === 0) {
+          output = entry.data;
+        } else if (entry.method === 8) {
+          const stream = new Blob([entry.data])
+            .stream()
+            .pipeThrough(new DecompressionStream("deflate-raw"));
+          output = new Uint8Array(await new Response(stream).arrayBuffer());
+        } else {
+          throw new Error("Kiểu nén không hỗ trợ: " + entry.method);
+        }
+        return new TextDecoder("utf-8").decode(output);
+      }
+
+      function getWorkbookSheets(workbookXML, relsXML) {
+        const wbDoc = new DOMParser().parseFromString(
+          workbookXML,
+          "application/xml",
+        );
+        const rDoc = new DOMParser().parseFromString(
+          relsXML,
+          "application/xml",
+        );
+        const rmap = {};
+        Array.from(rDoc.querySelectorAll("Relationship")).forEach((r) => {
+          const id = r.getAttribute("Id"),
+            target = r.getAttribute("Target");
+          if (id && target) rmap[id] = normalizeWorkbookTarget(target);
+        });
+        return Array.from(wbDoc.querySelectorAll("sheet"))
+          .map((s, i) => {
+            /* BUG FIX: handle both r:id and plain id attributes */
+            const relId =
+              s.getAttribute("r:id") ||
+              s.getAttribute("id") ||
+              s.getAttributeNS(
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+                "id",
+              );
+            return {
+              name: s.getAttribute("name") || `Sheet ${i + 1}`,
+              path: rmap[relId] || `xl/worksheets/sheet${i + 1}.xml`,
+            };
+          })
+          .filter((s) => s.path);
+      }
+
+      function normalizeWorkbookTarget(target) {
+        let p = target;
+        if (p.startsWith("/")) p = p.slice(1);
+        if (!p.startsWith("xl/")) p = "xl/" + p;
+        return p.replaceAll("\\", "/");
+      }
+
+      function parseSharedStrings(xml) {
+        if (!xml) return [];
+        return Array.from(
+          new DOMParser()
+            .parseFromString(xml, "application/xml")
+            .querySelectorAll("si"),
+        ).map((si) =>
+          Array.from(si.querySelectorAll("t"))
+            .map((t) => t.textContent)
+            .join(""),
+        );
+      }
+
+      function parseSheet(xml, sharedStrings) {
+        const doc = new DOMParser().parseFromString(xml, "application/xml"),
+          result = [];
+        Array.from(doc.querySelectorAll("sheetData row")).forEach((rowNode) => {
+          const row = [];
+          Array.from(rowNode.querySelectorAll("c")).forEach((cell) => {
+            const ref = cell.getAttribute("r") || "",
+              ci = columnNameToIndex(ref.replace(/[0-9]/g, "")),
+              type = cell.getAttribute("t"),
+              vn = cell.querySelector("v");
+            let value = vn ? vn.textContent : "";
+            if (type === "s") value = sharedStrings[Number(value)] || "";
+            else if (type === "inlineStr")
+              value = Array.from(cell.querySelectorAll("t"))
+                .map((t) => t.textContent)
+                .join("");
+            row[ci] = value;
+          });
+          result.push(row.map((v) => v || ""));
+        });
+        return result;
+      }
+
+      function columnNameToIndex(name) {
+        let i = 0;
+        for (let c = 0; c < name.length; c++)
+          i = i * 26 + name.charCodeAt(c) - 64;
+        return i - 1;
+      }
+      function indexToColumnName(i) {
+        let n = "",
+          c = i + 1;
+        while (c > 0) {
+          const r = (c - 1) % 26;
+          n = String.fromCharCode(65 + r) + n;
+          c = Math.floor((c - 1) / 26);
+        }
+        return n;
+      }
+    </script>
+  </body>
+</html>
