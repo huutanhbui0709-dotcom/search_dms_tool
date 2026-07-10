@@ -1100,16 +1100,16 @@
         const nppValue = nppInput.value;
 
         if (isNumericQuery(nppValue)) {
-          // Khi tìm bằng mã số (Dist code): trích tên NPP từ Call Details
-          // VD: "..._NPP Tuan Viet_HQTUNGNG1_Hotline..." → "Tuan Viet"
-          // Tìm tất cả đoạn _NPP xxx_ trong chuỗi (có thể nhiều NPP)
+          // Khi tìm bằng mã số (Dist code): highlight ĐÚNG đoạn tên NPP
+          // VD: "..._NPP Quan 3 (1)_004G0045_..." → highlight "Quan 3 (1)"
+          // Dùng vị trí ký tự trực tiếp, KHÔNG tokenize để tránh highlight nhầm số lẻ trong SĐT
           const nppRegex = /_NPP ([^_]+?)(?=_)/gi;
           let m;
           while ((m = nppRegex.exec(plain)) !== null) {
-            const nppName = m[1].trim();
-            if (nppName) {
-              ranges.push(...findTokenRanges(plain, getSearchTokens(nppName)));
-            }
+            // m.index = vị trí dấu '_' đầu tiên, +5 để bỏ qua "_NPP "
+            const start = m.index + 5;
+            const end = start + m[1].length;
+            if (end > start) ranges.push([start, end]);
           }
         } else {
           // Khi tìm bằng tên: highlight tên NPP như cũ
