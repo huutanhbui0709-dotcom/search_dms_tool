@@ -1079,22 +1079,37 @@
       function highlightCell(row, col) {
         const value = row[col] || "";
         const n = normalizeForSearch(col);
+        if (n === "dist code" || n.includes("dist code")) {
+          if (isNumericQuery(nppInput.value)) {
+            return highlight(value, [nppInput.value.trim()].filter(Boolean));
+          }
+          return escapeHTML(value);
+        }
         if (n === "hotline" || n.includes("hotline")) {
           return highlight(value, [hotlineInput.value.trim()].filter(Boolean));
         }
         if (n === "call details" || n.includes("call details")) {
-          return highlightCallDetails(value);
+          return highlightCallDetails(value, row);
         }
         return escapeHTML(value);
       }
 
-      function highlightCallDetails(value) {
+      function highlightCallDetails(value, row) {
         const plain = String(value || "");
         const ranges = [];
         const nppValue = nppInput.value;
 
-        // Highlight NPP (tên hoặc dist code) trong call details
-        ranges.push(...findTokenRanges(plain, getSearchTokens(nppValue)));
+        if (isNumericQuery(nppValue) && row) {
+          // Khi tìm bằng mã số (Dist code): highlight tên NPP trong Call Details
+          const distNameCol = findColumn("dist name");
+          const distName = String(row[distNameCol] || "");
+          if (distName) {
+            ranges.push(...findTokenRanges(plain, getSearchTokens(distName)));
+          }
+        } else {
+          // Khi tìm bằng tên: highlight tên NPP như cũ
+          ranges.push(...findTokenRanges(plain, getSearchTokens(nppValue)));
+        }
         ranges.push(...findNvbhRanges(plain, getSearchTokens(nvbhInput.value)));
 
         return renderHighlightedRanges(plain, ranges);
