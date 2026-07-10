@@ -1099,12 +1099,17 @@
         const ranges = [];
         const nppValue = nppInput.value;
 
-        if (isNumericQuery(nppValue) && row) {
-          // Khi tìm bằng mã số (Dist code): highlight tên NPP trong Call Details
-          const distNameCol = findColumn("dist name");
-          const distName = String(row[distNameCol] || "");
-          if (distName) {
-            ranges.push(...findTokenRanges(plain, getSearchTokens(distName)));
+        if (isNumericQuery(nppValue)) {
+          // Khi tìm bằng mã số (Dist code): trích tên NPP từ Call Details
+          // VD: "..._NPP Tuan Viet_HQTUNGNG1_Hotline..." → "Tuan Viet"
+          // Tìm tất cả đoạn _NPP xxx_ trong chuỗi (có thể nhiều NPP)
+          const nppRegex = /_NPP ([^_]+?)(?=_)/gi;
+          let m;
+          while ((m = nppRegex.exec(plain)) !== null) {
+            const nppName = m[1].trim();
+            if (nppName) {
+              ranges.push(...findTokenRanges(plain, getSearchTokens(nppName)));
+            }
           }
         } else {
           // Khi tìm bằng tên: highlight tên NPP như cũ
