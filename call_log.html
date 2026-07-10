@@ -942,16 +942,23 @@
       /* ─── Search index ─── */
       function buildCallLogIndex(row) {
         const distNameCol = findColumn("dist name");
+        const distCodeCol = findColumn("dist code");
         const hotlineCol = findColumn("hotline");
         const detailsCol = findColumn("call details");
         const nvbhFromDetails = extractNvbhFromCallDetails(row[detailsCol]);
         return {
           npp: buildSearchText([row[distNameCol], row[detailsCol]].join(" ")),
+          nppCode: buildSearchText(String(row[distCodeCol] || "")),
           nvbh: buildSearchText(nvbhFromDetails),
           hotline: buildSearchText(
             [row[hotlineCol], row[detailsCol]].join(" "),
           ),
         };
+      }
+
+      /* Trả về true nếu chuỗi nhập vào chỉ chứa chữ số (và khoảng trắng) */
+      function isNumericQuery(value) {
+        return /^[\d\s]+$/.test(value.trim()) && value.trim().length > 0;
       }
 
       function extractNvbhFromCallDetails(value) {
@@ -999,8 +1006,11 @@
       /* ─── Render ─── */
       function renderTable() {
         clearTimeout(renderTimer);
+        const nppValue = nppInput.value;
+        const nppIsNumeric = isNumericQuery(nppValue);
         const filters = {
-          npp: getSearchTokens(nppInput.value),
+          npp: nppIsNumeric ? [] : getSearchTokens(nppValue),
+          nppCode: nppIsNumeric ? getSearchTokens(nppValue) : [],
           nvbh: getSearchTokens(nvbhInput.value),
           hotline: getSearchTokens(hotlineInput.value),
         };
@@ -1081,8 +1091,10 @@
       function highlightCallDetails(value) {
         const plain = String(value || "");
         const ranges = [];
+        const nppValue = nppInput.value;
 
-        ranges.push(...findTokenRanges(plain, getSearchTokens(nppInput.value)));
+        // Highlight NPP (tên hoặc dist code) trong call details
+        ranges.push(...findTokenRanges(plain, getSearchTokens(nppValue)));
         ranges.push(...findNvbhRanges(plain, getSearchTokens(nvbhInput.value)));
 
         return renderHighlightedRanges(plain, ranges);
@@ -1113,6 +1125,10 @@
       function matchesFilters(entry, filters) {
         return Object.entries(filters).every(([key, tokens]) => {
           if (!tokens.length) return true;
+          // nppCode: tìm prefix (bắt đầu bằng) để match Dist code chính xác hơn
+          if (key === "nppCode") {
+            return tokens.every((t) => (entry.nppCode || "").startsWith(t));
+          }
           const text = entry[key] || "";
           return tokens.every((t) => text.includes(t));
         });
