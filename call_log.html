@@ -468,17 +468,27 @@
       <!-- Hero -->
       <div class="hero">
         <div class="hero-icon">📋</div>
-        <div>
+        <div style="flex:1">
           <h1>Call Log</h1>
           <p>
             Import file Excel, lọc theo NPP, NVBH hoặc hotline để tra cứu lịch
             sử cuộc gọi.
           </p>
         </div>
+        <button id="toggleUploadBtn" type="button" style="
+          font-size:12px; font-weight:600; color:var(--text-secondary);
+          background:var(--surface); border:1px solid var(--border);
+          border-radius:var(--radius-sm); padding:6px 12px;
+          cursor:pointer; flex-shrink:0; display:flex; align-items:center; gap:5px;
+          box-shadow:var(--shadow-sm); white-space:nowrap;
+        ">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Tải dữ liệu <span id="toggleUploadArrow">▾</span>
+        </button>
       </div>
 
-      <!-- Upload -->
-      <div class="card">
+      <!-- Upload (hidden by default) -->
+      <div class="card" id="uploadCard" style="display:none">
         <div class="section-label">
           <svg
             viewBox="0 0 24 24"
@@ -654,8 +664,17 @@
         "clearDateFilterButton",
       );
       const emptyBox = document.getElementById("emptyBox");
+      const uploadCard = document.getElementById("uploadCard");
+      const toggleUploadBtn = document.getElementById("toggleUploadBtn");
+      const toggleUploadArrow = document.getElementById("toggleUploadArrow");
 
       /* ─── Events ─── */
+      toggleUploadBtn.addEventListener("click", () => {
+        const isVisible = uploadCard.style.display !== "none";
+        uploadCard.style.display = isVisible ? "none" : "block";
+        toggleUploadArrow.textContent = isVisible ? "▾" : "▴";
+      });
+
       fileInput.addEventListener("change", async () => {
         const file = fileInput.files[0];
         if (!file) return;
