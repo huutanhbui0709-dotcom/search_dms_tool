@@ -536,15 +536,27 @@
   </head>
   <body>
     <div class="page">
-      <div class="hero">
-        <h1>&#128269; Tìm kiếm nhanh dữ liệu Excel</h1>
-        <p>
-          Import file CSV hoặc Excel, chọn cột hiển thị, nhập từ khóa để lọc và
-          tra cứu tức thì.
-        </p>
+      <div class="hero" style="display:flex; align-items:flex-start; gap:14px; margin-bottom:28px;">
+        <div style="flex:1">
+          <h1>&#128269; Tìm kiếm nhanh dữ liệu Excel</h1>
+          <p>
+            Import file CSV hoặc Excel, chọn cột hiển thị, nhập từ khóa để lọc và
+            tra cứu tức thì.
+          </p>
+        </div>
+        <button id="toggleUploadBtn" type="button" style="
+          font-size:12px; font-weight:600; color:#6b7280;
+          background:#fff; border:1px solid #e5e7eb;
+          border-radius:6px; padding:6px 12px;
+          cursor:pointer; flex-shrink:0; display:flex; align-items:center; gap:5px;
+          box-shadow:0 1px 3px rgba(0,0,0,0.07); white-space:nowrap;
+        ">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Tải dữ liệu <span id="toggleUploadArrow">▾</span>
+        </button>
       </div>
-      <!-- Upload -->
-      <div class="card">
+      <!-- Upload (hidden by default) -->
+      <div class="card" id="uploadCard" style="display:none">
         <div class="section-label">
           <svg
             viewBox="0 0 24 24"
@@ -792,6 +804,14 @@
       const searchPanel = document.getElementById("searchPanel");
       const tableWrap = document.getElementById("tableWrap");
       const emptyBox = document.getElementById("emptyBox");
+      const uploadCard = document.getElementById("uploadCard");
+      const toggleUploadBtn = document.getElementById("toggleUploadBtn");
+      const toggleUploadArrow = document.getElementById("toggleUploadArrow");
+      toggleUploadBtn.addEventListener("click", () => {
+        const isVisible = uploadCard.style.display !== "none";
+        uploadCard.style.display = isVisible ? "none" : "block";
+        toggleUploadArrow.textContent = isVisible ? "▾" : "▴";
+      });
       const searchInput = document.getElementById("searchInput");
       const refineSearchInput = document.getElementById("refineSearchInput");
       const countBadge = document.getElementById("countBadge");
