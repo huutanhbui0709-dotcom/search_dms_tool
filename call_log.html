@@ -557,6 +557,14 @@
                 />
               </div>
               <div class="filter-block">
+                <label class="field-label" for="solutionSearchInput">Solution</label>
+                <input
+                  id="solutionSearchInput"
+                  type="text"
+                  placeholder="Tìm theo nội dung solution..."
+                />
+              </div>
+              <div class="filter-block">
                 <label class="field-label" for="hotlineSearchInput"
                   >Hotline</label
                 >
@@ -649,7 +657,8 @@
       const nppInput = document.getElementById("nppSearchInput");
       const nvbhInput = document.getElementById("nvbhSearchInput");
       const hotlineInput = document.getElementById("hotlineSearchInput");
-      const filterInputs = [nppInput, nvbhInput, hotlineInput];
+      const solutionInput = document.getElementById("solutionSearchInput");
+      const filterInputs = [nppInput, nvbhInput, hotlineInput, solutionInput];
       const countBadge = document.getElementById("countBadge");
       const tableWrap = document.getElementById("tableWrap");
       const tableHead = document.getElementById("tableHead");
@@ -965,6 +974,7 @@
         const hotlineCol = findColumn("hotline");
         const detailsCol = findColumn("call details");
         const nvbhFromDetails = extractNvbhFromCallDetails(row[detailsCol]);
+        const solutionFromDetails = extractSolutionFromCallDetails(row[detailsCol]);
         return {
           npp: buildSearchText([row[distNameCol], row[detailsCol]].join(" ")),
           nppCode: buildSearchText(String(row[distCodeCol] || "")),
@@ -972,6 +982,7 @@
           hotline: buildSearchText(
             [row[hotlineCol], row[detailsCol]].join(" "),
           ),
+          solution: buildSearchText(solutionFromDetails),
         };
       }
 
@@ -984,6 +995,24 @@
         const text = String(value || "");
         const match = text.match(/_([^_]+)_Hotline\b/i);
         return match ? match[1].trim() : "";
+      }
+
+      /**
+       * Extract the Solution segment from a Call Details string.
+       * Format: [NVN-DMS]-[TYPE]_SOLUTION_..._NPP/HQ/ADMIN/distCode/longNum...
+       * Returns the raw solution text (not normalised).
+       */
+      function extractSolutionFromCallDetails(value) {
+        const text = String(value || "").trim();
+        // Strip the [NVN-DMS]-[TYPE]_ prefix
+        const prefixMatch = text.match(/^\[NVN-DMS\]-\[[^\]]*\]_/);
+        if (!prefixMatch) return "";
+        const rest = text.slice(prefixMatch[0].length);
+        // Find the first terminator: _NPP, _HQ, _ADMIN, _Hotline, _OTRS,
+        // dist-code (_digits+G+digits) or long ticket number (_10+digits)
+        const terminatorRe = /_(NPP\s|HQ\s|ADMIN\b|Hotline\b|OTRS\b|\d+G\d+|\d{10,})/;
+        const m = rest.match(terminatorRe);
+        return m ? rest.slice(0, m.index).trim() : rest.trim();
       }
 
       /* ─── Date sorting ─── */
@@ -1032,6 +1061,7 @@
           nppCode: nppIsNumeric ? getSearchTokens(nppValue) : [],
           nvbh: getSearchTokens(nvbhInput.value),
           hotline: getSearchTokens(hotlineInput.value),
+          solution: getSearchTokens(solutionInput.value),
         };
         const filtered = searchIndex
           .map((entry, i) => ({ row: rows[i], entry }))
@@ -1120,23 +1150,46 @@
 
         if (isNumericQuery(nppValue)) {
           // Khi tìm bằng mã số (Dist code): highlight ĐÚNG đoạn tên NPP
-          // VD: "..._NPP Quan 3 (1)_004G0045_..." → highlight "Quan 3 (1)"
-          // Dùng vị trí ký tự trực tiếp, KHÔNG tokenize để tránh highlight nhầm số lẻ trong SĐT
           const nppRegex = /_NPP ([^_]+?)(?=_)/gi;
           let m;
           while ((m = nppRegex.exec(plain)) !== null) {
-            // m.index = vị trí dấu '_' đầu tiên, +5 để bỏ qua "_NPP "
+            // m.index = vị trí '_', +5 để bỏ qua "_NPP "
             const start = m.index + 5;
             const end = start + m[1].length;
             if (end > start) ranges.push([start, end]);
           }
         } else {
-          // Khi tìm bằng tên: highlight tên NPP như cũ
           ranges.push(...findTokenRanges(plain, getSearchTokens(nppValue)));
         }
         ranges.push(...findNvbhRanges(plain, getSearchTokens(nvbhInput.value)));
+        ranges.push(...findSolutionRanges(plain, getSearchTokens(solutionInput.value)));
 
         return renderHighlightedRanges(plain, ranges);
+      }
+
+      /**
+       * Locate the solution segment within a Call Details string and return
+       * character ranges for tokens that match the current solution query.
+       */
+      function findSolutionRanges(plain, tokens) {
+        if (!tokens.length) return [];
+        const prefixMatch = plain.match(/^\[NVN-DMS\]-\[[^\]]*\]_/);
+        if (!prefixMatch) return [];
+        const segmentStart = prefixMatch[0].length;
+        const rest = plain.slice(segmentStart);
+        const terminatorRe = /_(NPP\s|HQ\s|ADMIN\b|Hotline\b|OTRS\b|\d+G\d+|\d{10,})/;
+        const tm = rest.match(terminatorRe);
+        const segmentText = tm ? rest.slice(0, tm.index) : rest;
+        const ranges = [];
+        const normalizedSeg = normalizeForSearch(segmentText);
+        tokens.forEach((token) => {
+          let idx = normalizedSeg.indexOf(token);
+          while (idx !== -1) {
+            ranges.push([segmentStart + idx, segmentStart + idx + token.length]);
+            idx = normalizedSeg.indexOf(token, idx + 1);
+          }
+        });
+        return ranges;
       }
 
       function buildRowsFromJson(data) {
