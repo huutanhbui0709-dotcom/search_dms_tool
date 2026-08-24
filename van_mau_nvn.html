@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Văn mẫu NVN</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ── Tokens ── */
+    :root {
+      --bg: #f5f3ff;
+      --surface: #ffffff;
+      --border: #e9e3ff;
+      --border-strong: #cbd5e1;
+      --text-primary: #1e1b4b;
+      --text-secondary: #4f46e5;
+      --text-muted: #818cf8;
+      --accent: #6366f1;
+      --accent-dark: #4f46e5;
+      --accent-bg: #eef2ff;
+      --accent-border: #c7d2fe;
+      --header-bg: #1e1b4b;
+      --header-text: #f5f3ff;
+      --mark-bg: #fbbf24;
+      --row-alt: #faf5ff;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(99, 102, 241, 0.07), 0 1px 2px rgba(99, 102, 241, 0.05);
+      --shadow-md: 0 4px 12px rgba(99, 102, 241, 0.08);
+      --success: #10b981;
+      --danger: #ef4444;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Layout ── */
+    .page {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 28px 20px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      margin-bottom: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .hero-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: var(--header-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 20px;
+    }
+
+    .hero h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+      letter-spacing: -0.3px;
+    }
+
+    .hero p {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Action Bar ── */
+    .action-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .search-container {
+      position: relative;
+      flex: 1;
+      min-width: 280px;
+      max-width: 500px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 16px 10px 38px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 14px;
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    /* ── Table style ── */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 600;
+      padding: 12px 16px;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+
+    th:first-child {
+      border-top-left-radius: var(--radius-sm);
+    }
+
+    th:last-child {
+      border-top-right-radius: var(--radius-sm);
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    tr:nth-child(even) td {
+      background: var(--row-alt);
+    }
+
+    tr:hover td {
+      background: var(--accent-bg);
+    }
+
+    .col-stt {
+      width: 60px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .col-en {
+      width: 35%;
+    }
+
+    .col-vi {
+      width: 35%;
+    }
+
+    .col-note {
+      width: 15%;
+      color: #6b7280;
+    }
+
+    .col-actions {
+      width: 120px;
+      text-align: center;
+    }
+
+    /* ── Copy Block ── */
+    .copyable-cell {
+      position: relative;
+      cursor: pointer;
+      padding-right: 28px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .copyable-cell:hover {
+      color: var(--accent-dark);
+    }
+
+    .copy-btn {
+      position: absolute;
+      right: 4px;
+      top: 2px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      opacity: 0.5;
+      padding: 2px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s, color 0.2s, background-color 0.2s;
+    }
+
+    .copyable-cell:hover .copy-btn {
+      opacity: 1;
+    }
+
+    .copy-btn:hover {
+      background-color: var(--accent-border);
+      color: var(--accent-dark);
+    }
+
+    .copy-btn svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    /* ── Buttons ── */
+    button {
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 8px 14px;
+      white-space: nowrap;
+      transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-dark);
+      border-color: var(--accent-dark);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+
+    .btn-outline:hover {
+      background: var(--row-alt);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-edit {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .btn-edit:hover {
+      background: #bae6fd;
+    }
+
+    .btn-delete {
+      background: #fee2e2;
+      color: #b91c1c;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .btn-delete:hover {
+      background: #fecaca;
+    }
+
+    /* ── Config URL Panel ── */
+    .config-panel {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+      background: #fff;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+
+    .config-panel label {
+      font-weight: 600;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .config-panel input {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      outline: none;
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      z-index: 1000;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-container {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 580px;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      transform: translateY(-20px);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.show .modal-container {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #9ca3af;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+
+    .modal-close:hover {
+      color: #ffffff;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .modal-footer {
+      padding: 12px 20px;
+      background: var(--row-alt);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* ── Toast notification ── */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: #1f2937;
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: toastIn 0.3s forwards, toastOut 0.3s 2.7s forwards;
+    }
+
+    .toast.toast-success {
+      border-left: 4px solid var(--success);
+    }
+
+    .toast.toast-error {
+      border-left: 4px solid var(--danger);
+    }
+
+    @keyframes toastIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes toastOut {
+      to {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+    }
+
+    /* ── Loading Overlay ── */
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--accent-border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="hero">
+      <div class="hero-icon">📄</div>
+      <div>
+        <h1>Văn mẫu NVN</h1>
+        <p>Quản lý và tra cứu nhanh các câu văn mẫu tiếng Anh/tiếng Việt phục vụ hỗ trợ khách hàng.</p>
+      </div>
+    </div>
+
+    <!-- Cấu hình API URL linh hoạt -->
+    <div class="config-panel">
+      <label for="apiUrlInput">Google Apps Script Web App URL:</label>
+      <input type="text" id="apiUrlInput" placeholder="Dán Web App URL của bạn ở đây..." />
+      <button class="btn-primary" onclick="saveApiUrl()" style="padding: 6px 12px; font-size:12px;">Lưu URL</button>
+    </div>
+
+    <div class="action-bar">
+      <div class="search-container">
+        <!-- Icon Tìm kiếm SVG -->
+        <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input type="text" class="search-input" id="searchBar" placeholder="Tìm kiếm nhanh Tiếng Anh, Tiếng Việt, Note..."
+          oninput="handleSearch()" />
+      </div>
+      <button class="btn-primary" onclick="openAddModal()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 2px;">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
+        </svg>
+        Thêm mới mẫu
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="table-responsive">
+        <table id="templatesTable">
+          <thead>
+            <tr>
+              <th class="col-stt">STT</th>
+              <th class="col-en">Tiếng Anh</th>
+              <th class="col-vi">Tiếng Việt</th>
+              <th class="col-note">Note</th>
+              <th class="col-actions">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Loading indicator hoặc Dữ liệu sẽ render ở đây -->
+            <tr>
+              <td colspan="5">
+                <div class="loading-container">
+                  <div class="spinner"></div>
+                  <div>Đang tải dữ liệu từ Google Sheets...</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Thêm / Sửa -->
+  <div class="modal-overlay" id="formModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="modalTitle">Thêm mới câu văn mẫu</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <form id="templateForm" onsubmit="handleSubmit(event)">
+        <input type="hidden" id="templateId" />
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="englishInput">Tiếng Anh <span style="color:var(--danger)">*</span></label>
+            <textarea class="form-control" id="englishInput" rows="3" placeholder="Nhập câu tiếng Anh..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="vietnameseInput">Tiếng Việt <span style="color:var(--danger)">*</span></label>
+            <textarea class="form-control" id="vietnameseInput" rows="3" placeholder="Nhập câu tiếng Việt dịch tương ứng..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="noteInput">Note (Ghi chú)</label>
+            <input type="text" class="form-control" id="noteInput" placeholder="Ví dụ: Dùng khi cấu hình máy, Mail cho HQ..." />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal()">Đóng</button>
+          <button type="submit" class="btn-primary" id="btnSubmit">Lưu lại</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // URL Mặc định - Hãy điền Web App URL Apps Script sau khi deploy.
+    // Dữ liệu URL này cũng có thể cấu hình thông qua Giao diện và lưu vào localStorage.
+    let API_URL = localStorage.getItem("van_mau_nvn_api_url") || "";
+
+    // Gán giá trị ban đầu cho Input URL cấu hình
+    document.getElementById("apiUrlInput").value = API_URL;
+
+    let allTemplates = []; // Chứa tất cả dữ liệu
+    let filteredTemplates = []; // Dữ liệu sau khi tìm kiếm
+
+    // Lưu URL Apps Script cấu hình
+    function saveApiUrl() {
+      const inputVal = document.getElementById("apiUrlInput").value.trim();
+      API_URL = inputVal;
+      localStorage.setItem("van_mau_nvn_api_url", inputVal);
+      showToast("Đã lưu URL cấu hình API!", "success");
+      loadData();
+    }
+
+    // Tải dữ liệu từ Apps Script
+    async function loadData() {
+      const tbody = document.getElementById("tableBody");
+      
+      if (!API_URL) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="empty-state">
+              <div style="color: var(--danger); font-weight:600; margin-bottom: 8px;">Vui lòng nhập Google Apps Script Web App URL ở cấu hình phía trên!</div>
+              <div>Bạn cần triển khai mã Apps Script dưới dạng Web App, cấu hình chế độ truy cập "Anyone" và điền URL vào ô cấu hình để bắt đầu sử dụng.</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5">
+            <div class="loading-container">
+              <div class="spinner"></div>
+              <div>Đang tải dữ liệu từ Google Sheets...</div>
+            </div>
+          </td>
+        </tr>
+      `;
+
+      try {
+        const response = await fetch(`${API_URL}?action=read`);
+        const result = await response.json();
+        
+        if (result.status === "success") {
+          allTemplates = result.data || [];
+          filteredTemplates = [...allTemplates];
+          renderTable();
+        } else {
+          showToast("Lỗi khi đọc dữ liệu từ Sheets!", "error");
+          tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Không thể tải dữ liệu. Lỗi: ${result.message || 'Lỗi không rõ'}</td></tr>`;
+        }
+      } catch (error) {
+        console.error("Lỗi:", error);
+        showToast("Lỗi kết nối API Apps Script!", "error");
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="empty-state">
+              <div style="color: var(--danger); font-weight:600; margin-bottom:8px;">Lỗi kết nối!</div>
+              <div style="font-size:12px; color:#555;">Hãy chắc chắn bạn đã deploy Apps Script đúng cách (chọn type: Web App, Who has access: Anyone, Configure CORS nếu cần).</div>
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    // Render bảng dữ liệu
+    function renderTable() {
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+
+      if (filteredTemplates.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Không tìm thấy kết quả nào phù hợp.</td></tr>`;
+        return;
+      }
+
+      filteredTemplates.forEach((item, index) => {
+        const tr = document.createElement("tr");
+
+        // Cell STT
+        const tdStt = document.createElement("td");
+        tdStt.className = "col-stt";
+        tdStt.textContent = index + 1;
+        tr.appendChild(tdStt);
+
+        // Cell Tiếng Anh
+        const tdEn = document.createElement("td");
+        tdEn.className = "col-en copyable-cell";
+        tdEn.onclick = (e) => {
+          if (e.target.closest('.copy-btn')) return;
+          copyText(item.english);
+        };
+        
+        const enSpan = document.createElement("span");
+        enSpan.textContent = item.english;
+        tdEn.appendChild(enSpan);
+
+        const copyBtnEn = document.createElement("button");
+        copyBtnEn.className = "copy-btn";
+        copyBtnEn.title = "Bấm để copy nhanh";
+        copyBtnEn.innerHTML = `
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+          </svg>
+        `;
+        copyBtnEn.onclick = (e) => {
+          e.stopPropagation();
+          copyText(item.english);
+        };
+        tdEn.appendChild(copyBtnEn);
+        tr.appendChild(tdEn);
+
+        // Cell Tiếng Việt
+        const tdVi = document.createElement("td");
+        tdVi.className = "col-vi copyable-cell";
+        tdVi.onclick = (e) => {
+          if (e.target.closest('.copy-btn')) return;
+          copyText(item.vietnamese);
+        };
+
+        const viSpan = document.createElement("span");
+        viSpan.textContent = item.vietnamese;
+        tdVi.appendChild(viSpan);
+
+        const copyBtnVi = document.createElement("button");
+        copyBtnVi.className = "copy-btn";
+        copyBtnVi.title = "Bấm để copy nhanh";
+        copyBtnVi.innerHTML = `
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+          </svg>
+        `;
+        copyBtnVi.onclick = (e) => {
+          e.stopPropagation();
+          copyText(item.vietnamese);
+        };
+        tdVi.appendChild(copyBtnVi);
+        tr.appendChild(tdVi);
+
+        // Cell Note
+        const tdNote = document.createElement("td");
+        tdNote.className = "col-note";
+        tdNote.textContent = item.note || "";
+        tr.appendChild(tdNote);
+
+        // Cell Actions
+        const tdActions = document.createElement("td");
+        tdActions.className = "col-actions";
+        
+        const btnEdit = document.createElement("button");
+        btnEdit.className = "btn-edit";
+        btnEdit.textContent = "Sửa";
+        btnEdit.onclick = () => openEditModal(item);
+        
+        const btnDel = document.createElement("button");
+        btnDel.className = "btn-delete";
+        btnDel.textContent = "Xóa";
+        btnDel.onclick = () => handleDelete(item.id, item.english);
+
+        tdActions.appendChild(btnEdit);
+        tdActions.appendChild(document.createTextNode(" "));
+        tdActions.appendChild(btnDel);
+        tr.appendChild(tdActions);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Sao chép văn bản vào Clipboard
+    function copyText(text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("Đã copy thành công!", "success");
+      }).catch(err => {
+        console.error("Lỗi copy:", err);
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand("copy");
+          showToast("Đã copy thành công (fallback)!", "success");
+        } catch (e) {
+          showToast("Không thể copy!", "error");
+        }
+        document.body.removeChild(textarea);
+      });
+    }
+
+    // Hiển thị thông báo Toast
+    function showToast(message, type = "success") {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `
+        <span>${type === "success" ? "✔️" : "❌"}</span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    // Xử lý Tìm kiếm
+    function handleSearch() {
+      const query = document.getElementById("searchBar").value.toLowerCase().trim();
+      if (!query) {
+        filteredTemplates = [...allTemplates];
+      } else {
+        filteredTemplates = allTemplates.filter(item => {
+          const en = (item.english || "").toLowerCase();
+          const vi = (item.vietnamese || "").toLowerCase();
+          const note = (item.note || "").toLowerCase();
+          return en.includes(query) || vi.includes(query) || note.includes(query);
+        });
+      }
+      renderTable();
+    }
+
+    // Mở Modal Thêm mới
+    function openAddModal() {
+      document.getElementById("modalTitle").textContent = "Thêm mới câu văn mẫu";
+      document.getElementById("templateId").value = "";
+      document.getElementById("englishInput").value = "";
+      document.getElementById("vietnameseInput").value = "";
+      document.getElementById("noteInput").value = "";
+      
+      const modal = document.getElementById("formModal");
+      modal.classList.add("show");
+    }
+
+    // Mở Modal Sửa
+    function openEditModal(item) {
+      document.getElementById("modalTitle").textContent = "Cập nhật câu văn mẫu";
+      document.getElementById("templateId").value = item.id;
+      document.getElementById("englishInput").value = item.english;
+      document.getElementById("vietnameseInput").value = item.vietnamese;
+      document.getElementById("noteInput").value = item.note || "";
+      
+      const modal = document.getElementById("formModal");
+      modal.classList.add("show");
+    }
+
+    // Đóng Modal
+    function closeModal() {
+      const modal = document.getElementById("formModal");
+      modal.classList.remove("show");
+    }
+
+    // Xử lý Lưu Thêm mới / Sửa cập nhật
+    async function handleSubmit(event) {
+      event.preventDefault();
+      
+      if (!API_URL) {
+        showToast("Chưa cấu hình API URL!", "error");
+        return;
+      }
+
+      const id = document.getElementById("templateId").value;
+      const english = document.getElementById("englishInput").value.trim();
+      const vietnamese = document.getElementById("vietnameseInput").value.trim();
+      const note = document.getElementById("noteInput").value.trim();
+
+      const btnSubmit = document.getElementById("btnSubmit");
+      const originalBtnText = btnSubmit.textContent;
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "Đang xử lý...";
+
+      const isEdit = id !== "";
+      const payload = {
+        action: isEdit ? "update" : "create",
+        english: english,
+        vietnamese: vietnamese,
+        note: note
+      };
+      
+      if (isEdit) {
+        payload.id = parseInt(id);
+      }
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain"
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === "success") {
+          showToast(isEdit ? "Cập nhật thành công!" : "Thêm mới thành công!", "success");
+          closeModal();
+          loadData();
+        } else {
+          showToast("Có lỗi xảy ra: " + (result.message || "Không rõ"), "error");
+        }
+      } catch (error) {
+        console.error("Lỗi:", error);
+        showToast("Lỗi kết nối tới Server!", "error");
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = originalBtnText;
+      }
+    }
+
+    // Xóa dòng
+    async function handleDelete(id, nameSnippet) {
+      if (!API_URL) {
+        showToast("Chưa cấu hình API URL!", "error");
+        return;
+      }
+
+      const confirmMsg = `Bạn có chắc chắn muốn xóa câu văn mẫu này?\n"${nameSnippet.substring(0, 60)}${nameSnippet.length > 60 ? '...' : ''}"`;
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const payload = {
+          action: "delete",
+          id: parseInt(id)
+        };
+
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (result.status === "success") {
+          showToast("Đã xóa câu văn mẫu thành công!", "success");
+          loadData();
+        } else {
+          showToast("Xóa thất bại: " + (result.message || "Không rõ"), "error");
+        }
+      } catch (error) {
+        console.error("Lỗi khi xóa:", error);
+        showToast("Lỗi kết nối khi thực hiện xóa!", "error");
+      }
+    }
+
+    // Load dữ liệu khi trang khởi động
+    window.onload = () => {
+      loadData();
+    };
+  </script>
+</body>
+
+</html>
