@@ -933,8 +933,8 @@
             alert("⚠️ Lưu R2 thất bại: " + (result.message || "lỗi không rõ"));
           }
         } catch (err) {
-          console.warn("Lỗi lưu R2:", err);
-          alert("Lỗi kết nối R2: " + err.message);
+          console.error(err);
+          alert(`Lưu R2 thất bại: ${err.message || JSON.stringify(err)}`);
         }
       });
 

@@ -681,8 +681,8 @@
             showToast("⚠️ Lưu R2 thất bại: " + (result.message || "lỗi không rõ"), "error");
           }
         } catch (err) {
-          console.warn("Lỗi đồng bộ R2:", err);
-          showToast("Lỗi kết nối R2: " + err.message, "error");
+          console.error(err);
+          alert(`Lưu R2 thất bại: ${err.message || JSON.stringify(err)}`);
         }
       }
       
