@@ -1505,11 +1505,12 @@
       localStorage.setItem("NVN_WORKER_API_URL", document.getElementById("workerUrlInput").value.trim());
 
       try {
-        const res = await fetch(getR2Endpoint(), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ systemName: "Summary Ticket", url: url })
-        });
+        const payload = JSON.stringify({ action: "save_url", name: "Summary Ticket", url: url });
+        const endpoint = getR2Endpoint();
+        const separator = endpoint.includes("?") ? "&" : "?";
+        const requestUrl = `${endpoint}${separator}data=${encodeURIComponent(payload)}&t=${Date.now()}`;
+        
+        const res = await fetch(requestUrl);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const result = await res.json();
         if (result.status === "success" || result.success) {

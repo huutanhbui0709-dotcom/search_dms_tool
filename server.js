@@ -1,4 +1,4 @@
-﻿const http = require("http");
+const http = require("http");
 const https = require("https");
 const fs = require("fs");
 const path = require("path");
@@ -98,22 +98,54 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type"
 };
 
-async function handleApiGet(res) {
-  try {
-    const r = await r2Fetch("GET", "");
-    if (r.statusCode === 404) {
+async function handleApiGet(req, res) {
+  const parsedUrl = new URL(req.url, "http://localhost");
+  const dataParam = parsedUrl.searchParams.get("data");
+  if (dataParam) {
+    try {
+      const payload = JSON.parse(dataParam);
+      const systemName = payload.name;
+      const url = payload.url;
+      if (!systemName || !url) {
+        res.writeHead(400, Object.assign({ "Content-Type": "application/json" }, CORS));
+        return res.end(JSON.stringify({ status: "error", message: "name and url required" }));
+      }
+      let current = {};
+      const getR = await r2Fetch("GET", "");
+      if (getR.statusCode === 200) {
+        try { current = JSON.parse(getR.body); } catch(e) {}
+      }
+      current[systemName] = url;
+      const putBody = JSON.stringify(current);
+      const putR = await r2Fetch("PUT", putBody);
+      if (putR.statusCode >= 200 && putR.statusCode < 300) {
+        res.writeHead(200, Object.assign({ "Content-Type": "application/json" }, CORS));
+        res.end(JSON.stringify({ status: "success", data: current }));
+      } else {
+        res.writeHead(502, Object.assign({ "Content-Type": "application/json" }, CORS));
+        res.end(JSON.stringify({ status: "error", message: "R2 PUT failed: " + putR.statusCode, detail: putR.body }));
+      }
+    } catch (err) {
+      res.writeHead(500, Object.assign({ "Content-Type": "application/json" }, CORS));
+      res.end(JSON.stringify({ status: "error", message: err.message }));
+    }
+  } else {
+    try {
+      const r = await r2Fetch("GET", "");
+      if (r.statusCode === 404) {
+        res.writeHead(200, Object.assign({ "Content-Type": "application/json" }, CORS));
+        return res.end("{}");
+      }
+      if (r.statusCode !== 200) {
+        res.writeHead(502, Object.assign({ "Content-Type": "application/json" }, CORS));
+        return res.end(JSON.stringify({ error: "R2 GET failed", status: r.statusCode, detail: r.body }));
+      }
       res.writeHead(200, Object.assign({ "Content-Type": "application/json" }, CORS));
-      return res.end("{}");
+      res.end(r.body);
+    } catch (err) {
+      res.writeHead(500, Object.assign({ "Content-Type": "application/json" }, CORS));
+      res.end(JSON.stringify({ error: err.message }));
     }
-    if (r.statusCode !== 200) {
-      res.writeHead(502, Object.assign({ "Content-Type": "application/json" }, CORS));
-      return res.end(JSON.stringify({ error: "R2 GET failed", status: r.statusCode, detail: r.body }));
-    }
-    res.writeHead(200, Object.assign({ "Content-Type": "application/json" }, CORS));
-    res.end(r.body);
-  } catch (err) {
-    res.writeHead(500, Object.assign({ "Content-Type": "application/json" }, CORS));
-    res.end(JSON.stringify({ error: err.message }));
   }
 }
 
@@ -161,7 +193,7 @@ const server = http.createServer(function(req, res) {
   }
 
   if (pathname === "/api/r2-urls") {
-    if (req.method === "GET")  return handleApiGet(res);
+    if (req.method === "GET")  return handleApiGet(req, res);
     if (req.method === "POST") return handleApiPost(req, res);
     res.writeHead(405);
     return res.end("Method Not Allowed");

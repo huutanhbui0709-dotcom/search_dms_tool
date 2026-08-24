@@ -1,4 +1,4 @@
-﻿const https = require("https");
+const https = require("https");
 const crypto = require("crypto");
 
 const R2_ACCOUNT_ID        = process.env.R2_ACCOUNT_ID        || "";
@@ -83,13 +83,42 @@ module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
 
   if (req.method === "GET") {
-    try {
-      const r = await r2Fetch("GET", "");
-      if (r.statusCode === 404) return res.status(200).json({});
-      if (r.statusCode !== 200) return res.status(502).json({ error: "R2 GET failed", status: r.statusCode });
-      return res.status(200).send(r.body);
-    } catch (err) {
-      return res.status(500).json({ error: err.message });
+    const urlParts = require("url").parse(req.url, true);
+    const dataParam = urlParts.query.data;
+    if (dataParam) {
+      try {
+        const payload = JSON.parse(dataParam);
+        const systemName = payload.name;
+        const url = payload.url;
+        if (!systemName || !url) {
+          return res.status(400).json({ status: "error", message: "name and url required" });
+        }
+
+        let current = {};
+        const getR = await r2Fetch("GET", "");
+        if (getR.statusCode === 200) { try { current = JSON.parse(getR.body); } catch(e) {} }
+
+        current[systemName] = url;
+        const putBody = JSON.stringify(current);
+        const putR = await r2Fetch("PUT", putBody);
+
+        if (putR.statusCode >= 200 && putR.statusCode < 300) {
+          return res.status(200).json({ status: "success", data: current });
+        } else {
+          return res.status(502).json({ status: "error", message: "R2 PUT failed: " + putR.statusCode });
+        }
+      } catch (err) {
+        return res.status(500).json({ status: "error", message: err.message });
+      }
+    } else {
+      try {
+        const r = await r2Fetch("GET", "");
+        if (r.statusCode === 404) return res.status(200).json({});
+        if (r.statusCode !== 200) return res.status(502).json({ error: "R2 GET failed", status: r.statusCode });
+        return res.status(200).send(r.body);
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
     }
   }
 

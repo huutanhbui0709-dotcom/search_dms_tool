@@ -667,11 +667,12 @@
       // Đồng bộ lên R2 (dùng /api/r2-urls nếu không có Worker URL)
       if (inputVal) {
         try {
-          const res = await fetch(getR2Endpoint(), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ systemName: "Văn mẫu", url: inputVal })
-          });
+          const payload = JSON.stringify({ action: "save_url", name: "Văn mẫu", url: inputVal });
+          const endpoint = getR2Endpoint();
+          const separator = endpoint.includes("?") ? "&" : "?";
+          const requestUrl = `${endpoint}${separator}data=${encodeURIComponent(payload)}&t=${Date.now()}`;
+
+          const res = await fetch(requestUrl);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const result = await res.json();
           if (result.status === "success" || result.success) {
