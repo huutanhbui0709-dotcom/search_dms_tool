@@ -543,10 +543,14 @@
     </div>
 
     <!-- Cấu hình API URL linh hoạt -->
-    <div class="config-panel">
+    <div class="config-panel" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
       <label for="apiUrlInput">Google Apps Script Web App URL (Văn mẫu):</label>
-      <input type="text" id="apiUrlInput" placeholder="Dán Web App URL của Văn mẫu tại đây..." />
-      <button class="btn-primary" onclick="saveApiUrl()" style="padding: 6px 12px; font-size:12px;">Lưu URL</button>
+      <input type="text" id="apiUrlInput" placeholder="Dán Web App URL của Văn mẫu tại đây..." style="flex: 1; min-width: 250px;" />
+      
+      <label for="workerUrlInput" style="margin-left: 10px;">Worker API URL:</label>
+      <input type="text" id="workerUrlInput" placeholder="Dán Worker API URL tại đây..." style="width: 250px;" />
+      
+      <button class="btn-primary" onclick="saveApiUrl()" style="padding: 6px 12px; font-size:12px;">Lưu &amp; Tải</button>
     </div>
 
     <div class="action-bar">
@@ -630,24 +634,77 @@
 
   <script>
     // ── URL Config ───────────────────────────────────────────────────────────
-    // Key localStorage của Văn mẫu (riêng biệt với Task Pending)
-    const VM_LS_KEY   = "NVN_VANMAU_API_URL";
-    const TASK_LS_KEY = "NVN_TASK_API_URL";
+    const VM_LS_KEY     = "NVN_VANMAU_API_URL";
+    const WORKER_LS_KEY = "NVN_WORKER_API_URL";
 
     let API_URL = localStorage.getItem(VM_LS_KEY) || "";
     document.getElementById("apiUrlInput").value = API_URL;
 
+    let WORKER_API_URL = localStorage.getItem(WORKER_LS_KEY) || "";
+    document.getElementById("workerUrlInput").value = WORKER_API_URL;
+
     let allTemplates = [];
     let filteredTemplates = [];
 
-    // Lưu URL Apps Script cấu hình (localStorage)
-    function saveApiUrl() {
+    // Lưu URL Apps Script cấu hình (localStorage & R2 Worker)
+    async function saveApiUrl() {
       const inputVal = document.getElementById("apiUrlInput").value.trim();
-      if (!inputVal) return;
       API_URL = inputVal;
       localStorage.setItem(VM_LS_KEY, inputVal);
-      showToast("Đã lưu URL!", "success");
+
+      const workerVal = document.getElementById("workerUrlInput").value.trim();
+      localStorage.setItem(WORKER_LS_KEY, workerVal);
+      WORKER_API_URL = workerVal;
+
+      showToast("Đã lưu cấu hình cục bộ!", "success");
+
+      // Đồng bộ lên Cloudflare R2 Worker để chia sẻ cho mọi người
+      if (WORKER_API_URL && inputVal) {
+        try {
+          const res = await fetch(WORKER_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ systemName: "Văn mẫu", url: inputVal })
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const result = await res.json();
+          if (result.status === "success" || result.success) {
+            showToast("✅ Đã đồng bộ URL Văn mẫu lên R2!", "success");
+          } else {
+            showToast("⚠️ Lưu R2 thất bại: " + (result.message || "lỗi không rõ"), "error");
+          }
+        } catch (err) {
+          console.warn("Lỗi đồng bộ R2:", err);
+          showToast("Lỗi kết nối R2: " + err.message, "error");
+        }
+      }
+      
       loadData();
+    }
+
+    // Tự động lấy URL Văn mẫu từ R2 Worker khi mở trang
+    async function autoDetectVanMauUrl() {
+      if (!WORKER_API_URL) return;
+      try {
+        const res = await fetch(`${WORKER_API_URL}?t=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        
+        // Tìm URL tương ứng với "Văn mẫu"
+        const vmUrl = data["Văn mẫu"] || data["Văn mẫu NVN"] || data["van mau"] || data["template"];
+        if (vmUrl) {
+          const cleanUrl = vmUrl.trim();
+          const localUrl = localStorage.getItem(VM_LS_KEY) || "";
+          if (cleanUrl && cleanUrl !== localUrl) {
+            API_URL = cleanUrl;
+            localStorage.setItem(VM_LS_KEY, cleanUrl);
+            document.getElementById("apiUrlInput").value = cleanUrl;
+            console.log("[R2 Sync] Tự động tải URL Văn mẫu từ R2:", cleanUrl);
+          }
+        }
+      } catch (err) {
+        console.warn("Lỗi auto-detect URL từ R2:", err);
+      }
     }
 
 
@@ -1000,7 +1057,9 @@
     }
 
     // Load dữ liệu khi trang khởi động
-    window.onload = () => {
+    window.onload = async () => {
+      // Tự động tải URL từ R2 nếu chưa cấu hình cục bộ hoặc để làm mới
+      await autoDetectVanMauUrl();
       loadData();
     };
 

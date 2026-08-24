@@ -347,10 +347,15 @@
   <!-- ── API Config ── -->
   <div class="config-bar">
     <label>Apps Script URL:</label>
-    <input type="text" id="apiUrl" placeholder="Dán Web App URL của Apps Script tại đây..." />
+    <input type="text" id="apiUrl" placeholder="Dán Web App URL của Apps Script..." />
+    
+    <label style="margin-left: 10px;">Worker API URL:</label>
+    <input type="text" id="workerUrl" placeholder="Dán Worker API URL..." style="max-width: 240px;" />
+    
     <button class="btn-primary" onclick="saveUrl()" style="font-size:12px;padding:6px 12px;">Lưu &amp; Tải</button>
     <button class="btn-outline" onclick="openMemberModal()" style="font-size:12px;padding:6px 12px;">⚙ Quản lý Thành viên</button>
-    <!-- Hệ thống liên kết từ Cột J/K -->
+    
+    <!-- Hệ thống liên kết từ Cloudflare Worker -->
     <div class="syslinks-wrap" id="syslinksWrap">
       <button class="syslinks-btn" onclick="toggleSyslinks(event)">🔗 Hệ thống ▾</button>
       <div class="syslinks-menu" id="syslinksMenu">
@@ -361,10 +366,19 @@
         </div>
         <hr class="syslinks-divider">
         <div style="padding:4px 14px 8px;">
-          <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">Cập nhật URL Task Pending:</div>
-          <div style="display:flex;gap:6px;">
-            <input type="text" id="newTaskUrl" placeholder="Nhập URL mới..." style="flex:1;padding:5px 8px;border:1px solid var(--border-s);border-radius:5px;font-size:12px;outline:none;">
-            <button onclick="saveSystemUrl('Task pending')" style="padding:5px 10px;font-size:11px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">Lưu</button>
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">Cập nhật URL Hệ thống:</div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <select id="saveSystemName" style="width:100%; padding:5px; border:1px solid var(--border-s); border-radius:5px; font-size:12px; outline:none; background:#fff;">
+              <option value="Task pending">Task pending</option>
+              <option value="Văn mẫu">Văn mẫu</option>
+              <option value="Solution">Solution</option>
+              <option value="Call log">Call log</option>
+              <option value="Summary Ticket">Summary Ticket</option>
+            </select>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="newTaskUrl" placeholder="Nhập URL mới..." style="flex:1;padding:5px 8px;border:1px solid var(--border-s);border-radius:5px;font-size:12px;outline:none;">
+              <button onclick="saveSystemUrlToWorker()" style="padding:5px 10px;font-size:11px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">Lưu</button>
+            </div>
           </div>
         </div>
       </div>
@@ -516,10 +530,14 @@ const LS_KEY = "NVN_TASK_API_URL";
 let API_URL = localStorage.getItem(LS_KEY) || DEFAULT_API_URL;
 document.getElementById("apiUrl").value = API_URL;
 
+const WORKER_LS_KEY = "NVN_WORKER_API_URL";
+let WORKER_API_URL = localStorage.getItem(WORKER_LS_KEY) || "";
+document.getElementById("workerUrl").value = WORKER_API_URL;
+
 let allTasks       = [];
 let filteredTasks  = [];
 let allMembers     = [];
-let allSystemUrls  = []; // danh sách hệ thống từ Cột J/K
+let allSystemUrls  = []; 
 let selectedAssignees = [];
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -572,16 +590,22 @@ async function apiPostFallback(body) {
 
 function saveUrl() {
   const newUrl = document.getElementById("apiUrl").value.trim();
-  if (!newUrl) return;
-  API_URL = newUrl;
-  localStorage.setItem(LS_KEY, API_URL);
-  toast("Đã lưu URL!", "s");
+  if (newUrl) {
+    API_URL = newUrl;
+    localStorage.setItem(LS_KEY, API_URL);
+  }
+  const newWorkerUrl = document.getElementById("workerUrl").value.trim();
+  localStorage.setItem(WORKER_LS_KEY, newWorkerUrl);
+  WORKER_API_URL = newWorkerUrl;
+  
+  toast("Đã lưu cấu hình!", "s");
   loadAll();
 }
 
 function loadAll() {
   loadMembers();
   loadTasks();
+  loadWorkerUrls();
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -603,35 +627,6 @@ async function loadTasks() {
   try {
     const res = await apiGet("action=read_tasks");
     if (res.status === "success") {
-      // ── Đồng bộ System URLs từ Sheets (Cột J/K) ───────────────────────────
-      if (Array.isArray(res.systemUrls) && res.systemUrls.length > 0) {
-        allSystemUrls = res.systemUrls;
-        // Tự động cập nhật API_URL nếu sheet có URL cho "Task pending"
-        const taskSysEntry = res.systemUrls.find(s =>
-          s.name && (s.name.toLowerCase().includes("task") || s.name.toLowerCase().includes("pending"))
-        );
-        if (taskSysEntry && taskSysEntry.url) {
-          const sheetUrl = taskSysEntry.url.trim();
-          const localUrl = localStorage.getItem(LS_KEY) || "";
-          // Chỉ cập nhật nếu khác với localStorage hiện tại (tránh vòng lặp)
-          if (sheetUrl && sheetUrl !== localUrl) {
-            API_URL = sheetUrl;
-            localStorage.setItem(LS_KEY, sheetUrl);
-            document.getElementById("apiUrl").value = sheetUrl;
-            console.log("[SystemURL] Tự động cập nhật URL từ Sheet:", sheetUrl);
-          }
-        }
-        renderSyslinks(allSystemUrls);
-      } else if (res.savedUrl) {
-        // Fallback: dùng savedUrl nếu không có mảng systemUrls
-        const sheetUrl = res.savedUrl.trim();
-        if (sheetUrl && sheetUrl !== (localStorage.getItem(LS_KEY) || "")) {
-          API_URL = sheetUrl;
-          localStorage.setItem(LS_KEY, sheetUrl);
-          document.getElementById("apiUrl").value = sheetUrl;
-        }
-      }
-
       const rawTasks = res.data || res.tasks || [];
       allTasks = rawTasks.map(t => {
         let dl = t.deadline || t.dueDate || "";
@@ -1048,30 +1043,63 @@ function renderSyslinks(systemUrls) {
   }).join("");
 }
 
-// Lưu URL lên Sheet (Cột J/K) → chia sẻ cho tất cả người dùng
-async function saveSystemUrl(sysName) {
+// Tải dữ liệu URLs từ Cloudflare R2 Worker API
+async function loadWorkerUrls() {
+  const container = document.getElementById("syslinksItems");
+  if (!WORKER_API_URL) {
+    if (container) container.innerHTML = `<a href="#" style="color:var(--text-muted);pointer-events:none;">Chưa cấu hình Worker URL</a>`;
+    return;
+  }
+  try {
+    const res = await fetch(`${WORKER_API_URL}?t=${Date.now()}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    
+    // Map từ format {"SystemName": "url"} sang định dạng mảng [{ name, url }]
+    const formattedUrls = Object.entries(data).map(([name, url]) => ({ name, url }));
+    allSystemUrls = formattedUrls;
+    renderSyslinks(formattedUrls);
+  } catch (err) {
+    console.error("Lỗi tải Worker URLs:", err);
+    if (container) container.innerHTML = `<a href="#" style="color:var(--danger);pointer-events:none;">Lỗi: ${err.message}</a>`;
+  }
+}
+
+// Lưu URL lên Cloudflare R2 Worker API (chia sẻ cho tất cả người dùng)
+async function saveSystemUrlToWorker() {
+  if (!WORKER_API_URL) {
+    toast("Chưa cấu hình Worker API URL!", "e");
+    return;
+  }
+  const sysName = document.getElementById("saveSystemName").value;
   const urlInput = document.getElementById("newTaskUrl");
   const newUrl = urlInput ? urlInput.value.trim() : "";
-  if (!newUrl) { toast("Nhập URL cần lưu!", "w"); return; }
-  if (!API_URL) { toast("Chưa có API URL!", "e"); return; }
+  if (!newUrl) {
+    toast("Nhập URL cần lưu!", "w");
+    return;
+  }
   try {
-    const res = await apiPost({ action: "save_url", name: sysName, url: newUrl });
-    if (res.status === "success") {
-      toast(`Đã lưu URL "${sysName}" lên Sheet! Mọi người sẽ tự động nhận.`, "s");
+    const res = await fetch(WORKER_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        systemName: sysName,
+        url: newUrl
+      })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const result = await res.json();
+    if (result.status === "success" || result.success) {
+      toast(`Đã lưu URL "${sysName}" lên Worker!`, "s");
       if (urlInput) urlInput.value = "";
-      // Cập nhật local ngay lập tức
-      if (sysName.toLowerCase().includes("task") || sysName.toLowerCase().includes("pending")) {
-        API_URL = newUrl;
-        localStorage.setItem(LS_KEY, newUrl);
-        document.getElementById("apiUrl").value = newUrl;
-      }
-      // Tải lại để cập nhật allSystemUrls
-      setTimeout(loadTasks, 800);
+      loadWorkerUrls();
     } else {
-      toast("Lỗi lưu URL: " + (res.message || "không rõ"), "e");
+      toast("Lỗi lưu URL: " + (result.message || "Không rõ"), "e");
     }
   } catch (err) {
-    toast("Lỗi kết nối: " + err.message, "e");
+    toast("Lỗi kết nối Worker: " + err.message, "e");
   }
 }
 
@@ -1080,6 +1108,7 @@ async function saveSystemUrl(sysName) {
 ────────────────────────────────────────────────────────────────────────── */
 window.addEventListener("load", () => {
   if (API_URL) loadAll();
+  else loadWorkerUrls();
 });
 </script>
 </body>

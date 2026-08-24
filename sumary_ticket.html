@@ -1212,10 +1212,16 @@
         <strong>Chọn file báo cáo Ticket Excel</strong>
         <small>Hỗ trợ kéo thả file .xlsx / .csv</small>
         <input id="fileInput" type="file" accept=".xlsx,.csv" />
-        <div class="url-loader">
-          <input id="jsonUrlInput" type="text" placeholder="Dán URL JSON API Ticket..."
-            value="https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnRayL2R9Ivbr4w-FKAxF1zznB93sfF9ogA3SlCm3Zgmret9MLoowAjiIav0_KvIxHJ0eC8MvL7OFskVHEwTpyLjQR9Onw1YBzcXRWXnh8QeQuoNxdHwXf5YEy_viR6d9kDYFcE79d9ApQH96JKR-u7gfBqQe2JY12k_30YN8QcjR_NIy01gJf3RoSzeVISFRVULgcGT64o3TrGSU1G-mY-9EhYbU__RNs4oMX4npBQxUtvIUUk&amp;lib=Md7LAhvTqClNnYJkEV3dtMvD8R0iiSsw_" />
-          <button id="loadJsonButton" type="button">Tải từ URL</button>
+        <div class="url-loader" style="display:flex; flex-direction:column; gap:8px; width:100%;">
+          <div style="display:flex; gap:8px; width:100%;">
+            <input id="jsonUrlInput" type="text" placeholder="Dán URL JSON API Ticket..." style="flex:1" />
+            <button id="loadJsonButton" type="button">Tải từ URL</button>
+          </div>
+          <div style="display:flex; gap:8px; width:100%; align-items:center;">
+            <label style="font-size:11px; font-weight:600; color:var(--text-secondary); white-space:nowrap;">Worker API URL:</label>
+            <input id="workerUrlInput" type="text" placeholder="Dán Cloudflare Worker URL tại đây để đồng bộ..." style="flex:1; padding:6px 10px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-size:13px; outline:none;" />
+            <button id="saveR2Button" type="button" style="padding: 6px 12px; font-size:13px;">Lưu vào R2</button>
+          </div>
         </div>
         <div class="upload-overlay" id="uploadLoading">
           <div class="spinner"></div>
@@ -1412,6 +1418,12 @@
     const uploadCard = document.getElementById("uploadCard");
     const toggleUploadBtn = document.getElementById("toggleUploadBtn");
     const toggleUploadArrow = document.getElementById("toggleUploadArrow");
+
+    // Thiết lập giá trị ban đầu cho các input từ localStorage
+    const defaultJsonUrl = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnRayL2R9Ivbr4w-FKAxF1zznB93SlCm3Zgmret9MLoowAjiIav0_KvIxHJ0eC8MvL7OFskVHEwTpyLjQR9Onw1YBzcXRWXnh8QeQuoNxdHwXf5YEy_viR6d9kDYFcE79d9ApQH96JKR-u7gfBqQe2JY12k_30YN8QcjR_NIy01gJf3RoSzeVISFRVULgcGT64o3TrGSU1G-mY-9EhYbU__RNs4oMX4npBQxUtvIUUk&lib=Md7LAhvTqClNnYJkEV3dtMvD8R0iiSsw_";
+    jsonUrlInput.value = localStorage.getItem("NVN_SUMMARY_API_URL") || defaultJsonUrl;
+    document.getElementById("workerUrlInput").value = localStorage.getItem("NVN_WORKER_API_URL") || "";
+
     toggleUploadBtn.addEventListener("click", () => {
       const isVisible = uploadCard.style.display !== "none";
       uploadCard.style.display = isVisible ? "none" : "block";
@@ -1452,6 +1464,12 @@
         alert("Vui lòng dán link URL JSON Ticket.");
         return;
       }
+
+      // Lưu local
+      localStorage.setItem("NVN_SUMMARY_API_URL", url);
+      const workerUrlVal = document.getElementById("workerUrlInput").value.trim();
+      localStorage.setItem("NVN_WORKER_API_URL", workerUrlVal);
+
       setLoading(true, "Đang gọi dữ liệu API từ URL...");
       try {
         const response = await fetch(url);
@@ -1465,6 +1483,42 @@
         console.error(err);
       } finally {
         setLoading(false);
+      }
+    });
+
+    const saveR2Button = document.getElementById("saveR2Button");
+    saveR2Button.addEventListener("click", async () => {
+      const url = jsonUrlInput.value.trim();
+      const workerUrlVal = document.getElementById("workerUrlInput").value.trim();
+      if (!url) {
+        alert("Vui lòng dán link URL JSON Ticket trước khi lưu.");
+        return;
+      }
+      if (!workerUrlVal) {
+        alert("Vui lòng cấu hình Worker API URL.");
+        return;
+      }
+
+      // Lưu local trước
+      localStorage.setItem("NVN_SUMMARY_API_URL", url);
+      localStorage.setItem("NVN_WORKER_API_URL", workerUrlVal);
+
+      try {
+        const res = await fetch(workerUrlVal, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ systemName: "Summary Ticket", url: url })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const result = await res.json();
+        if (result.status === "success" || result.success) {
+          alert("✅ Đã đồng bộ URL Summary Ticket lên R2 thành công!");
+        } else {
+          alert("⚠️ Lưu R2 thất bại: " + (result.message || "lỗi không rõ"));
+        }
+      } catch (err) {
+        console.warn("Lỗi lưu R2:", err);
+        alert("Lỗi kết nối R2: " + err.message);
       }
     });
 
@@ -1589,8 +1643,33 @@
       }
     });
 
-    restoreCachedData().then(() => {
-      // Tự động load dữ liệu từ URL khi mở trang
+    // Tự động tải URL Summary Ticket từ R2 Worker khi mở trang
+    async function autoDetectSummaryUrl() {
+      const workerUrlVal = document.getElementById("workerUrlInput").value.trim();
+      if (!workerUrlVal) return;
+      try {
+        const res = await fetch(`${workerUrlVal}?t=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const sheetUrl = data["Summary Ticket"] || data["Summary"] || data["ticket"] || data["Summary Ticket NVN"];
+        if (sheetUrl) {
+          const cleanUrl = sheetUrl.trim();
+          const localUrl = localStorage.getItem("NVN_SUMMARY_API_URL") || "";
+          if (cleanUrl && cleanUrl !== localUrl) {
+            jsonUrlInput.value = cleanUrl;
+            localStorage.setItem("NVN_SUMMARY_API_URL", cleanUrl);
+            console.log("[R2 Sync] Tự động tải URL Summary Ticket từ R2:", cleanUrl);
+          }
+        }
+      } catch (err) {
+        console.warn("Lỗi auto-detect URL từ R2:", err);
+      }
+    }
+
+    restoreCachedData().then(async () => {
+      // 1. Tải URL mới nhất từ R2 Worker trước
+      await autoDetectSummaryUrl();
+      // 2. Tự động load dữ liệu từ URL khi mở trang
       loadJsonButton.click();
     });
 
@@ -1617,6 +1696,7 @@
       uploadLoadingText.textContent = message;
       fileInput.disabled = isLoading;
       loadJsonButton.disabled = isLoading;
+      document.getElementById("saveR2Button").disabled = isLoading;
       sheetSelect.disabled = isLoading;
     }
 

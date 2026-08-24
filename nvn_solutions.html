@@ -575,16 +575,16 @@
           <strong>Chọn file dữ liệu</strong>
           <small>Hỗ trợ CSV và Excel .xlsx (Chrome / Edge)</small>
           <input id="fileInput" type="file" accept=".csv,.xlsx" />
-          <div class="url-loader">
-            <input
-              id="jsonUrlInput"
-              type="text"
-              placeholder="Dán URL JSON NVN Solutions..."
-              value="https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnRy4OcIKBmKuP6pDcca_yzalKKkwCpcOLdb1WoVT_YJ4h2OYW06C24wxLbPrca9ECZQmH_8-gMpjvOvxFmQflJRDYjZG-DMlov5PmjB968By6eB0y_6LSWOm7tdBbRdwcPYGjaNSV2sFq7h0oeMaxvXO_JgOng9xjLFBkReuj6RhgkKcBrm1ND7B4Qts7WhQyHkEDMyMRA7PN5x8OGt5r9XTN5NEpig-nkgFhlxTJOykBT0xuh-Q0aB3p2beEHombmuVvEq4ifNU5vqN1CrgXJFcgqCdg&amp;lib=MMhwz9pBNVli5DJbMNtBflfD8R0iiSsw_"
-            />
-            <button class="primary" id="loadJsonButton" type="button">
-              Tải từ URL
-            </button>
+          <div class="url-loader" style="display:flex; flex-direction:column; gap:8px; width:100%;">
+            <div style="display:flex; gap:8px; width:100%;">
+              <input id="jsonUrlInput" type="text" placeholder="Dán URL JSON NVN Solutions..." style="flex:1" />
+              <button class="primary" id="loadJsonButton" type="button">Tải từ URL</button>
+            </div>
+            <div style="display:flex; gap:8px; width:100%; align-items:center;">
+              <label style="font-size:11px; font-weight:600; color:var(--text-secondary); white-space:nowrap;">Worker API URL:</label>
+              <input id="workerUrlInput" type="text" placeholder="Dán Cloudflare Worker URL tại đây để đồng bộ..." style="flex:1; padding:6px 10px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-size:13px; outline:none;" />
+              <button id="saveR2Button" type="button" class="primary" style="padding: 6px 12px; font-size:13px;">Lưu vào R2</button>
+            </div>
           </div>
           <div class="upload-overlay" id="uploadLoading">
             <div class="spinner"></div>
@@ -798,6 +798,11 @@
       const toggleColumnPanelButton = document.getElementById(
         "toggleColumnPanelButton",
       );
+
+      // Thiết lập giá trị ban đầu cho các input từ localStorage
+      const defaultJsonUrl = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnRy4OcIKBmKuP6pDcca_yzalKKkwCpcOLdb1WoVT_YJ4h2OYW06C24wxLbPrca9ECZQmH_8-gMpjvOvxFmQflJRDYjZG-DMlov5PmjB968By6eB0y_6LSWOm7tdBbRdwcPYGjaNSV2sFq7h0oeMaxvXO_JgOng9xjLFBkReuj6RhgkKcBrm1ND7B4Qts7WhQyHkEDMyMRA7PN5x8OGt5r9XTN5NEpig-nkgFhlxTJOykBT0xuh-Q0aB3p2beEHombmuVvEq4ifNU5vqN1CrgXJFcgqCdg&lib=MMhwz9pBNVli5DJbMNtBflfD8R0iiSsw_";
+      jsonUrlInput.value = localStorage.getItem("NVN_SOLUTIONS_API_URL") || defaultJsonUrl;
+      document.getElementById("workerUrlInput").value = localStorage.getItem("NVN_WORKER_API_URL") || "";
       const columnPanel = document.getElementById("columnPanel");
       const sheetChooser = document.getElementById("sheetChooser");
       const sheetSelect = document.getElementById("sheetSelect");
@@ -874,6 +879,11 @@
           return;
         }
 
+        // Lưu local
+        localStorage.setItem("NVN_SOLUTIONS_API_URL", url);
+        const workerUrlVal = document.getElementById("workerUrlInput").value.trim();
+        localStorage.setItem("NVN_WORKER_API_URL", workerUrlVal);
+
         setImportLoading(true, "Đang tải JSON từ URL...");
         try {
           const response = await fetch(url);
@@ -887,6 +897,42 @@
           console.error(err);
         } finally {
           setImportLoading(false);
+        }
+      });
+
+      const saveR2Button = document.getElementById("saveR2Button");
+      saveR2Button.addEventListener("click", async () => {
+        const url = jsonUrlInput.value.trim();
+        const workerUrlVal = document.getElementById("workerUrlInput").value.trim();
+        if (!url) {
+          alert("Vui lòng dán URL JSON NVN Solutions trước khi lưu.");
+          return;
+        }
+        if (!workerUrlVal) {
+          alert("Vui lòng cấu hình Worker API URL.");
+          return;
+        }
+
+        // Lưu local trước
+        localStorage.setItem("NVN_SOLUTIONS_API_URL", url);
+        localStorage.setItem("NVN_WORKER_API_URL", workerUrlVal);
+
+        try {
+          const res = await fetch(workerUrlVal, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ systemName: "Solution", url: url })
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const result = await res.json();
+          if (result.status === "success" || result.success) {
+            alert("✅ Đã đồng bộ URL Solutions lên R2 thành công!");
+          } else {
+            alert("⚠️ Lưu R2 thất bại: " + (result.message || "lỗi không rõ"));
+          }
+        } catch (err) {
+          console.warn("Lỗi lưu R2:", err);
+          alert("Lỗi kết nối R2: " + err.message);
         }
       });
 
@@ -930,8 +976,33 @@
         aiOutput.style.display = "none";
       });
 
-      restoreCachedData().then(() => {
-        // Tự động load dữ liệu từ URL khi mở trang
+      // Tự động tải URL Solution từ R2 Worker khi mở trang
+      async function autoDetectSolutionsUrl() {
+        const workerUrlVal = document.getElementById("workerUrlInput").value.trim();
+        if (!workerUrlVal) return;
+        try {
+          const res = await fetch(`${workerUrlVal}?t=${Date.now()}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          const sheetUrl = data["Solution"] || data["Solutions"] || data["solution"] || data["NVN Solutions"] || data["NVN Solution"];
+          if (sheetUrl) {
+            const cleanUrl = sheetUrl.trim();
+            const localUrl = localStorage.getItem("NVN_SOLUTIONS_API_URL") || "";
+            if (cleanUrl && cleanUrl !== localUrl) {
+              jsonUrlInput.value = cleanUrl;
+              localStorage.setItem("NVN_SOLUTIONS_API_URL", cleanUrl);
+              console.log("[R2 Sync] Tự động tải URL Solutions từ R2:", cleanUrl);
+            }
+          }
+        } catch (err) {
+          console.warn("Lỗi auto-detect URL từ R2:", err);
+        }
+      }
+
+      restoreCachedData().then(async () => {
+        // 1. Tải URL mới nhất từ R2 Worker trước
+        await autoDetectSolutionsUrl();
+        // 2. Tự động load dữ liệu từ URL khi mở trang
         loadJsonButton.click();
       });
 
@@ -940,6 +1011,7 @@
         uploadLoadingText.textContent = message;
         fileInput.disabled = isLoading;
         loadJsonButton.disabled = isLoading;
+        document.getElementById("saveR2Button").disabled = isLoading;
         sheetSelect.disabled = isLoading;
       }
 
