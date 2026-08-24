@@ -631,7 +631,7 @@
   <script>
     // URL Mặc định - Hãy điền Web App URL Apps Script sau khi deploy.
     // Dữ liệu URL này cũng có thể cấu hình thông qua Giao diện và lưu vào localStorage.
-    let API_URL = localStorage.getItem("van_mau_nvn_api_url") || "";
+    let API_URL = localStorage.getItem("van_mau_nvn_api_url") || "https://script.google.com/macros/s/AKfycbw_nU7v55qFrC1IRnH3miFwduQLsDOT2hHZ5g2afreZYJhyd84_6CrIKJQmvG0TCoDPRg/exec";
 
     // Gán giá trị ban đầu cho Input URL cấu hình
     document.getElementById("apiUrlInput").value = API_URL;
@@ -886,6 +886,37 @@
       modal.classList.remove("show");
     }
 
+    // Hàm gửi request ghi dữ liệu dùng chung (Hỗ trợ GET Fallback phòng lỗi CORS redirect của Apps Script)
+    async function sendApiWriteRequest(payload) {
+      try {
+        // 1. Thử gửi POST thông thường
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain"
+          },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (result.status === "error" && (result.message === "Action không hợp lệ" || String(result.message).includes("Action không hợp lệ"))) {
+          console.warn("POST bị redirect thành GET, kích hoạt GET Fallback cho Văn mẫu...");
+          return await sendApiWriteRequestFallback(payload);
+        }
+        return result;
+      } catch (error) {
+        console.warn("Lỗi fetch POST, thử GET Fallback cho Văn mẫu:", error);
+        return await sendApiWriteRequestFallback(payload);
+      }
+    }
+
+    // Gửi request ghi dữ liệu bằng GET (mã hóa JSON qua tham số data)
+    async function sendApiWriteRequestFallback(payload) {
+      const url = `${API_URL}?action=${payload.action}&data=${encodeURIComponent(JSON.stringify(payload))}`;
+      const response = await fetch(url);
+      return response.json();
+    }
+
     // Xử lý Lưu Thêm mới / Sửa cập nhật
     async function handleSubmit(event) {
       event.preventDefault();
@@ -918,15 +949,7 @@
       }
 
       try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "text/plain"
-          },
-          body: JSON.stringify(payload)
-        });
-        
-        const result = await response.json();
+        const result = await sendApiWriteRequest(payload);
         
         if (result.status === "success") {
           showToast(isEdit ? "Cập nhật thành công!" : "Thêm mới thành công!", "success");
@@ -960,15 +983,7 @@
           id: parseInt(id)
         };
 
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "text/plain"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const result = await response.json();
+        const result = await sendApiWriteRequest(payload);
         if (result.status === "success") {
           showToast("Đã xóa câu văn mẫu thành công!", "success");
           loadData();

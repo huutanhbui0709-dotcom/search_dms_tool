@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Pending – NVN Team</title>
+  <style>
+    /* ── Reset & Tokens ───────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #f0f4ff;
+      --surface:      #ffffff;
+      --border:       #dde3f5;
+      --border-s:     #b0bdd8;
+      --text:         #1a1f36;
+      --text-2:       #4a5568;
+      --text-muted:   #8898b4;
+      --accent:       #4f46e5;
+      --accent-h:     #3730a3;
+      --accent-bg:    #eef2ff;
+      --accent-bdr:   #c7d2fe;
+      --hdr:          #1e1b4b;
+      --hdr-txt:      #f0f4ff;
+      --row-alt:      #f7f9ff;
+      --pending-bg:   #fee2e2;
+      --pending-txt:  #b91c1c;
+      --done-bg:      #dcfce7;
+      --done-txt:     #166534;
+      --danger:       #ef4444;
+      --danger-h:     #b91c1c;
+      --success:      #10b981;
+      --warn:         #f59e0b;
+      --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
+      --sh-sm: 0 1px 3px rgba(79,70,229,.08);
+      --sh-md: 0 6px 20px rgba(79,70,229,.12);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Layout ───────────────────────────────────────────────────────────── */
+    .page { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+
+    /* ── Hero ─────────────────────────────────────────────────────────────── */
+    .hero { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
+    .hero-icon {
+      width: 46px; height: 46px; border-radius: var(--r-md);
+      background: var(--hdr); display: flex; align-items: center;
+      justify-content: center; font-size: 22px; flex-shrink: 0;
+    }
+    .hero h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+    .hero p  { font-size: 13px; color: var(--accent); margin-top: 2px; }
+
+    /* ── Config bar ───────────────────────────────────────────────────────── */
+    .config-bar {
+      display: flex; gap: 8px; align-items: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: 10px 14px; margin-bottom: 16px;
+    }
+    .config-bar label { font-weight: 700; font-size: 12px; white-space: nowrap; color: var(--text-2); }
+    .config-bar input {
+      flex: 1; padding: 6px 10px; border: 1px solid var(--border-s);
+      border-radius: var(--r-sm); font-size: 13px; outline: none;
+    }
+    .config-bar input:focus { border-color: var(--accent); }
+
+    /* ── Toolbar ──────────────────────────────────────────────────────────── */
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      align-items: center; margin-bottom: 14px;
+    }
+    .toolbar-left { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
+
+    /* ── Filters ──────────────────────────────────────────────────────────── */
+    select.filter-sel {
+      padding: 8px 12px; border: 1px solid var(--border-s);
+      border-radius: var(--r-md); font-size: 13px; outline: none;
+      background: var(--surface); color: var(--text); cursor: pointer;
+    }
+    select.filter-sel:focus { border-color: var(--accent); }
+
+    /* ── Buttons ──────────────────────────────────────────────────────────── */
+    button {
+      border: 1px solid transparent; border-radius: var(--r-sm);
+      cursor: pointer; font-size: 13px; font-weight: 600;
+      padding: 8px 14px; white-space: nowrap;
+      transition: background .15s, border-color .15s, color .15s;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .btn-primary   { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-h); border-color: var(--accent-h); }
+    .btn-outline   { background: transparent; border-color: var(--border-s); color: var(--text); }
+    .btn-outline:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+    .btn-danger    { background: #fee2e2; color: var(--danger); border-color: #fca5a5; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-success   { background: #dcfce7; color: #166534; border-color: #86efac; }
+    .btn-success:hover { background: #bbf7d0; }
+    .btn-warn      { background: #fef9c3; color: #92400e; border-color: #fde68a; }
+    .btn-warn:hover { background: #fef08a; }
+    .btn-sm { padding: 4px 9px; font-size: 12px; border-radius: 5px; }
+
+    /* ── Card / Table ─────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); box-shadow: var(--sh-sm); overflow: hidden;
+    }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th {
+      background: var(--hdr); color: var(--hdr-txt);
+      font-size: 12.5px; font-weight: 700; padding: 11px 14px;
+      letter-spacing: 0.4px; white-space: nowrap;
+    }
+    th:first-child { border-radius: var(--r-sm) 0 0 0; }
+    th:last-child  { border-radius: 0 var(--r-sm) 0 0; }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:nth-child(even) td { background: var(--row-alt); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--accent-bg); transition: background .12s; }
+
+    .col-stt      { width: 50px; text-align: center; font-weight: 700; color: var(--text-muted); }
+    .col-deadline { width: 110px; white-space: nowrap; }
+    .col-issue    { min-width: 200px; white-space: pre-wrap; word-break: break-word; }
+    .col-note     { min-width: 130px; color: var(--text-2); white-space: pre-wrap; word-break: break-word; }
+    .col-assignee { min-width: 150px; }
+    .col-status   { width: 110px; }
+    .col-actions  { width: 120px; text-align: center; }
+
+    /* ── Badges ───────────────────────────────────────────────────────────── */
+    .badge {
+      display: inline-block; padding: 2px 9px; border-radius: 20px;
+      font-size: 11.5px; font-weight: 700; margin: 2px 2px 2px 0;
+    }
+    .badge-member {
+      background: var(--accent-bg); color: var(--accent);
+      border: 1px solid var(--accent-bdr);
+    }
+    .badge-pending {
+      background: var(--pending-bg); color: var(--pending-txt);
+    }
+    .badge-done {
+      background: var(--done-bg); color: var(--done-txt);
+    }
+
+    /* ── Deadline indicator ───────────────────────────────────────────────── */
+    .deadline-overdue  { color: var(--danger); font-weight: 700; }
+    .deadline-today    { color: var(--warn);   font-weight: 700; }
+    .deadline-upcoming { color: var(--text);   }
+
+    /* ── Empty / Loading ──────────────────────────────────────────────────── */
+    .state-box {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 40px; color: var(--text-muted); gap: 10px;
+    }
+    .spinner {
+      width: 30px; height: 30px;
+      border: 3px solid var(--accent-bdr); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Stats bar ────────────────────────────────────────────────────────── */
+    .stats-bar {
+      display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .stat-chip {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: 8px 16px;
+      font-size: 13px; display: flex; align-items: center; gap: 8px;
+    }
+    .stat-chip b { font-size: 18px; font-weight: 800; }
+    .stat-chip.pending b { color: var(--pending-txt); }
+    .stat-chip.done    b { color: #166534; }
+    .stat-chip.total   b { color: var(--accent); }
+
+    /* ── Modal ────────────────────────────────────────────────────────────── */
+    .modal-bg {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .22s ease; z-index: 1000;
+    }
+    .modal-bg.show { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: var(--surface); border-radius: var(--r-lg);
+      width: 100%; max-width: 600px; box-shadow: var(--sh-md);
+      overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;
+      transform: translateY(-18px); transition: transform .22s ease;
+    }
+    .modal-bg.show .modal { transform: translateY(0); }
+
+    .modal-hdr {
+      background: var(--hdr); color: var(--hdr-txt);
+      padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
+      flex-shrink: 0;
+    }
+    .modal-hdr h3 { font-size: 15px; font-weight: 700; }
+    .modal-hdr button {
+      background: none; border: none; color: #9ca3af;
+      font-size: 22px; line-height: 1; padding: 0 4px; cursor: pointer;
+    }
+    .modal-hdr button:hover { color: #fff; }
+    .modal-body { padding: 18px 20px; overflow-y: auto; flex: 1; }
+    .modal-footer {
+      padding: 12px 20px; background: var(--row-alt);
+      border-top: 1px solid var(--border); display: flex;
+      justify-content: flex-end; gap: 8px; flex-shrink: 0;
+    }
+
+    /* ── Form ─────────────────────────────────────────────────────────────── */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-row.single { grid-template-columns: 1fr; }
+    .fg { margin-bottom: 14px; }
+    .fg label { display: block; font-weight: 700; font-size: 12.5px; margin-bottom: 5px; }
+    .fg .req   { color: var(--danger); }
+    .fc {
+      width: 100%; padding: 9px 12px; border: 1px solid var(--border-s);
+      border-radius: var(--r-md); font-size: 14px; font-family: inherit; outline: none;
+    }
+    .fc:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
+    textarea.fc { resize: vertical; min-height: 72px; }
+    select.fc   { background: var(--surface); cursor: pointer; }
+
+    /* ── Multi-select member pills ────────────────────────────────────────── */
+    .multi-select-wrap {
+      border: 1px solid var(--border-s); border-radius: var(--r-md);
+      padding: 8px 10px; background: var(--surface); cursor: text;
+      min-height: 44px; display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .multi-select-wrap.focused {
+      border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-bdr);
+      border-radius: 20px; padding: 2px 10px; font-size: 12px; font-weight: 600;
+    }
+    .pill .pill-x {
+      cursor: pointer; line-height: 1; font-size: 14px; color: var(--accent);
+      opacity: .7; border: none; background: none; padding: 0;
+    }
+    .pill .pill-x:hover { opacity: 1; }
+    .member-dropdown {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: var(--surface); border: 1px solid var(--border-s);
+      border-radius: var(--r-md); box-shadow: var(--sh-md);
+      z-index: 500; max-height: 180px; overflow-y: auto;
+    }
+    .member-dropdown-item {
+      padding: 8px 14px; cursor: pointer; font-size: 13px;
+      transition: background .1s;
+    }
+    .member-dropdown-item:hover { background: var(--accent-bg); color: var(--accent); }
+    .member-dropdown-item.selected { background: var(--accent-bg); font-weight: 700; color: var(--accent); }
+    .ms-wrap { position: relative; }
+    .ms-input {
+      border: none; outline: none; font-size: 13px; min-width: 100px;
+      flex: 1; font-family: inherit; color: var(--text);
+    }
+    .ms-input::placeholder { color: var(--text-muted); }
+
+    /* ── Member manager ───────────────────────────────────────────────────── */
+    .member-list { list-style: none; margin-top: 12px; }
+    .member-list-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 10px; border-radius: var(--r-sm);
+      border: 1px solid var(--border); margin-bottom: 6px;
+      background: var(--row-alt);
+    }
+    .member-list-item:hover { border-color: var(--accent-bdr); background: var(--accent-bg); }
+    .member-name { font-weight: 600; font-size: 13.5px; }
+    .member-actions { display: flex; gap: 6px; }
+    .member-edit-input {
+      border: 1px solid var(--accent); border-radius: 5px; padding: 3px 8px;
+      font-size: 13px; outline: none; flex: 1; margin-right: 6px;
+    }
+
+    /* ── Toast ────────────────────────────────────────────────────────────── */
+    #toastBox {
+      position: fixed; bottom: 22px; right: 22px;
+      z-index: 2000; display: flex; flex-direction: column; gap: 8px;
+    }
+    .toast {
+      background: #1f2937; color: #fff; padding: 10px 16px;
+      border-radius: var(--r-md); box-shadow: var(--sh-md);
+      display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500;
+      opacity: 0; transform: translateY(18px);
+      animation: tIn .28s forwards, tOut .28s 2.72s forwards;
+    }
+    .toast.ts { border-left: 4px solid var(--success); }
+    .toast.te { border-left: 4px solid var(--danger); }
+    .toast.tw { border-left: 4px solid var(--warn); }
+    @keyframes tIn  { to { opacity:1; transform:translateY(0); } }
+    @keyframes tOut { to { opacity:0; transform:translateY(-14px); } }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Hero ── -->
+  <div class="hero">
+    <div class="hero-icon">📋</div>
+    <div>
+      <h1>Task Pending – NVN Team</h1>
+      <p>Quản lý công việc đang chờ xử lý, phân công và theo dõi tiến độ cho cả nhóm.</p>
+    </div>
+  </div>
+
+  <!-- ── API Config ── -->
+  <div class="config-bar">
+    <label>Apps Script URL:</label>
+    <input type="text" id="apiUrl" placeholder="Dán Web App URL của Apps Script tại đây..." />
+    <button class="btn-primary" onclick="saveUrl()" style="font-size:12px;padding:6px 12px;">Lưu &amp; Tải</button>
+    <button class="btn-outline"  onclick="openMemberModal()" style="font-size:12px;padding:6px 12px;">⚙ Quản lý Thành viên</button>
+  </div>
+
+  <!-- ── Stats ── -->
+  <div class="stats-bar" id="statsBar" style="display:none;">
+    <div class="stat-chip total">   <b id="stTotal">0</b><span>Tổng task</span></div>
+    <div class="stat-chip pending"> <b id="stPending">0</b><span>Pending</span></div>
+    <div class="stat-chip done">    <b id="stDone">0</b><span>Done</span></div>
+  </div>
+
+  <!-- ── Toolbar ── -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <select class="filter-sel" id="filterStatus" onchange="applyFilters()">
+        <option value="">📂 Tất cả trạng thái</option>
+        <option value="Pending">🔴 Pending</option>
+        <option value="Done">🟢 Done</option>
+      </select>
+      <select class="filter-sel" id="filterMember" onchange="applyFilters()">
+        <option value="">👤 Tất cả thành viên</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="openTaskModal()">
+      <span>＋</span> Thêm Task mới
+    </button>
+  </div>
+
+  <!-- ── Table ── -->
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-stt">STT</th>
+            <th class="col-deadline">Hạn cuối</th>
+            <th class="col-issue">Issue</th>
+            <th class="col-note">Ghi chú</th>
+            <th class="col-assignee">Người phụ trách</th>
+            <th class="col-status">Trạng thái</th>
+            <th class="col-actions">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="taskTbody">
+          <tr><td colspan="7"><div class="state-box">
+            <div>Nhập Apps Script URL ở trên để bắt đầu tải dữ liệu.</div>
+          </div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- ── MODAL: Thêm/Sửa Task ── -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="taskModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="taskModalTitle">Thêm Task mới</h3>
+      <button onclick="closeTaskModal()">&times;</button>
+    </div>
+    <form id="taskForm" onsubmit="submitTask(event)">
+      <input type="hidden" id="editId" />
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="fg">
+            <label>Hạn cuối</label>
+            <input type="date" class="fc" id="tDeadline" />
+          </div>
+          <div class="fg">
+            <label>Trạng thái <span class="req">*</span></label>
+            <select class="fc" id="tStatus" required>
+              <option value="Pending">🔴 Pending</option>
+              <option value="Done">🟢 Done</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg form-row single">
+          <div>
+            <label>Issue (Công việc) <span class="req">*</span></label>
+            <textarea class="fc" id="tIssue" rows="3" placeholder="Mô tả công việc cần xử lý..." required></textarea>
+          </div>
+        </div>
+        <div class="fg form-row single">
+          <div>
+            <label>Ghi chú</label>
+            <textarea class="fc" id="tNote" rows="2" placeholder="Ghi chú thêm (nếu có)..."></textarea>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Người phụ trách</label>
+          <div class="ms-wrap">
+            <div class="multi-select-wrap" id="pillBox" onclick="focusMsInput()">
+              <input class="ms-input" id="msInput" placeholder="Chọn hoặc gõ để tìm..." oninput="filterDropdown()" onfocus="showDropdown()" />
+            </div>
+            <div class="member-dropdown" id="msDropdown" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-outline" onclick="closeTaskModal()">Đóng</button>
+        <button type="submit" class="btn-primary" id="btnSaveTask">Lưu Task</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- ── MODAL: Quản lý Thành viên ── -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="memberModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-hdr">
+      <h3>⚙ Quản lý Thành viên</h3>
+      <button onclick="closeMemberModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <input type="text" class="fc" id="newMemberName" placeholder="Nhập tên thành viên mới..." style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();addMember();}" />
+        <button class="btn-primary" onclick="addMember()" style="padding:8px 14px; white-space:nowrap;">＋ Thêm</button>
+      </div>
+      <ul class="member-list" id="memberList">
+        <li style="text-align:center; color:var(--text-muted); padding:12px;">Đang tải danh sách...</li>
+      </ul>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeMemberModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastBox"></div>
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- ── JAVASCRIPT ── -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<script>
+/* ──────────────────────────────────────────────────────────────────────────
+   CONFIG & STATE
+────────────────────────────────────────────────────────────────────────── */
+let API_URL = localStorage.getItem("task_nvn_api_url") || "https://script.google.com/macros/s/AKfycbw_nU7v55qFrC1IRnH3miFwduQLsDOT2hHZ5g2afreZYJhyd84_6CrIKJQmvG0TCoDPRg/exec";
+document.getElementById("apiUrl").value = API_URL;
+
+let allTasks    = [];
+let filteredTasks = [];
+let allMembers  = [];
+let selectedAssignees = []; // mảng tên đang chọn trong modal task
+
+/* ──────────────────────────────────────────────────────────────────────────
+   UTILS
+────────────────────────────────────────────────────────────────────────── */
+function toast(msg, type = "s") {
+  const box = document.getElementById("toastBox");
+  const el  = document.createElement("div");
+  el.className = `toast t${type}`;
+  el.innerHTML = `<span>${type==="s"?"✔️":type==="e"?"❌":"⚠️"}</span><span>${msg}</span>`;
+  box.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+async function apiGet(qs) {
+  if (!API_URL) { toast("Chưa nhập API URL!", "e"); throw new Error("no url"); }
+  const r = await fetch(`${API_URL}?${qs}`);
+  return r.json();
+}
+
+async function apiPost(body) {
+  if (!API_URL) { toast("Chưa nhập API URL!", "e"); throw new Error("no url"); }
+  try {
+    // 1. Thử gửi POST thông thường
+    const r = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(body)
+    });
+    const res = await r.json();
+    
+    // Nếu Apps Script bị redirect chuyển thành GET và báo lỗi action không hợp lệ
+    if (res.status === "error" && (res.message === "Action không hợp lệ" || String(res.message).includes("Action không hợp lệ"))) {
+      console.warn("POST bị redirect thành GET, kích hoạt GET Fallback...");
+      return await apiPostFallback(body);
+    }
+    return res;
+  } catch (err) {
+    console.warn("Lỗi fetch POST, thử GET Fallback:", err);
+    return await apiPostFallback(body);
+  }
+}
+
+// Hàm gửi request ghi dữ liệu thông qua GET parameter (mã hóa dữ liệu) để tránh lỗi CORS redirect
+async function apiPostFallback(body) {
+  const url = `${API_URL}?action=${body.action}&data=${encodeURIComponent(JSON.stringify(body))}`;
+  const r = await fetch(url);
+  return r.json();
+}
+
+function saveUrl() {
+  API_URL = document.getElementById("apiUrl").value.trim();
+  localStorage.setItem("task_nvn_api_url", API_URL);
+  toast("Đã lưu URL!", "s");
+  loadAll();
+}
+
+function loadAll() {
+  loadMembers();
+  loadTasks();
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   STATS
+────────────────────────────────────────────────────────────────────────── */
+function updateStats(tasks) {
+  document.getElementById("statsBar").style.display = "flex";
+  document.getElementById("stTotal").textContent   = tasks.length;
+  document.getElementById("stPending").textContent = tasks.filter(t => t.status === "Pending").length;
+  document.getElementById("stDone").textContent    = tasks.filter(t => t.status === "Done").length;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   TASKS – LOAD & RENDER
+────────────────────────────────────────────────────────────────────────── */
+async function loadTasks() {
+  const tbody = document.getElementById("taskTbody");
+  tbody.innerHTML = `<tr><td colspan="7"><div class="state-box"><div class="spinner"></div><div>Đang tải task...</div></div></td></tr>`;
+  try {
+    const res = await apiGet("action=read_tasks");
+    if (res.status === "success") {
+      const rawTasks = res.data || res.tasks || [];
+      allTasks = rawTasks.map(t => {
+        // Chuẩn hóa định dạng ngày
+        let dl = t.deadline || t.dueDate || "";
+        if (dl && dl.includes("T")) {
+          dl = dl.split("T")[0];
+        }
+        
+        // Chuẩn hóa trạng thái (loại bỏ khoảng trắng thừa, viết hoa viết thường)
+        let statusVal = String(t.status || "").trim().toLowerCase();
+        if (statusVal === "done") {
+          statusVal = "Done";
+        } else {
+          statusVal = "Pending";
+        }
+
+        return {
+          id: t.id,
+          deadline: dl,
+          issue: t.issue || "",
+          note: t.note || "",
+          assignees: Array.isArray(t.assignees) ? t.assignees : [],
+          status: statusVal
+        };
+      });
+      applyFilters();
+    } else {
+      tbody.innerHTML = `<tr><td colspan="7"><div class="state-box">Lỗi: ${res.message || 'không rõ'}</div></td></tr>`;
+    }
+  } catch (err) {
+    console.error("Lỗi load task:", err);
+    tbody.innerHTML = `<tr><td colspan="7"><div class="state-box" style="color:var(--danger);">Lỗi kết nối API!</div></td></tr>`;
+  }
+}
+
+function deadlineClass(dl) {
+  if (!dl) return "";
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dl);
+  if (d < today)  return "deadline-overdue";
+  if (d.toDateString() === today.toDateString()) return "deadline-today";
+  return "deadline-upcoming";
+}
+
+function renderTasks() {
+  const tbody = document.getElementById("taskTbody");
+  tbody.innerHTML = "";
+  if (!filteredTasks.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="state-box">Không có task nào phù hợp.</div></td></tr>`;
+    return;
+  }
+  filteredTasks.forEach((t, i) => {
+    const tr = document.createElement("tr");
+    const dlClass = deadlineClass(t.deadline);
+    const dlLabel = t.deadline ? formatDate(t.deadline) : "—";
+    const badgesHtml = (t.assignees || []).map(a =>
+      `<span class="badge badge-member">${esc(a)}</span>`
+    ).join("");
+    const statusBadge = t.status === "Done"
+      ? `<span class="badge badge-done">✔ Done</span>`
+      : `<span class="badge badge-pending">● Pending</span>`;
+
+    tr.innerHTML = `
+      <td class="col-stt">${i+1}</td>
+      <td class="col-deadline"><span class="${dlClass}">${esc(dlLabel)}</span></td>
+      <td class="col-issue">${esc(t.issue)}</td>
+      <td class="col-note">${esc(t.note || "")}</td>
+      <td class="col-assignee">${badgesHtml || '<span style="color:var(--text-muted)">—</span>'}</td>
+      <td class="col-status">${statusBadge}</td>
+      <td class="col-actions">
+        <button class="btn-warn btn-sm" onclick="openEditTask(${t.id})">Sửa</button>
+        <button class="btn-danger btn-sm" onclick="deleteTask(${t.id},'${esc(t.issue).substring(0,40)}')">Xóa</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function esc(str) {
+  return String(str || "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  dateStr = String(dateStr).trim();
+  if (dateStr.includes("/")) {
+    return dateStr;
+  }
+  if (dateStr.includes("-")) {
+    const parts = dateStr.split("-");
+    if (parts[0].length === 4) { // yyyy-mm-dd
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
+  }
+  return dateStr;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   FILTERS
+────────────────────────────────────────────────────────────────────────── */
+function applyFilters() {
+  const fs = document.getElementById("filterStatus").value;
+  const fm = document.getElementById("filterMember").value;
+  filteredTasks = allTasks.filter(t => {
+    const matchStatus = !fs || t.status === fs;
+    const matchMember = !fm || (t.assignees || []).includes(fm);
+    return matchStatus && matchMember;
+  });
+  updateStats(allTasks);
+  renderTasks();
+}
+
+function populateMemberFilter() {
+  const sel = document.getElementById("filterMember");
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">👤 Tất cả thành viên</option>`;
+  allMembers.forEach(m => {
+    const opt = document.createElement("option");
+    opt.value = m.name; opt.textContent = m.name;
+    if (m.name === cur) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   TASK MODAL
+────────────────────────────────────────────────────────────────────────── */
+function openTaskModal() {
+  document.getElementById("taskModalTitle").textContent = "Thêm Task mới";
+  document.getElementById("editId").value = "";
+  document.getElementById("tDeadline").value = "";
+  document.getElementById("tIssue").value = "";
+  document.getElementById("tNote").value = "";
+  document.getElementById("tStatus").value = "Pending";
+  selectedAssignees = [];
+  renderPills();
+  document.getElementById("taskModal").classList.add("show");
+}
+
+// Hàm chuyển đổi ngược từ dd/MM/yyyy sang yyyy-MM-dd để gán vào input date
+function parseToIsoDate(dateStr) {
+  if (!dateStr) return "";
+  dateStr = String(dateStr).trim();
+  if (dateStr.includes("/")) {
+    const parts = dateStr.split("/");
+    if (parts.length === 3) {
+      const d = parts[0].padStart(2, '0');
+      const m = parts[1].padStart(2, '0');
+      const y = parts[2];
+      if (y.length === 4) {
+        return `${y}-${m}-${d}`;
+      }
+    }
+  }
+  if (dateStr.includes("-")) {
+    const parts = dateStr.split("-");
+    if (parts[0].length === 4) {
+      return dateStr; // Đã là yyyy-MM-dd
+    }
+    if (parts[2].length === 4) { // dd-MM-yyyy -> yyyy-MM-dd
+      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    }
+  }
+  return dateStr;
+}
+
+function openEditTask(id) {
+  const t = allTasks.find(x => Number(x.id) === Number(id));
+  if (!t) return;
+  document.getElementById("taskModalTitle").textContent = "Chỉnh sửa Task";
+  document.getElementById("editId").value = id;
+  document.getElementById("tDeadline").value = parseToIsoDate(t.deadline);
+  document.getElementById("tIssue").value = t.issue || "";
+  document.getElementById("tNote").value = t.note || "";
+  document.getElementById("tStatus").value = t.status || "Pending";
+  selectedAssignees = [...(t.assignees || [])];
+  renderPills();
+  document.getElementById("taskModal").classList.add("show");
+}
+
+function closeTaskModal() {
+  document.getElementById("taskModal").classList.remove("show");
+  document.getElementById("msDropdown").style.display = "none";
+}
+
+async function submitTask(e) {
+  e.preventDefault();
+  const btn = document.getElementById("btnSaveTask");
+  btn.disabled = true; btn.textContent = "Đang lưu...";
+
+  const id       = document.getElementById("editId").value;
+  const deadline = document.getElementById("tDeadline").value;
+  const issue    = document.getElementById("tIssue").value.trim();
+  const note     = document.getElementById("tNote").value.trim();
+  const status   = document.getElementById("tStatus").value;
+
+  const payload = {
+    action: "save_task",
+    deadline, issue, note,
+    assignees: selectedAssignees,
+    status
+  };
+  if (id) payload.id = parseInt(id);
+
+  try {
+    const res = await apiPost(payload);
+    if (res.status === "success") {
+      toast(id ? "Cập nhật task thành công!" : "Thêm task thành công!", "s");
+      closeTaskModal();
+      loadTasks();
+    } else {
+      toast("Lỗi: " + (res.message || "không rõ"), "e");
+    }
+  } catch (err) {
+    console.error("Lỗi submitTask:", err);
+    toast("Lỗi kết nối: " + err.message, "e");
+  } finally {
+    btn.disabled = false; btn.textContent = "Lưu Task";
+  }
+}
+
+async function deleteTask(id, label) {
+  if (!confirm(`Xóa task này?\n"${label}..."`)) return;
+  try {
+    const res = await apiPost({ action: "delete_task", id });
+    if (res.status === "success") {
+      toast("Đã xóa task!", "s");
+      loadTasks();
+    } else {
+      toast("Lỗi: " + (res.message || "không rõ"), "e");
+    }
+  } catch (err) {
+    console.error("Lỗi deleteTask:", err);
+    toast("Lỗi kết nối: " + err.message, "e");
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   MULTI-SELECT MEMBER PICKER
+────────────────────────────────────────────────────────────────────────── */
+function renderPills() {
+  const box = document.getElementById("pillBox");
+  // Xóa tất cả pills cũ (giữ lại input)
+  Array.from(box.querySelectorAll(".pill")).forEach(p => p.remove());
+  const input = document.getElementById("msInput");
+
+  selectedAssignees.forEach(name => {
+    const pill = document.createElement("span");
+    pill.className = "pill";
+    pill.innerHTML = `${esc(name)}<button type="button" class="pill-x" data-name="${esc(name)}">&times;</button>`;
+    pill.querySelector(".pill-x").addEventListener("click", () => {
+      selectedAssignees = selectedAssignees.filter(x => x !== name);
+      renderPills();
+    });
+    box.insertBefore(pill, input);
+  });
+}
+
+function focusMsInput() {
+  document.getElementById("msInput").focus();
+}
+
+function showDropdown() {
+  document.getElementById("pillBox").classList.add("focused");
+  filterDropdown();
+  document.getElementById("msDropdown").style.display = "block";
+}
+
+function filterDropdown() {
+  const q   = document.getElementById("msInput").value.toLowerCase();
+  const dd  = document.getElementById("msDropdown");
+  dd.innerHTML = "";
+  const items = allMembers.filter(m => m.name.toLowerCase().includes(q));
+  if (!items.length) {
+    dd.innerHTML = `<div class="member-dropdown-item" style="color:var(--text-muted);">Không tìm thấy</div>`;
+    dd.style.display = "block";
+    return;
+  }
+  items.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "member-dropdown-item" + (selectedAssignees.includes(m.name) ? " selected" : "");
+    div.textContent = (selectedAssignees.includes(m.name) ? "✔ " : "") + m.name;
+    div.onclick = () => toggleAssignee(m.name);
+    dd.appendChild(div);
+  });
+  dd.style.display = "block";
+}
+
+function toggleAssignee(name) {
+  if (selectedAssignees.includes(name)) {
+    selectedAssignees = selectedAssignees.filter(x => x !== name);
+  } else {
+    selectedAssignees.push(name);
+  }
+  document.getElementById("msInput").value = "";
+  renderPills();
+  filterDropdown();
+}
+
+// Đóng dropdown khi click ra ngoài
+document.addEventListener("click", e => {
+  const wrap = document.getElementById("pillBox");
+  const dd   = document.getElementById("msDropdown");
+  if (wrap && !wrap.contains(e.target) && !dd.contains(e.target)) {
+    dd.style.display = "none";
+    if (wrap) wrap.classList.remove("focused");
+  }
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+   MEMBERS – LOAD, RENDER, CRUD (NAME-BASED FROM COLUMN I)
+────────────────────────────────────────────────────────────────────────── */
+async function loadMembers() {
+  try {
+    const res = await apiGet("action=read_members");
+    if (res.status === "success") {
+      allMembers = res.data || []; // m.name
+      populateMemberFilter();
+      renderMemberList();
+    }
+  } catch { /* silent */ }
+}
+
+function renderMemberList() {
+  const ul = document.getElementById("memberList");
+  ul.innerHTML = "";
+  if (!allMembers.length) {
+    ul.innerHTML = `<li style="text-align:center;color:var(--text-muted);padding:12px;">Chưa có thành viên nào.</li>`;
+    return;
+  }
+  allMembers.forEach(m => {
+    const li = document.createElement("li");
+    li.className = "member-list-item";
+    li.innerHTML = `
+      <span class="member-name">${esc(m.name)}</span>
+      <div class="member-actions">
+        <button class="btn-danger btn-sm" onclick="deleteMember('${esc(m.name)}')">Xóa</button>
+      </div>
+    `;
+    ul.appendChild(li);
+  });
+}
+
+async function addMember() {
+  const input = document.getElementById("newMemberName");
+  const name = input.value.trim();
+  if (!name) { toast("Nhập tên thành viên!", "w"); return; }
+  try {
+    const res = await apiPost({ action: "add_member", name });
+    if (res.status === "success") {
+      toast(`Đã thêm "${name}"!`, "s");
+      input.value = "";
+      loadMembers();
+    } else { toast("Lỗi: " + (res.message || "không rõ"), "e"); }
+  } catch { toast("Lỗi kết nối!", "e"); }
+}
+
+async function deleteMember(name) {
+  if (!confirm(`Xóa thành viên "${name}"?\nThành viên sẽ bị xóa khỏi danh sách chọn nhưng task cũ vẫn giữ nguyên.`)) return;
+  try {
+    const res = await apiPost({ action: "delete_member", name });
+    if (res.status === "success") {
+      toast(`Đã xóa "${name}"!`, "s");
+      loadMembers();
+    } else { toast("Lỗi: " + (res.message || "không rõ"), "e"); }
+  } catch { toast("Lỗi kết nối!", "e"); }
+}
+
+function openMemberModal() {
+  document.getElementById("memberModal").classList.add("show");
+  loadMembers();
+}
+function closeMemberModal() {
+  document.getElementById("memberModal").classList.remove("show");
+  loadMembers(); // Refresh dữ liệu bộ lọc sau khi đóng
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   INIT
+────────────────────────────────────────────────────────────────────────── */
+window.addEventListener("load", () => {
+  if (API_URL) loadAll();
+});
+</script>
+</body>
+</html>
