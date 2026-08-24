@@ -284,6 +284,35 @@
       font-size: 13px; outline: none; flex: 1; margin-right: 6px;
     }
 
+    /* ── System Links Dropdown ────────────────────────────────────────────── */
+    .syslinks-wrap { position: relative; display: inline-block; }
+    .syslinks-btn {
+      background: var(--surface); border: 1px solid var(--border-s); color: var(--text);
+      padding: 6px 12px; border-radius: var(--r-sm); font-size: 12px; font-weight: 600;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+      transition: border-color .15s, background .15s;
+    }
+    .syslinks-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+    .syslinks-menu {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0;
+      background: var(--surface); border: 1px solid var(--border-s);
+      border-radius: var(--r-md); box-shadow: var(--sh-md);
+      min-width: 220px; z-index: 900; overflow: hidden;
+    }
+    .syslinks-wrap:hover .syslinks-menu,
+    .syslinks-wrap.open  .syslinks-menu { display: block; }
+    .syslinks-menu a {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 14px; font-size: 13px; font-weight: 500;
+      color: var(--text); text-decoration: none;
+      transition: background .1s;
+    }
+    .syslinks-menu a:hover { background: var(--accent-bg); color: var(--accent); }
+    .syslinks-menu a.active-sys {
+      background: var(--accent-bg); color: var(--accent); font-weight: 700;
+    }
+    .syslinks-divider { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+
     /* ── Toast ────────────────────────────────────────────────────────────── */
     #toastBox {
       position: fixed; bottom: 22px; right: 22px;
@@ -320,7 +349,26 @@
     <label>Apps Script URL:</label>
     <input type="text" id="apiUrl" placeholder="Dán Web App URL của Apps Script tại đây..." />
     <button class="btn-primary" onclick="saveUrl()" style="font-size:12px;padding:6px 12px;">Lưu &amp; Tải</button>
-    <button class="btn-outline"  onclick="openMemberModal()" style="font-size:12px;padding:6px 12px;">⚙ Quản lý Thành viên</button>
+    <button class="btn-outline" onclick="openMemberModal()" style="font-size:12px;padding:6px 12px;">⚙ Quản lý Thành viên</button>
+    <!-- Hệ thống liên kết từ Cột J/K -->
+    <div class="syslinks-wrap" id="syslinksWrap">
+      <button class="syslinks-btn" onclick="toggleSyslinks(event)">🔗 Hệ thống ▾</button>
+      <div class="syslinks-menu" id="syslinksMenu">
+        <div style="padding:8px 14px 4px; font-size:11px; font-weight:700; color:var(--text-muted); letter-spacing:.5px;">ĐƯỜNG DẪN NHANH</div>
+        <hr class="syslinks-divider">
+        <div id="syslinksItems" style="padding: 4px 0;">
+          <a href="#" style="color:var(--text-muted); pointer-events:none;">Đang tải...</a>
+        </div>
+        <hr class="syslinks-divider">
+        <div style="padding:4px 14px 8px;">
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">Cập nhật URL Task Pending:</div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="newTaskUrl" placeholder="Nhập URL mới..." style="flex:1;padding:5px 8px;border:1px solid var(--border-s);border-radius:5px;font-size:12px;outline:none;">
+            <button onclick="saveSystemUrl('Task pending')" style="padding:5px 10px;font-size:11px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">Lưu</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ── Stats ── -->
@@ -460,13 +508,19 @@
 /* ──────────────────────────────────────────────────────────────────────────
    CONFIG & STATE
 ────────────────────────────────────────────────────────────────────────── */
-let API_URL = localStorage.getItem("task_nvn_api_url") || "https://script.google.com/macros/s/AKfycbw_nU7v55qFrC1IRnH3miFwduQLsDOT2hHZ5g2afreZYJhyd84_6CrIKJQmvG0TCoDPRg/exec";
+// ── URL Config ─────────────────────────────────────────────────────────────
+// Thứ tự ưu tiên: localStorage > DEFAULT_API_URL (fallback trong code)
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbw_nU7v55qFrC1IRnH3miFwduQLsDOT2hHZ5g2afreZYJhyd84_6CrIKJQmvG0TCoDPRg/exec";
+const LS_KEY = "NVN_TASK_API_URL";
+
+let API_URL = localStorage.getItem(LS_KEY) || DEFAULT_API_URL;
 document.getElementById("apiUrl").value = API_URL;
 
-let allTasks    = [];
-let filteredTasks = [];
-let allMembers  = [];
-let selectedAssignees = []; // mảng tên đang chọn trong modal task
+let allTasks       = [];
+let filteredTasks  = [];
+let allMembers     = [];
+let allSystemUrls  = []; // danh sách hệ thống từ Cột J/K
+let selectedAssignees = [];
 
 /* ──────────────────────────────────────────────────────────────────────────
    UTILS
@@ -516,10 +570,28 @@ async function apiPostFallback(body) {
   return r.json();
 }
 
-function saveUrl() {
-  API_URL = document.getElementById("apiUrl").value.trim();
-  localStorage.setItem("task_nvn_api_url", API_URL);
-  toast("Đã lưu URL!", "s");
+async function saveUrl() {
+  const newUrl = document.getElementById("apiUrl").value.trim();
+  if (!newUrl) return;
+  API_URL = newUrl;
+  localStorage.setItem(LS_KEY, API_URL);
+  toast("Đã lưu URL vào thiết bị!", "s");
+
+  // Ghi URL lên Sheet (Cột J/K) để mọi người dùng khác tự nhận được
+  try {
+    const payload = { action: "save_url", name: "Task pending", url: newUrl };
+    const reqUrl = `${newUrl}?action=save_url&data=${encodeURIComponent(JSON.stringify(payload))}`;
+    const res = await fetch(reqUrl);
+    const result = await res.json();
+    if (result.status === "success") {
+      toast("✅ Đã đồng bộ URL Task Pending lên Sheet!", "s");
+    } else {
+      toast("⚠️ Lưu Sheet: " + (result.message || "lỗi không rõ"), "w");
+    }
+  } catch (err) {
+    console.warn("Không thể lưu URL Task Pending lên Sheet:", err);
+  }
+
   loadAll();
 }
 
@@ -547,22 +619,41 @@ async function loadTasks() {
   try {
     const res = await apiGet("action=read_tasks");
     if (res.status === "success") {
+      // ── Đồng bộ System URLs từ Sheets (Cột J/K) ───────────────────────────
+      if (Array.isArray(res.systemUrls) && res.systemUrls.length > 0) {
+        allSystemUrls = res.systemUrls;
+        // Tự động cập nhật API_URL nếu sheet có URL cho "Task pending"
+        const taskSysEntry = res.systemUrls.find(s =>
+          s.name && (s.name.toLowerCase().includes("task") || s.name.toLowerCase().includes("pending"))
+        );
+        if (taskSysEntry && taskSysEntry.url) {
+          const sheetUrl = taskSysEntry.url.trim();
+          const localUrl = localStorage.getItem(LS_KEY) || "";
+          // Chỉ cập nhật nếu khác với localStorage hiện tại (tránh vòng lặp)
+          if (sheetUrl && sheetUrl !== localUrl) {
+            API_URL = sheetUrl;
+            localStorage.setItem(LS_KEY, sheetUrl);
+            document.getElementById("apiUrl").value = sheetUrl;
+            console.log("[SystemURL] Tự động cập nhật URL từ Sheet:", sheetUrl);
+          }
+        }
+        renderSyslinks(allSystemUrls);
+      } else if (res.savedUrl) {
+        // Fallback: dùng savedUrl nếu không có mảng systemUrls
+        const sheetUrl = res.savedUrl.trim();
+        if (sheetUrl && sheetUrl !== (localStorage.getItem(LS_KEY) || "")) {
+          API_URL = sheetUrl;
+          localStorage.setItem(LS_KEY, sheetUrl);
+          document.getElementById("apiUrl").value = sheetUrl;
+        }
+      }
+
       const rawTasks = res.data || res.tasks || [];
       allTasks = rawTasks.map(t => {
-        // Chuẩn hóa định dạng ngày
         let dl = t.deadline || t.dueDate || "";
-        if (dl && dl.includes("T")) {
-          dl = dl.split("T")[0];
-        }
-        
-        // Chuẩn hóa trạng thái (loại bỏ khoảng trắng thừa, viết hoa viết thường)
+        if (dl && dl.includes("T")) dl = dl.split("T")[0];
         let statusVal = String(t.status || "").trim().toLowerCase();
-        if (statusVal === "done") {
-          statusVal = "Done";
-        } else {
-          statusVal = "Pending";
-        }
-
+        statusVal = (statusVal === "done") ? "Done" : "Pending";
         return {
           id: t.id,
           deadline: dl,
@@ -578,7 +669,7 @@ async function loadTasks() {
     }
   } catch (err) {
     console.error("Lỗi load task:", err);
-    tbody.innerHTML = `<tr><td colspan="7"><div class="state-box" style="color:var(--danger);">Lỗi kết nối API!</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7"><div class="state-box" style="color:var(--danger);">Lỗi kết nối API: ${err.message}</div></td></tr>`;
   }
 }
 
@@ -925,6 +1016,79 @@ function openMemberModal() {
 function closeMemberModal() {
   document.getElementById("memberModal").classList.remove("show");
   loadMembers(); // Refresh dữ liệu bộ lọc sau khi đóng
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   SYSTEM LINKS (Dropdown điều hướng hệ thống)
+────────────────────────────────────────────────────────────────────────── */
+// Mở/đóng dropdown khi click nút (hover cũng hoạt động nhờ CSS)
+function toggleSyslinks(e) {
+  e.stopPropagation();
+  const wrap = document.getElementById("syslinksWrap");
+  wrap.classList.toggle("open");
+}
+// Đóng khi click ra ngoài
+document.addEventListener("click", () => {
+  document.getElementById("syslinksWrap")?.classList.remove("open");
+});
+
+// Render danh sách link hệ thống từ mảng systemUrls
+function renderSyslinks(systemUrls) {
+  const container = document.getElementById("syslinksItems");
+  if (!systemUrls || systemUrls.length === 0) {
+    container.innerHTML = `<a href="#" style="color:var(--text-muted);pointer-events:none;">Chưa có hệ thống nào.</a>`;
+    return;
+  }
+  const icons = {
+    "solution": "🛠️", "calllog": "📞", "call": "📞",
+    "summary": "📊", "ticket": "🎫",
+    "văn mẫu": "📄", "van mau": "📄", "template": "📄",
+    "task": "📋", "pending": "📋"
+  };
+  const getIcon = (name) => {
+    const low = name.toLowerCase();
+    for (const [key, icon] of Object.entries(icons)) {
+      if (low.includes(key)) return icon;
+    }
+    return "🔗";
+  };
+  const currentUrl = window.location.href.split("?")[0];
+  container.innerHTML = systemUrls.map(s => {
+    if (!s.url && !s.name) return "";
+    const isActive = s.url && currentUrl === s.url.split("?")[0];
+    const href = s.url || "#";
+    return `<a href="${href}" target="_blank" class="${isActive ? "active-sys" : ""}">
+      <span>${getIcon(s.name)}</span>
+      <span>${esc(s.name || s.url)}</span>
+    </a>`;
+  }).join("");
+}
+
+// Lưu URL lên Sheet (Cột J/K) → chia sẻ cho tất cả người dùng
+async function saveSystemUrl(sysName) {
+  const urlInput = document.getElementById("newTaskUrl");
+  const newUrl = urlInput ? urlInput.value.trim() : "";
+  if (!newUrl) { toast("Nhập URL cần lưu!", "w"); return; }
+  if (!API_URL) { toast("Chưa có API URL!", "e"); return; }
+  try {
+    const res = await apiPost({ action: "save_url", name: sysName, url: newUrl });
+    if (res.status === "success") {
+      toast(`Đã lưu URL "${sysName}" lên Sheet! Mọi người sẽ tự động nhận.`, "s");
+      if (urlInput) urlInput.value = "";
+      // Cập nhật local ngay lập tức
+      if (sysName.toLowerCase().includes("task") || sysName.toLowerCase().includes("pending")) {
+        API_URL = newUrl;
+        localStorage.setItem(LS_KEY, newUrl);
+        document.getElementById("apiUrl").value = newUrl;
+      }
+      // Tải lại để cập nhật allSystemUrls
+      setTimeout(loadTasks, 800);
+    } else {
+      toast("Lỗi lưu URL: " + (res.message || "không rõ"), "e");
+    }
+  } catch (err) {
+    toast("Lỗi kết nối: " + err.message, "e");
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────────────────

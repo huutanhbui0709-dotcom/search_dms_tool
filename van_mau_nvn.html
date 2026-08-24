@@ -544,8 +544,8 @@
 
     <!-- Cấu hình API URL linh hoạt -->
     <div class="config-panel">
-      <label for="apiUrlInput">Google Apps Script Web App URL:</label>
-      <input type="text" id="apiUrlInput" placeholder="Dán Web App URL của bạn ở đây..." />
+      <label for="apiUrlInput">Google Apps Script Web App URL (Văn mẫu):</label>
+      <input type="text" id="apiUrlInput" placeholder="Dán Web App URL của Văn mẫu tại đây..." />
       <button class="btn-primary" onclick="saveApiUrl()" style="padding: 6px 12px; font-size:12px;">Lưu URL</button>
     </div>
 
@@ -629,34 +629,88 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script>
-    // URL Mặc định - Hãy điền Web App URL Apps Script sau khi deploy.
-    // Dữ liệu URL này cũng có thể cấu hình thông qua Giao diện và lưu vào localStorage.
-    let API_URL = localStorage.getItem("van_mau_nvn_api_url") || "https://script.google.com/macros/s/AKfycbw_nU7v55qFrC1IRnH3miFwduQLsDOT2hHZ5g2afreZYJhyd84_6CrIKJQmvG0TCoDPRg/exec";
+    // ── URL Config ───────────────────────────────────────────────────────────
+    // Key localStorage của Văn mẫu (riêng biệt với Task Pending)
+    const VM_LS_KEY   = "NVN_VANMAU_API_URL";
+    const TASK_LS_KEY = "NVN_TASK_API_URL";
 
-    // Gán giá trị ban đầu cho Input URL cấu hình
+    let API_URL = localStorage.getItem(VM_LS_KEY) || "";
     document.getElementById("apiUrlInput").value = API_URL;
 
-    let allTemplates = []; // Chứa tất cả dữ liệu
-    let filteredTemplates = []; // Dữ liệu sau khi tìm kiếm
+    let allTemplates = [];
+    let filteredTemplates = [];
 
-    // Lưu URL Apps Script cấu hình
-    function saveApiUrl() {
+    // Lưu URL Apps Script cấu hình (localStorage + Sheet)
+    async function saveApiUrl() {
       const inputVal = document.getElementById("apiUrlInput").value.trim();
+      if (!inputVal) return;
       API_URL = inputVal;
-      localStorage.setItem("van_mau_nvn_api_url", inputVal);
-      showToast("Đã lưu URL cấu hình API!", "success");
+      localStorage.setItem(VM_LS_KEY, inputVal);
+      showToast("Đã lưu URL vào thiết bị!", "success");
+
+      // Ghi URL lên Sheet qua Task Pending API để chia sẻ cho mọi người
+      const taskUrl = localStorage.getItem(TASK_LS_KEY);
+      if (taskUrl) {
+        try {
+          const payload = { action: "save_url", name: "Văn mẫu", url: inputVal };
+          // Dùng GET Fallback để tránh CORS redirect của Apps Script
+          const reqUrl = `${taskUrl}?action=save_url&data=${encodeURIComponent(JSON.stringify(payload))}`;
+          const res = await fetch(reqUrl);
+          const result = await res.json();
+          if (result.status === "success") {
+            showToast("✅ Đã đồng bộ URL Văn mẫu lên Sheet!", "success");
+          } else {
+            showToast("⚠️ Lưu lên Sheet thất bại: " + (result.message || ""), "error");
+          }
+        } catch (err) {
+          console.warn("Không thể lưu URL Văn mẫu lên Sheet:", err);
+        }
+      } else {
+        showToast("⚠️ Chưa có URL Task Pending → chỉ lưu cục bộ. Nhập URL Task Pending để đồng bộ.", "error");
+      }
+
       loadData();
+    }
+
+    // Tự động phát hiện URL Văn mẫu từ Sheet (qua API của Task Pending)
+    async function autoDetectVanMauUrl() {
+      const taskUrl = localStorage.getItem(TASK_LS_KEY);
+      if (!taskUrl) return; // Không có URL Task Pending → bỏ qua
+
+      try {
+        const res = await fetch(`${taskUrl}?action=read_tasks`);
+        const data = await res.json();
+        if (data.systemUrls && Array.isArray(data.systemUrls)) {
+          const vmEntry = data.systemUrls.find(s =>
+            s.name && (s.name.toLowerCase().includes("văn mẫu") ||
+                       s.name.toLowerCase().includes("van mau") ||
+                       s.name.toLowerCase().includes("template"))
+          );
+          if (vmEntry && vmEntry.url) {
+            const sheetUrl = vmEntry.url.trim();
+            const localUrl = localStorage.getItem(VM_LS_KEY) || "";
+            if (sheetUrl && sheetUrl !== localUrl) {
+              API_URL = sheetUrl;
+              localStorage.setItem(VM_LS_KEY, sheetUrl);
+              document.getElementById("apiUrlInput").value = sheetUrl;
+              console.log("[SystemURL] Tự động cập nhật URL Văn mẫu từ Sheet:", sheetUrl);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Không thể auto-detect URL Văn mẫu:", err);
+      }
     }
 
     // Tải dữ liệu từ Apps Script
     async function loadData() {
       const tbody = document.getElementById("tableBody");
-      
+
       if (!API_URL) {
         tbody.innerHTML = `
           <tr>
             <td colspan="5" class="empty-state">
-              <div style="color: var(--danger); font-weight:600; margin-bottom: 8px;">Vui lòng nhập Google Apps Script Web App URL ở cấu hình phía trên!</div>
+              <div style="color: var(--danger); font-weight:600; margin-bottom: 8px;">Vui lòng nhập Google Apps Script Web App URL của Văn mẫu ở cấu hình phía trên!</div>
               <div>Bạn cần triển khai mã Apps Script dưới dạng Web App, cấu hình chế độ truy cập "Anyone" và điền URL vào ô cấu hình để bắt đầu sử dụng.</div>
             </td>
           </tr>
@@ -678,7 +732,7 @@
       try {
         const response = await fetch(`${API_URL}?action=read`);
         const result = await response.json();
-        
+
         if (result.status === "success") {
           allTemplates = result.data || [];
           filteredTemplates = [...allTemplates];
@@ -694,7 +748,7 @@
           <tr>
             <td colspan="5" class="empty-state">
               <div style="color: var(--danger); font-weight:600; margin-bottom:8px;">Lỗi kết nối!</div>
-              <div style="font-size:12px; color:#555;">Hãy chắc chắn bạn đã deploy Apps Script đúng cách (chọn type: Web App, Who has access: Anyone, Configure CORS nếu cần).</div>
+              <div style="font-size:12px; color:#555;">Hãy chắc chắn bạn đã deploy Apps Script đúng cách.</div>
             </td>
           </tr>
         `;
@@ -892,18 +946,18 @@
         // 1. Thử gửi POST thông thường
         const response = await fetch(API_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "text/plain"
-          },
+          headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(payload)
         });
         const result = await response.json();
 
-        if (result.status === "error" && (result.message === "Action không hợp lệ" || String(result.message).includes("Action không hợp lệ"))) {
+        const errMsg = String(result.message || "");
+        if (result.status === "error" && (errMsg.includes("Action không hợp lệ") || errMsg.includes("không được hỗ trợ"))) {
           console.warn("POST bị redirect thành GET, kích hoạt GET Fallback cho Văn mẫu...");
           return await sendApiWriteRequestFallback(payload);
         }
         return result;
+
       } catch (error) {
         console.warn("Lỗi fetch POST, thử GET Fallback cho Văn mẫu:", error);
         return await sendApiWriteRequestFallback(payload);
@@ -997,7 +1051,12 @@
     }
 
     // Load dữ liệu khi trang khởi động
-    window.onload = () => {
+    window.onload = async () => {
+      // Bước 1: Nếu chưa có URL Văn mẫu → thử lấy từ Sheet qua API Task Pending
+      if (!API_URL) {
+        await autoDetectVanMauUrl();
+      }
+      // Bước 2: Tải dữ liệu văn mẫu
       loadData();
     };
   </script>
