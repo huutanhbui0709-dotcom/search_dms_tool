@@ -646,7 +646,13 @@
     let allTemplates = [];
     let filteredTemplates = [];
 
-    // Lưu URL Apps Script cấu hình (localStorage & R2 Worker)
+    // Trả về R2 endpoint: Worker URL nếu có, không thì dùng /api/r2-urls (server-side proxy)
+    function getR2Endpoint() {
+      const w = document.getElementById("workerUrlInput").value.trim();
+      return w || "/api/r2-urls";
+    }
+
+    // Lưu URL Apps Script cấu hình (localStorage & R2)
     async function saveApiUrl() {
       const inputVal = document.getElementById("apiUrlInput").value.trim();
       API_URL = inputVal;
@@ -658,10 +664,10 @@
 
       showToast("Đã lưu cấu hình cục bộ!", "success");
 
-      // Đồng bộ lên Cloudflare R2 Worker để chia sẻ cho mọi người
-      if (WORKER_API_URL && inputVal) {
+      // Đồng bộ lên R2 (dùng /api/r2-urls nếu không có Worker URL)
+      if (inputVal) {
         try {
-          const res = await fetch(WORKER_API_URL, {
+          const res = await fetch(getR2Endpoint(), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ systemName: "Văn mẫu", url: inputVal })
@@ -682,11 +688,11 @@
       loadData();
     }
 
-    // Tự động lấy URL Văn mẫu từ R2 Worker khi mở trang
+    // Tự động lấy URL Văn mẫu từ R2 khi mở trang
     async function autoDetectVanMauUrl() {
-      if (!WORKER_API_URL) return;
+      const endpoint = getR2Endpoint();
       try {
-        const res = await fetch(`${WORKER_API_URL}?t=${Date.now()}`);
+        const res = await fetch(endpoint + (endpoint.includes("?") ? "&" : "?") + "t=" + Date.now());
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         

@@ -900,25 +900,26 @@
         }
       });
 
+      // Trả về R2 endpoint: Worker URL nếu có, không thì dùng /api/r2-urls (server-side proxy)
+      function getR2Endpoint() {
+        const w = document.getElementById("workerUrlInput").value.trim();
+        return w || "/api/r2-urls";
+      }
+
       const saveR2Button = document.getElementById("saveR2Button");
       saveR2Button.addEventListener("click", async () => {
         const url = jsonUrlInput.value.trim();
-        const workerUrlVal = document.getElementById("workerUrlInput").value.trim();
         if (!url) {
           alert("Vui lòng dán URL JSON NVN Solutions trước khi lưu.");
           return;
         }
-        if (!workerUrlVal) {
-          alert("Vui lòng cấu hình Worker API URL.");
-          return;
-        }
 
-        // Lưu local trước
+        // Lưu local
         localStorage.setItem("NVN_SOLUTIONS_API_URL", url);
-        localStorage.setItem("NVN_WORKER_API_URL", workerUrlVal);
+        localStorage.setItem("NVN_WORKER_API_URL", document.getElementById("workerUrlInput").value.trim());
 
         try {
-          const res = await fetch(workerUrlVal, {
+          const res = await fetch(getR2Endpoint(), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ systemName: "Solution", url: url })
@@ -976,12 +977,11 @@
         aiOutput.style.display = "none";
       });
 
-      // Tự động tải URL Solution từ R2 Worker khi mở trang
+      // Tự động tải URL Solution từ R2 khi mở trang
       async function autoDetectSolutionsUrl() {
-        const workerUrlVal = document.getElementById("workerUrlInput").value.trim();
-        if (!workerUrlVal) return;
+        const endpoint = getR2Endpoint();
         try {
-          const res = await fetch(`${workerUrlVal}?t=${Date.now()}`);
+          const res = await fetch(endpoint + (endpoint.includes("?") ? "&" : "?") + "t=" + Date.now());
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
           const sheetUrl = data["Solution"] || data["Solutions"] || data["solution"] || data["NVN Solutions"] || data["NVN Solution"];
