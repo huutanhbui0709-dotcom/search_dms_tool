@@ -640,67 +640,16 @@
     let allTemplates = [];
     let filteredTemplates = [];
 
-    // Lưu URL Apps Script cấu hình (localStorage + Sheet)
-    async function saveApiUrl() {
+    // Lưu URL Apps Script cấu hình (localStorage)
+    function saveApiUrl() {
       const inputVal = document.getElementById("apiUrlInput").value.trim();
       if (!inputVal) return;
       API_URL = inputVal;
       localStorage.setItem(VM_LS_KEY, inputVal);
-      showToast("Đã lưu URL vào thiết bị!", "success");
-
-      // Ghi URL lên Sheet qua Task Pending API để chia sẻ cho mọi người
-      const taskUrl = localStorage.getItem(TASK_LS_KEY);
-      if (taskUrl) {
-        try {
-          const payload = { action: "save_url", name: "Văn mẫu", url: inputVal };
-          // Dùng GET Fallback để tránh CORS redirect của Apps Script
-          const reqUrl = `${taskUrl}?action=save_url&data=${encodeURIComponent(JSON.stringify(payload))}`;
-          const res = await fetch(reqUrl);
-          const result = await res.json();
-          if (result.status === "success") {
-            showToast("✅ Đã đồng bộ URL Văn mẫu lên Sheet!", "success");
-          } else {
-            showToast("⚠️ Lưu lên Sheet thất bại: " + (result.message || ""), "error");
-          }
-        } catch (err) {
-          console.warn("Không thể lưu URL Văn mẫu lên Sheet:", err);
-        }
-      } else {
-        showToast("⚠️ Chưa có URL Task Pending → chỉ lưu cục bộ. Nhập URL Task Pending để đồng bộ.", "error");
-      }
-
+      showToast("Đã lưu URL!", "success");
       loadData();
     }
 
-    // Tự động phát hiện URL Văn mẫu từ Sheet (qua API của Task Pending)
-    async function autoDetectVanMauUrl() {
-      const taskUrl = localStorage.getItem(TASK_LS_KEY);
-      if (!taskUrl) return; // Không có URL Task Pending → bỏ qua
-
-      try {
-        const res = await fetch(`${taskUrl}?action=read_tasks`);
-        const data = await res.json();
-        if (data.systemUrls && Array.isArray(data.systemUrls)) {
-          const vmEntry = data.systemUrls.find(s =>
-            s.name && (s.name.toLowerCase().includes("văn mẫu") ||
-                       s.name.toLowerCase().includes("van mau") ||
-                       s.name.toLowerCase().includes("template"))
-          );
-          if (vmEntry && vmEntry.url) {
-            const sheetUrl = vmEntry.url.trim();
-            const localUrl = localStorage.getItem(VM_LS_KEY) || "";
-            if (sheetUrl && sheetUrl !== localUrl) {
-              API_URL = sheetUrl;
-              localStorage.setItem(VM_LS_KEY, sheetUrl);
-              document.getElementById("apiUrlInput").value = sheetUrl;
-              console.log("[SystemURL] Tự động cập nhật URL Văn mẫu từ Sheet:", sheetUrl);
-            }
-          }
-        }
-      } catch (err) {
-        console.warn("Không thể auto-detect URL Văn mẫu:", err);
-      }
-    }
 
     // Tải dữ liệu từ Apps Script
     async function loadData() {
@@ -1051,14 +1000,10 @@
     }
 
     // Load dữ liệu khi trang khởi động
-    window.onload = async () => {
-      // Bước 1: Nếu chưa có URL Văn mẫu → thử lấy từ Sheet qua API Task Pending
-      if (!API_URL) {
-        await autoDetectVanMauUrl();
-      }
-      // Bước 2: Tải dữ liệu văn mẫu
+    window.onload = () => {
       loadData();
     };
+
   </script>
 </body>
 

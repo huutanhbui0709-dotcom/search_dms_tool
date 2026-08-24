@@ -570,28 +570,12 @@ async function apiPostFallback(body) {
   return r.json();
 }
 
-async function saveUrl() {
+function saveUrl() {
   const newUrl = document.getElementById("apiUrl").value.trim();
   if (!newUrl) return;
   API_URL = newUrl;
   localStorage.setItem(LS_KEY, API_URL);
-  toast("Đã lưu URL vào thiết bị!", "s");
-
-  // Ghi URL lên Sheet (Cột J/K) để mọi người dùng khác tự nhận được
-  try {
-    const payload = { action: "save_url", name: "Task pending", url: newUrl };
-    const reqUrl = `${newUrl}?action=save_url&data=${encodeURIComponent(JSON.stringify(payload))}`;
-    const res = await fetch(reqUrl);
-    const result = await res.json();
-    if (result.status === "success") {
-      toast("✅ Đã đồng bộ URL Task Pending lên Sheet!", "s");
-    } else {
-      toast("⚠️ Lưu Sheet: " + (result.message || "lỗi không rõ"), "w");
-    }
-  } catch (err) {
-    console.warn("Không thể lưu URL Task Pending lên Sheet:", err);
-  }
-
+  toast("Đã lưu URL!", "s");
   loadAll();
 }
 
