@@ -84,7 +84,7 @@ module.exports = async function handler(req, res) {
 
   if (req.method === "GET") {
     const urlParts = require("url").parse(req.url, true);
-    const dataParam = urlParts.query.data;
+    const dataParam = (req.query && req.query.data) || (urlParts.query && urlParts.query.data);
     if (dataParam) {
       try {
         const payload = JSON.parse(dataParam);
