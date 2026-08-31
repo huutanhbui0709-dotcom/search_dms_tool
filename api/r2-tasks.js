@@ -63,7 +63,7 @@ function r2Fetch(method, body) {
     const req = https.request(options, function(res) {
       let data = "";
       res.on("data", function(c) { data += c; });
-      res.on("end", function() { resolve({ statusCode: res.statusCode, body: data }); });
+      res.on("end", function() { resolve({ statusCode: res.statusCode, body: data, headers: res.headers }); });
     });
     req.on("error", reject);
     if (body) req.write(body);
@@ -73,8 +73,9 @@ function r2Fetch(method, body) {
 
 const CORS = {
   "Access-Control-Allow-Origin":  "*",
-  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type"
+  "Access-Control-Allow-Methods": "GET,POST,HEAD,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Expose-Headers": "ETag, Last-Modified"
 };
 
 // Đọc dữ liệu hiện tại từ R2, fallback về object trống nếu chưa có hoặc lỗi
@@ -110,12 +111,39 @@ module.exports = async function handler(req, res) {
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method === "OPTIONS") return res.status(204).end();
 
+  // Force no-cache for real-time synchronization
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+
   try {
+    if (req.method === "HEAD") {
+      const r2Res = await r2Fetch("HEAD", "");
+      if (r2Res.headers) {
+        const etag = r2Res.headers["etag"] || r2Res.headers["ETag"] || "";
+        const lm = r2Res.headers["last-modified"] || r2Res.headers["Last-Modified"] || "";
+        if (etag) res.setHeader("ETag", etag);
+        if (lm) res.setHeader("Last-Modified", lm);
+      }
+      return res.status(200).end();
+    }
+
     if (req.method === "GET") {
       const urlParts = require("url").parse(req.url, true);
       const action = urlParts.query.action;
 
-      const data = await getTasksData();
+      const r2Res = await r2Fetch("GET", "");
+      if (r2Res.headers) {
+        const etag = r2Res.headers["etag"] || r2Res.headers["ETag"] || "";
+        const lm = r2Res.headers["last-modified"] || r2Res.headers["Last-Modified"] || "";
+        if (etag) res.setHeader("ETag", etag);
+        if (lm) res.setHeader("Last-Modified", lm);
+      }
+
+      let data = { tasks: [], members: [] };
+      if (r2Res.statusCode === 200) {
+        try { data = JSON.parse(r2Res.body); } catch (e) {}
+      }
 
       if (action === "read_tasks") {
         return res.status(200).json({

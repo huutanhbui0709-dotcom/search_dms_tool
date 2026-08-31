@@ -1340,7 +1340,15 @@
 
     async function apiGet(qs) {
       const endpoint = getTasksEndpoint();
-      const r = await fetch(`${endpoint}?${qs}`);
+      const separator = qs ? "&" : "";
+      const r = await fetch(`${endpoint}?${qs}${separator}t=${Date.now()}`, {
+        cache: "no-cache"
+      });
+      const etag = r.headers.get("ETag") || r.headers.get("Last-Modified");
+      if (etag) {
+        currentEtag = etag;
+        localStorage.setItem("r2_tasks_etag", etag);
+      }
       return r.json();
     }
 
@@ -2017,12 +2025,63 @@
 
 
 
+    /* ── Real-time Auto-Sync System ── */
+    let syncIntervalId = null;
+    let currentEtag = localStorage.getItem("r2_tasks_etag") || "";
+
+    async function checkTasksEtag() {
+      try {
+        const endpoint = getTasksEndpoint();
+        const separator = endpoint.includes("?") ? "&" : "?";
+        const res = await fetch(`${endpoint}${separator}t=${Date.now()}`, {
+          method: "HEAD",
+          cache: "no-cache"
+        });
+        if (!res.ok) return;
+        const newEtag = res.headers.get("ETag") || res.headers.get("Last-Modified");
+        if (newEtag && newEtag !== currentEtag) {
+          console.log("[Auto-Sync] ETag changed from", currentEtag, "to", newEtag, "- reloading tasks...");
+          currentEtag = newEtag;
+          localStorage.setItem("r2_tasks_etag", newEtag);
+          await loadTasks();
+        }
+      } catch (err) {
+        console.warn("[Auto-Sync] HEAD request failed:", err);
+      }
+    }
+
+    function startAutoSync() {
+      if (syncIntervalId) return;
+      checkTasksEtag();
+      syncIntervalId = setInterval(checkTasksEtag, 4000); // 4 seconds interval
+      console.log("[Auto-Sync] Started checking every 4s");
+    }
+
+    function stopAutoSync() {
+      if (syncIntervalId) {
+        clearInterval(syncIntervalId);
+        syncIntervalId = null;
+        console.log("[Auto-Sync] Stopped");
+      }
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "hidden") {
+        stopAutoSync();
+      } else {
+        startAutoSync();
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     /* ──────────────────────────────────────────────────────────────────────────
        INIT
     ────────────────────────────────────────────────────────────────────────── */
     window.addEventListener("load", async () => {
       await autoDetectTaskUrl();
       loadAll();
+      startAutoSync();
     });
   </script>
 </body>
