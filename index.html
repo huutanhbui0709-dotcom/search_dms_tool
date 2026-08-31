@@ -527,7 +527,7 @@
 
         tasks.forEach(task => {
           if (task.status === "Done") return;
-          const last = ts[task.id] || 0;
+          const last = ts[task.id] || ts[String(task.id)] || 0;
 
           if (shouldAlert(task, last, nowMs)) {
             const isHidden = document.visibilityState !== "visible";
@@ -540,21 +540,25 @@
             }
 
             ts[task.id] = nowMs;
+            ts[String(task.id)] = nowMs;
             updated = true;
 
-            if (readIds.includes(task.id)) {
-              readIds = readIds.filter(id => id !== task.id);
+            const tNum = Number(task.id);
+            if (readIds.some(id => Number(id) === tNum)) {
+              readIds = readIds.filter(id => Number(id) !== tNum);
               readUpdated = true;
             }
           }
         });
 
-        if (updated) {
+        if (updated || readUpdated) {
           saveTimestamps(ts);
-          window.dispatchEvent(new Event("storage"));
-        }
-        if (readUpdated) {
-          try { localStorage.setItem(LS_READ_KEY, JSON.stringify(readIds)); } catch(e) {}
+          if (readUpdated) {
+            try { localStorage.setItem(LS_READ_KEY, JSON.stringify(readIds)); } catch(e) {}
+          }
+          if (typeof window.updateBellUI === "function") {
+            window.updateBellUI();
+          }
           window.dispatchEvent(new Event("storage"));
         }
       }
@@ -596,14 +600,14 @@
       function getActiveAlerts() {
         const tasks = loadTasks();
         const notified = loadTimestamps();
-        return tasks.filter(t => t.status !== "Done" && ["P1","P2","P3"].includes(t.priority) && notified[t.id]);
+        return tasks.filter(t => t.status !== "Done" && ["P1","P2","P3"].includes(t.priority) && (notified[t.id] || notified[String(t.id)]));
       }
 
       function updateBellUI() {
         const activeAlerts = getActiveAlerts();
-        const readIds = loadReadTaskIds();
+        const readIds = loadReadTaskIds().map(Number);
 
-        const unreadAlerts = activeAlerts.filter(t => !readIds.includes(t.id));
+        const unreadAlerts = activeAlerts.filter(t => !readIds.includes(Number(t.id)));
         
         const badge = document.getElementById("bellBadge");
         if (badge) {
@@ -638,7 +642,7 @@
         };
 
         listContainer.innerHTML = sortedAlerts.map(t => {
-          const isUnread = !readIds.includes(t.id);
+          const isUnread = !readIds.includes(Number(t.id));
           const classes = `bell-item ${isUnread ? 'unread' : ''}`;
           const deadlineLabel = t.deadline ? formatDate(t.deadline) : "Không hạn";
           const freqText = freqLabels[t.alert_frequency] || t.alert_frequency || "Mỗi 1 tuần";
@@ -677,6 +681,8 @@
         });
       }
 
+      window.updateBellUI = updateBellUI;
+
       function formatDate(dateStr) {
         if (!dateStr) return "";
         dateStr = String(dateStr).trim();
@@ -697,8 +703,8 @@
 
       function markAsRead(taskId) {
         const readIds = loadReadTaskIds();
-        if (!readIds.includes(taskId)) {
-          readIds.push(taskId);
+        if (!readIds.some(id => Number(id) === Number(taskId))) {
+          readIds.push(Number(taskId));
           saveReadTaskIds(readIds);
           updateBellUI();
         }
@@ -706,7 +712,7 @@
 
       function markAllAsRead() {
         const activeAlerts = getActiveAlerts();
-        const readIds = activeAlerts.map(t => t.id);
+        const readIds = activeAlerts.map(t => Number(t.id));
         saveReadTaskIds(readIds);
         updateBellUI();
       }
@@ -738,7 +744,7 @@
         updateBellUI();
 
         window.addEventListener("storage", (e) => {
-          if (e.key === LS_TASKS_KEY || e.key === LS_READ_KEY || e.key === LS_NOTIFIED_KEY) {
+          if (!e.key || e.key === LS_TASKS_KEY || e.key === LS_READ_KEY || e.key === LS_NOTIFIED_KEY) {
             updateBellUI();
           }
         });
