@@ -145,8 +145,9 @@ module.exports = async function handler(req, res) {
       const currentData = await getTasksData();
 
       if (action === "save_task") {
-        const { id, deadline, issue, note, assignees, status } = payload;
+        const { id, deadline, issue, note, assignees, status, priority } = payload;
         const taskStatus = (String(status || "").trim().toLowerCase() === "done") ? "Done" : "Pending";
+        const taskPriority = ["P1","P2","P3"].includes(priority) ? priority : "P3";
         
         if (id) {
           // Edit task
@@ -158,7 +159,8 @@ module.exports = async function handler(req, res) {
               issue: issue || "",
               note: note || "",
               assignees: Array.isArray(assignees) ? assignees : [],
-              status: taskStatus
+              status: taskStatus,
+              priority: taskPriority
             };
           } else {
             return res.status(404).json({ status: "error", message: "Không tìm thấy task cần chỉnh sửa" });
@@ -171,7 +173,8 @@ module.exports = async function handler(req, res) {
             issue: issue || "",
             note: note || "",
             assignees: Array.isArray(assignees) ? assignees : [],
-            status: taskStatus
+            status: taskStatus,
+            priority: taskPriority
           };
           currentData.tasks.push(newTask);
         }

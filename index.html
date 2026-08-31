@@ -58,6 +58,64 @@
       .tab-frame.active {
         display: block;
       }
+
+      /* ── Global Priority Toast System ────────────────────────────────────── */
+      #gNotifyBox {
+        position: fixed;
+        bottom: 22px;
+        left: 22px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 10px;
+        max-width: 360px;
+      }
+      .g-toast {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        background: #1e1b4b;
+        color: #f0f4ff;
+        padding: 13px 16px;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.25);
+        font-size: 13px;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        line-height: 1.5;
+        max-width: 360px;
+        opacity: 0;
+        transform: translateX(-24px);
+        animation: gSlideIn .3s forwards, gFadeOut .35s 4.65s forwards;
+        pointer-events: none;
+      }
+      .g-toast-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .g-toast-body { flex: 1; }
+      .g-toast-priority {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 800;
+        margin-bottom: 4px;
+      }
+      .g-toast.p1 { border-left: 4px solid #ef4444; }
+      .g-toast.p1 .g-toast-priority { background: #ef4444; color: #fff; }
+      .g-toast.p2 { border-left: 4px solid #f59e0b; }
+      .g-toast.p2 .g-toast-priority { background: #f59e0b; color: #1f2937; }
+      .g-toast.p3 { border-left: 4px solid #8b5cf6; }
+      .g-toast.p3 .g-toast-priority { background: #8b5cf6; color: #fff; }
+      .g-toast-title { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+      .g-toast-sub { font-size: 12px; color: #a5b4fc; }
+      @keyframes gSlideIn {
+        to { opacity: 1; transform: translateX(0); }
+      }
+      @keyframes gFadeOut {
+        to { opacity: 0; transform: translateX(-16px); }
+      }
     </style>
   </head>
   <body>
@@ -149,6 +207,84 @@
           });
         });
       });
+    </script>
+
+    <!-- ── Global Priority Notification System ── -->
+    <div id="gNotifyBox"></div>
+    <script>
+    (function() {
+      /* ── Config ── */
+      const PRIORITY_INTERVALS = { P1: 3600000, P2: 10800000, P3: 86400000 };
+      const LS_TASKS_KEY    = "app_tasks_data";
+      const LS_NOTIFIED_KEY = "task_last_notified";
+      const CHECK_INTERVAL  = 60000; // check every 1 min
+
+      const ICONS  = { P1: "🚨", P2: "⚠️", P3: "📣" };
+      const LABELS = { P1: "🔴 P1 – Khẩn cấp", P2: "🟡 P2 – Cao", P3: "🟣 P3 – Thường" };
+
+      function loadTimestamps() {
+        try { return JSON.parse(localStorage.getItem(LS_NOTIFIED_KEY) || "{}"); }
+        catch(e) { return {}; }
+      }
+      function saveTimestamps(ts) {
+        try { localStorage.setItem(LS_NOTIFIED_KEY, JSON.stringify(ts)); } catch(e) {}
+      }
+
+      function showGToast(task) {
+        const box = document.getElementById("gNotifyBox");
+        if (!box) return;
+        const p = (task.priority || "P3").toLowerCase();
+        const el = document.createElement("div");
+        el.className = `g-toast ${p}`;
+        const issue = (task.issue || "").substring(0, 80);
+        const assignees = (task.assignees || []).join(", ") || "Chưa phân công";
+        el.innerHTML = `
+          <div class="g-toast-icon">${ICONS[task.priority] || "📣"}</div>
+          <div class="g-toast-body">
+            <div class="g-toast-priority">${LABELS[task.priority] || task.priority}</div>
+            <div class="g-toast-title">${escHtml(issue)}</div>
+            <div class="g-toast-sub">▶ ${escHtml(assignees)}</div>
+          </div>
+        `;
+        box.prepend(el);
+        setTimeout(() => el.remove(), 5100);
+      }
+
+      function escHtml(s) {
+        return String(s || "")
+          .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      function checkAndNotify() {
+        let tasks;
+        try { tasks = JSON.parse(localStorage.getItem(LS_TASKS_KEY) || "[]"); }
+        catch(e) { return; }
+
+        const now = Date.now();
+        const ts  = loadTimestamps();
+        let updated = false;
+
+        tasks.forEach(task => {
+          if (task.status === "Done") return;
+          const p    = task.priority || "P3";
+          const intv = PRIORITY_INTERVALS[p] || PRIORITY_INTERVALS.P3;
+          const last = ts[task.id] || 0;
+
+          if ((now - last) >= intv) {
+            showGToast(task);
+            ts[task.id] = now;
+            updated = true;
+          }
+        });
+
+        if (updated) saveTimestamps(ts);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        checkAndNotify();
+        setInterval(checkAndNotify, CHECK_INTERVAL);
+      });
+    })();
     </script>
   </body>
 </html>

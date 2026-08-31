@@ -135,12 +135,18 @@
     tr:hover td { background: var(--accent-bg); transition: background .12s; }
 
     .col-stt      { width: 50px; text-align: center; font-weight: 700; color: var(--text-muted); }
+    .col-priority { width: 70px; text-align: center; }
     .col-deadline { width: 110px; white-space: nowrap; }
     .col-issue    { min-width: 200px; white-space: pre-wrap; word-break: break-word; }
     .col-note     { min-width: 130px; color: var(--text-2); white-space: pre-wrap; word-break: break-word; }
     .col-assignee { min-width: 150px; }
     .col-status   { width: 110px; }
     .col-actions  { width: 120px; text-align: center; }
+
+    /* Priority badges */
+    .badge-p1 { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; font-weight: 800; }
+    .badge-p2 { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-weight: 800; }
+    .badge-p3 { background: #ede9fe; color: #4c1d95; border: 1px solid #c4b5fd; font-weight: 800; }
 
     /* ── Badges ───────────────────────────────────────────────────────────── */
     .badge {
@@ -554,6 +560,7 @@
         <thead>
           <tr>
             <th class="col-stt">STT</th>
+            <th class="col-priority">P</th>
             <th class="col-deadline">Hạn cuối</th>
             <th class="col-issue">Issue</th>
             <th class="col-note">Ghi chú</th>
@@ -563,8 +570,8 @@
           </tr>
         </thead>
         <tbody id="taskTbody">
-          <tr><td colspan="7"><div class="state-box">
-            <div>Nhập Apps Script URL ở trên để bắt đầu tải dữ liệu.</div>
+          <tr><td colspan="8"><div class="state-box">
+            <div>Đang tải task...</div>
           </div></td></tr>
         </tbody>
       </table>
@@ -594,6 +601,14 @@
             <select class="fc" id="tStatus" required>
               <option value="Pending">🔴 Pending</option>
               <option value="Done">🟢 Done</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Mức ưu tiên <span class="req">*</span></label>
+            <select class="fc" id="tPriority" required>
+              <option value="P1">🔴 P1 – Khẩn cấp (1h)</option>
+              <option value="P2">🟡 P2 – Cao (3h)</option>
+              <option value="P3" selected>🟣 P3 – Bình thường (24h)</option>
             </select>
           </div>
         </div>
@@ -811,7 +826,7 @@ function updateStats(tasks) {
 ────────────────────────────────────────────────────────────────────────── */
 async function loadTasks() {
   const tbody = document.getElementById("taskTbody");
-  tbody.innerHTML = `<tr><td colspan="7"><div class="state-box"><div class="spinner"></div><div>Đang tải task...</div></div></td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="8"><div class="state-box"><div class="spinner"></div><div>Đang tải task...</div></div></td></tr>`;
   try {
     const res = await apiGet("action=read_tasks");
     if (res.status === "success") {
@@ -821,22 +836,26 @@ async function loadTasks() {
         if (dl && dl.includes("T")) dl = dl.split("T")[0];
         let statusVal = String(t.status || "").trim().toLowerCase();
         statusVal = (statusVal === "done") ? "Done" : "Pending";
+        const priority = ["P1","P2","P3"].includes(t.priority) ? t.priority : "P3";
         return {
           id: t.id,
           deadline: dl,
           issue: t.issue || "",
           note: t.note || "",
           assignees: Array.isArray(t.assignees) ? t.assignees : [],
-          status: statusVal
+          status: statusVal,
+          priority
         };
       });
+      // Cache tasks to localStorage for global notification system
+      try { localStorage.setItem("app_tasks_data", JSON.stringify(allTasks)); } catch(e) {}
       applyFilters();
     } else {
-      tbody.innerHTML = `<tr><td colspan="7"><div class="state-box">Lỗi: ${res.message || 'không rõ'}</div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8"><div class="state-box">Lỗi: ${res.message || 'không rõ'}</div></td></tr>`;
     }
   } catch (err) {
     console.error("Lỗi load task:", err);
-    tbody.innerHTML = `<tr><td colspan="7"><div class="state-box" style="color:var(--danger);">Lỗi kết nối API: ${err.message}</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8"><div class="state-box" style="color:var(--danger);">Lỗi kết nối API: ${err.message}</div></td></tr>`;
   }
 }
 
@@ -853,9 +872,10 @@ function renderTasks() {
   const tbody = document.getElementById("taskTbody");
   tbody.innerHTML = "";
   if (!filteredTasks.length) {
-    tbody.innerHTML = `<tr><td colspan="7"><div class="state-box">Không có task nào phù hợp.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8"><div class="state-box">Không có task nào phù hợp.</div></td></tr>`;
     return;
   }
+  const priorityClasses = { P1: "badge-p1", P2: "badge-p2", P3: "badge-p3" };
   filteredTasks.forEach((t, i) => {
     const tr = document.createElement("tr");
     const dlClass = deadlineClass(t.deadline);
@@ -866,9 +886,12 @@ function renderTasks() {
     const statusBadge = t.status === "Done"
       ? `<span class="badge badge-done">✔ Done</span>`
       : `<span class="badge badge-pending">● Pending</span>`;
+    const pClass = priorityClasses[t.priority] || "badge-p3";
+    const priorityBadge = `<span class="badge ${pClass}">${t.priority || "P3"}</span>`;
 
     tr.innerHTML = `
       <td class="col-stt">${i+1}</td>
+      <td class="col-priority">${priorityBadge}</td>
       <td class="col-deadline"><span class="${dlClass}">${esc(dlLabel)}</span></td>
       <td class="col-issue">${esc(t.issue)}</td>
       <td class="col-note">${esc(t.note || "")}</td>
@@ -1011,6 +1034,7 @@ function openTaskModal() {
   document.getElementById("tIssue").value = "";
   document.getElementById("tNote").value = "";
   document.getElementById("tStatus").value = "Pending";
+  document.getElementById("tPriority").value = "P3";
   selectedAssignees = [];
   renderPills();
   document.getElementById("taskModal").classList.add("show");
@@ -1052,6 +1076,7 @@ function openEditTask(id) {
   document.getElementById("tIssue").value = t.issue || "";
   document.getElementById("tNote").value = t.note || "";
   document.getElementById("tStatus").value = t.status || "Pending";
+  document.getElementById("tPriority").value = t.priority || "P3";
   selectedAssignees = [...(t.assignees || [])];
   renderPills();
   document.getElementById("taskModal").classList.add("show");
@@ -1072,12 +1097,13 @@ async function submitTask(e) {
   const issue    = document.getElementById("tIssue").value.trim();
   const note     = document.getElementById("tNote").value.trim();
   const status   = document.getElementById("tStatus").value;
+  const priority = document.getElementById("tPriority").value;
 
   const payload = {
     action: "save_task",
     deadline, issue, note,
     assignees: selectedAssignees,
-    status
+    status, priority
   };
   if (id) payload.id = parseInt(id);
 
