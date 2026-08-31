@@ -1659,6 +1659,15 @@
         const matchMember = !fm || (t.assignees || []).includes(fm);
         return matchStatus && matchMember;
       });
+
+      // Tự động đẩy các task đã hoàn thành (Done) xuống dưới cùng của bảng
+      filteredTasks.sort((a, b) => {
+        const aDone = (a.status === "Done");
+        const bDone = (b.status === "Done");
+        if (aDone !== bDone) return aDone ? 1 : -1;
+        return 0;
+      });
+
       updateStats(allTasks);
       renderTasks();
       updateDueSidebar();
