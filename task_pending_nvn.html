@@ -665,6 +665,7 @@
     }
 
     @media (max-width: 580px) {
+
       .form-row,
       .form-row.triple {
         grid-template-columns: 1fr;
@@ -1143,7 +1144,8 @@
           <p>Quản lý công việc đang chờ xử lý, phân công và theo dõi tiến độ cho cả nhóm.</p>
         </div>
       </div>
-      <button class="btn-outline" onclick="openMemberModal()" style="gap: 6px;"><i class="fa-solid fa-users"></i> Quản lý thành viên</button>
+      <button class="btn-outline" onclick="openMemberModal()" style="gap: 6px;"><i class="fa-solid fa-users"></i> Quản
+        lý thành viên</button>
     </div>
 
     <!-- ── Summary Cards ── -->
@@ -1208,7 +1210,7 @@
               <th class="col-deadline">Hạn cuối</th>
               <th class="col-issue">Issue</th>
               <th class="col-note">Ghi chú</th>
-              <th class="col-assignee">Người phụ trách</th>
+              <th class="col-assignee">Phụ trách</th>
               <th class="col-status">Trạng thái</th>
               <th class="col-actions">Thao tác</th>
             </tr>
@@ -1284,8 +1286,10 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-outline" onclick="closeTaskModal()"><i class="fa-solid fa-xmark"></i> Đóng</button>
-          <button type="submit" class="btn-primary" id="btnSaveTask"><i class="fa-solid fa-floppy-disk"></i> Lưu Task</button>
+          <button type="button" class="btn-outline" onclick="closeTaskModal()"><i class="fa-solid fa-xmark"></i>
+            Đóng</button>
+          <button type="submit" class="btn-primary" id="btnSaveTask"><i class="fa-solid fa-floppy-disk"></i> Lưu
+            Task</button>
         </div>
       </form>
     </div>
@@ -1304,7 +1308,8 @@
         <div style="display:flex; gap:8px; margin-bottom:12px;">
           <input type="text" class="fc" id="newMemberName" placeholder="Nhập tên thành viên mới..." style="flex:1;"
             onkeydown="if(event.key==='Enter'){event.preventDefault();addMember();}" />
-          <button class="btn-primary" onclick="addMember()" style="padding:8px 14px; white-space:nowrap;"><i class="fa-solid fa-user-plus"></i> Thêm</button>
+          <button class="btn-primary" onclick="addMember()" style="padding:8px 14px; white-space:nowrap;"><i
+              class="fa-solid fa-user-plus"></i> Thêm</button>
         </div>
         <ul class="member-list" id="memberList">
           <li style="text-align:center; color:var(--text-muted); padding:12px;">Đang tải danh sách...</li>
@@ -1322,7 +1327,8 @@
   <div class="due-sidebar" id="dueSidebar">
     <div class="due-sidebar-header">
       <h3><i class="fa-solid fa-triangle-exclamation"></i> Task Đến Hạn Hôm Nay</h3>
-      <button class="due-sidebar-close" id="dueSidebarCloseBtn" onclick="toggleDueSidebar(false)" title="Đóng"><i class="fa-solid fa-xmark"></i></button>
+      <button class="due-sidebar-close" id="dueSidebarCloseBtn" onclick="toggleDueSidebar(false)" title="Đóng"><i
+          class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="due-sidebar-body" id="dueSidebarBody"></div>
   </div>
@@ -1596,7 +1602,7 @@
                 </div>` : ''}
 
                 <div class="field-wrap">
-                  <div class="field-label">Người phụ trách</div>
+                  <div class="field-label">Phụ trách</div>
                   <div class="field-value" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
                     ${(t.assignees || []).map(a => `<span class="badge badge-member">${esc(a)}</span>`).join(" ") || '<span style="color:#94a3b8">—</span>'}
                   </div>
