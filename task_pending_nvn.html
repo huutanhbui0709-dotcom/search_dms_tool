@@ -512,41 +512,7 @@
     <button class="btn-outline" onclick="openMemberModal()" style="font-size:12.5px;padding:7px 14px;white-space:nowrap;">⚙ Quản lý Thành viên</button>
   </div>
 
-  <!-- ── API Config ── -->
-  <div class="config-bar">
-    <label>Worker API URL:</label>
-    <input type="text" id="workerUrl" placeholder="Dán Worker API URL..." style="max-width: 320px;" />
-    <button class="btn-primary" onclick="saveUrl()" style="font-size:12px;padding:6px 12px;">Lưu &amp; Tải</button>
 
-    <!-- Hệ thống liên kết từ Cloudflare Worker -->
-    <div class="syslinks-wrap" id="syslinksWrap" style="margin-left:auto;">
-      <button class="syslinks-btn" onclick="toggleSyslinks(event)">🔗 Hệ thống ▾</button>
-      <div class="syslinks-menu" id="syslinksMenu">
-        <div style="padding:8px 14px 4px; font-size:11px; font-weight:700; color:var(--text-muted); letter-spacing:.5px;">ĐƯỜNG DẪN NHANH</div>
-        <hr class="syslinks-divider">
-        <div id="syslinksItems" style="padding: 4px 0;">
-          <a href="#" style="color:var(--text-muted); pointer-events:none;">Đang tải...</a>
-        </div>
-        <hr class="syslinks-divider">
-        <div style="padding:4px 14px 8px;">
-          <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">Cập nhật URL Hệ thống:</div>
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            <select id="saveSystemName" style="width:100%; padding:5px; border:1px solid var(--border-s); border-radius:5px; font-size:12px; outline:none; background:#fff;">
-              <option value="Task pending">Task pending</option>
-              <option value="Văn mẫu">Văn mẫu</option>
-              <option value="Solution">Solution</option>
-              <option value="Call log">Call log</option>
-              <option value="Summary Ticket">Summary Ticket</option>
-            </select>
-            <div style="display:flex;gap:6px;">
-              <input type="text" id="newTaskUrl" placeholder="Nhập URL mới..." style="flex:1;padding:5px 8px;border:1px solid var(--border-s);border-radius:5px;font-size:12px;outline:none;">
-              <button onclick="saveSystemUrlToWorker()" style="padding:5px 10px;font-size:11px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">Lưu</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- ── Summary Cards ── -->
   <div class="stats-bar" id="statsBar">
@@ -708,7 +674,8 @@
 // ── URL Config ─────────────────────────────────────────────────────────────
 const WORKER_LS_KEY = "NVN_TASK_WORKER_URL";
 let WORKER_API_URL = localStorage.getItem(WORKER_LS_KEY) || "";
-document.getElementById("workerUrl").value = WORKER_API_URL;
+const workerUrlEl = document.getElementById("workerUrl");
+if (workerUrlEl) workerUrlEl.value = WORKER_API_URL;
 
 let allTasks       = [];
 let filteredTasks  = [];
@@ -731,7 +698,7 @@ function toast(msg, type = "s") {
 function getTasksEndpoint() {
   let base = "";
   if (window.location.protocol === "file:") {
-    const wUrl = document.getElementById("workerUrl").value.trim();
+    const wUrl = WORKER_API_URL;
     if (wUrl) {
       try {
         const urlObj = new URL(wUrl);
@@ -765,7 +732,7 @@ async function apiPost(body) {
 function getR2Endpoint() {
   let base = "";
   if (window.location.protocol === "file:") {
-    const wUrl = document.getElementById("workerUrl").value.trim();
+    const wUrl = WORKER_API_URL;
     if (wUrl) {
       try {
         const urlObj = new URL(wUrl);
@@ -827,7 +794,6 @@ async function saveUrl() {
 function loadAll() {
   loadMembers();
   loadTasks();
-  loadWorkerUrls();
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -1237,9 +1203,10 @@ async function autoDetectTaskUrl() {
       const localUrl = localStorage.getItem(WORKER_LS_KEY) || "";
       if (cleanUrl && cleanUrl !== localUrl) {
         // Đồng bộ local storage
-        document.getElementById("workerUrl").value = cleanUrl;
         localStorage.setItem(WORKER_LS_KEY, cleanUrl);
         WORKER_API_URL = cleanUrl;
+        const workerUrlEl = document.getElementById("workerUrl");
+        if (workerUrlEl) workerUrlEl.value = cleanUrl;
  
         console.log("[R2 Sync] Tự động tải URL Task Pending từ R2 và điền vào cấu hình:", cleanUrl);
       }
