@@ -374,9 +374,7 @@
       color: #fff;
     }
     .due-sidebar-close.locked {
-      cursor: not-allowed;
-      opacity: 0.3;
-      pointer-events: none;
+      cursor: pointer;
     }
     .due-sidebar-body {
       padding: 20px;
@@ -423,6 +421,41 @@
     .due-alert-assignees {
       font-size: 12px;
       color: var(--text-2);
+    }
+    /* Floating alert trigger */
+    .due-alert-trigger {
+      position: fixed;
+      bottom: 85px;
+      right: 22px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--danger);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+      cursor: pointer;
+      z-index: 940;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      animation: pulseAlert 2s infinite;
+      transition: transform 0.2s;
+    }
+    .due-alert-trigger:hover {
+      transform: scale(1.1);
+    }
+    @keyframes pulseAlert {
+      0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 12px rgba(239, 68, 68, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+      }
     }
   </style>
 </head>
@@ -614,6 +647,8 @@
   </div>
   <div class="due-sidebar-body" id="dueSidebarBody"></div>
 </div>
+
+<button class="due-alert-trigger" id="dueAlertTrigger" onclick="toggleDueSidebar(true)" title="Có task đến hạn hôm nay!">⚠️</button>
 
 <!-- ════════════════════════════════════════════════════════════════════════ -->
 <!-- ── JAVASCRIPT ── -->
@@ -882,12 +917,19 @@ function getTodayLocalDate() {
 
 function toggleDueSidebar(show) {
   const sidebar = document.getElementById("dueSidebar");
+  const trigger = document.getElementById("dueAlertTrigger");
+  const todayStr = getTodayLocalDate();
+  const hasDueTasks = allTasks.some(t => parseToIsoDate(t.deadline) === todayStr && t.status !== "Done");
+
   if (show) {
     sidebar.classList.add("show");
+    trigger.style.display = "none";
   } else {
-    const closeBtn = document.getElementById("dueSidebarCloseBtn");
-    if (!closeBtn.disabled) {
-      sidebar.classList.remove("show");
+    sidebar.classList.remove("show");
+    if (hasDueTasks) {
+      trigger.style.display = "flex";
+    } else {
+      trigger.style.display = "none";
     }
   }
 }
@@ -900,7 +942,7 @@ function updateDueSidebar() {
   });
 
   const sidebar = document.getElementById("dueSidebar");
-  const closeBtn = document.getElementById("dueSidebarCloseBtn");
+  const trigger = document.getElementById("dueAlertTrigger");
   const body = document.getElementById("dueSidebarBody");
 
   if (dueTasks.length > 0) {
@@ -915,16 +957,16 @@ function updateDueSidebar() {
       </div>
     `).join("");
 
-    sidebar.classList.add("show");
-    closeBtn.disabled = true;
-    closeBtn.classList.add("locked");
-    closeBtn.title = "Có task đến hạn chưa hoàn thành, không thể đóng cảnh báo!";
+    if (sidebar.classList.contains("show")) {
+      trigger.style.display = "none";
+    } else {
+      sidebar.classList.add("show");
+      trigger.style.display = "none";
+    }
   } else {
     body.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding: 20px 0;">Không có task nào đến hạn hôm nay cần xử lý.</div>`;
-    closeBtn.disabled = false;
-    closeBtn.classList.remove("locked");
-    closeBtn.removeAttribute("title");
     sidebar.classList.remove("show");
+    trigger.style.display = "none";
   }
 }
 
