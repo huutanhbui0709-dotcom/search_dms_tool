@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Task Pending – NVN Team</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     /* ── Reset & Tokens ───────────────────────────────────────────────────── */
     *,
@@ -1142,7 +1143,7 @@
           <p>Quản lý công việc đang chờ xử lý, phân công và theo dõi tiến độ cho cả nhóm.</p>
         </div>
       </div>
-      <button class="btn-outline" onclick="openMemberModal()">👥 Quản lý thành viên</button>
+      <button class="btn-outline" onclick="openMemberModal()" style="gap: 6px;"><i class="fa-solid fa-users"></i> Quản lý thành viên</button>
     </div>
 
     <!-- ── Summary Cards ── -->
@@ -1192,7 +1193,7 @@
         </select>
       </div>
       <button class="btn-primary" onclick="openTaskModal()">
-        <span>＋</span> Thêm task mới
+        <i class="fa-solid fa-plus"></i> Thêm task mới
       </button>
     </div>
 
@@ -1233,7 +1234,7 @@
     <div class="modal">
       <div class="modal-hdr">
         <h3 id="taskModalTitle">Thêm Task mới</h3>
-        <button onclick="closeTaskModal()">&times;</button>
+        <button onclick="closeTaskModal()" title="Đóng"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <form id="taskForm" onsubmit="submitTask(event)">
         <input type="hidden" id="editId" />
@@ -1283,8 +1284,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-outline" onclick="closeTaskModal()">Đóng</button>
-          <button type="submit" class="btn-primary" id="btnSaveTask">Lưu Task</button>
+          <button type="button" class="btn-outline" onclick="closeTaskModal()"><i class="fa-solid fa-xmark"></i> Đóng</button>
+          <button type="submit" class="btn-primary" id="btnSaveTask"><i class="fa-solid fa-floppy-disk"></i> Lưu Task</button>
         </div>
       </form>
     </div>
@@ -1296,22 +1297,21 @@
   <div class="modal-bg" id="memberModal">
     <div class="modal" style="max-width:460px;">
       <div class="modal-hdr">
-        <h3>⚙ Quản lý Thành viên</h3>
-        <button onclick="closeMemberModal()">&times;</button>
+        <h3><i class="fa-solid fa-users-gear"></i> Quản lý Thành viên</h3>
+        <button onclick="closeMemberModal()" title="Đóng"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
         <div style="display:flex; gap:8px; margin-bottom:12px;">
           <input type="text" class="fc" id="newMemberName" placeholder="Nhập tên thành viên mới..." style="flex:1;"
             onkeydown="if(event.key==='Enter'){event.preventDefault();addMember();}" />
-          <button class="btn-primary" onclick="addMember()" style="padding:8px 14px; white-space:nowrap;">＋
-            Thêm</button>
+          <button class="btn-primary" onclick="addMember()" style="padding:8px 14px; white-space:nowrap;"><i class="fa-solid fa-user-plus"></i> Thêm</button>
         </div>
         <ul class="member-list" id="memberList">
           <li style="text-align:center; color:var(--text-muted); padding:12px;">Đang tải danh sách...</li>
         </ul>
       </div>
       <div class="modal-footer">
-        <button class="btn-outline" onclick="closeMemberModal()">Đóng</button>
+        <button class="btn-outline" onclick="closeMemberModal()"><i class="fa-solid fa-xmark"></i> Đóng</button>
       </div>
     </div>
   </div>
@@ -1321,14 +1321,14 @@
   <!-- Due Alert Sidebar -->
   <div class="due-sidebar" id="dueSidebar">
     <div class="due-sidebar-header">
-      <h3>⚠️ Task Đến Hạn Hôm Nay</h3>
-      <button class="due-sidebar-close" id="dueSidebarCloseBtn" onclick="toggleDueSidebar(false)">&times;</button>
+      <h3><i class="fa-solid fa-triangle-exclamation"></i> Task Đến Hạn Hôm Nay</h3>
+      <button class="due-sidebar-close" id="dueSidebarCloseBtn" onclick="toggleDueSidebar(false)" title="Đóng"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="due-sidebar-body" id="dueSidebarBody"></div>
   </div>
 
   <button class="due-alert-trigger" id="dueAlertTrigger" onclick="toggleDueSidebar(true)"
-    title="Có task đến hạn hôm nay!">⚠️</button>
+    title="Có task đến hạn hôm nay!"><i class="fa-solid fa-triangle-exclamation"></i></button>
 
   <!-- ════════════════════════════════════════════════════════════════════════ -->
   <!-- ── JAVASCRIPT ── -->
@@ -1596,11 +1596,11 @@
               </div>
 
               <div style="display:flex; flex-direction:column; gap:8px;">
-                <button class="btn-outline" onclick="openEditTask(${t.id})" style="width:100%; justify-content:center; height:38px; border-radius:10px; font-size:12.5px; font-weight:600; color:#4f46e5; border-color:#4f46e5;">
-                  📝 Mở chi tiết task
+                <button class="btn-outline" onclick="openEditTask(${t.id})" style="width:100%; justify-content:center; height:38px; border-radius:10px; font-size:12.5px; font-weight:600; color:#4f46e5; border-color:#4f46e5; gap:6px;">
+                  <i class="fa-solid fa-up-right-from-square"></i> Mở chi tiết task
                 </button>
-                <button class="btn-outline-danger" onclick="deleteTask(${t.id}, '${esc(t.issue).substring(0, 40)}')" style="width:100%; justify-content:center; height:38px; border-radius:10px; font-size:12.5px; font-weight:600; padding:8px 14px;">
-                  🗑️ Xóa task
+                <button class="btn-outline-danger" onclick="deleteTask(${t.id}, '${esc(t.issue).substring(0, 40)}')" style="width:100%; justify-content:center; height:38px; border-radius:10px; font-size:12.5px; font-weight:600; padding:8px 14px; gap:6px;">
+                  <i class="fa-solid fa-trash-can"></i> Xóa task
                 </button>
               </div>
             </div>
@@ -1653,8 +1653,8 @@
       <td class="col-assignee">${badgesHtml || '<span style="color:var(--text-muted)">—</span>'}</td>
       <td class="col-status">${statusBadge}</td>
       <td class="col-actions" style="display:flex; justify-content:center; gap:6px;">
-        <button class="btn-action-edit" onclick="openEditTask(${t.id})" title="Sửa">📝</button>
-        <button class="btn-action-delete" onclick="deleteTask(${t.id},'${esc(t.issue).substring(0, 40)}')" title="Xóa">🗑️</button>
+        <button class="btn-action-edit" onclick="openEditTask(${t.id})" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button class="btn-action-delete" onclick="deleteTask(${t.id},'${esc(t.issue).substring(0, 40)}')" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
       </td>
     `;
         tbody.appendChild(tr);
@@ -2021,7 +2021,7 @@
         li.innerHTML = `
       <span class="member-name">${esc(m.name)}</span>
       <div class="member-actions">
-        <button class="btn-danger btn-sm" onclick="deleteMember('${esc(m.name)}')">Xóa</button>
+        <button class="btn-danger btn-sm" onclick="deleteMember('${esc(m.name)}')" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
       </div>
     `;
         ul.appendChild(li);
