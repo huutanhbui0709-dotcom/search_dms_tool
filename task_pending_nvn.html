@@ -346,11 +346,8 @@
 
   <!-- ── API Config ── -->
   <div class="config-bar">
-    <label>Apps Script URL:</label>
-    <input type="text" id="apiUrl" placeholder="Dán Web App URL của Apps Script..." />
-    
-    <label style="margin-left: 10px;">Worker API URL:</label>
-    <input type="text" id="workerUrl" placeholder="Dán Worker API URL..." style="max-width: 240px;" />
+    <label>Worker API URL:</label>
+    <input type="text" id="workerUrl" placeholder="Dán Worker API URL..." style="max-width: 320px;" />
     
     <button class="btn-primary" onclick="saveUrl()" style="font-size:12px;padding:6px 12px;">Lưu &amp; Tải</button>
     <button class="btn-outline" onclick="openMemberModal()" style="font-size:12px;padding:6px 12px;">⚙ Quản lý Thành viên</button>
@@ -523,13 +520,6 @@
    CONFIG & STATE
 ────────────────────────────────────────────────────────────────────────── */
 // ── URL Config ─────────────────────────────────────────────────────────────
-// Thứ tự ưu tiên: localStorage > DEFAULT_API_URL (fallback trong code)
-const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbw_nU7v55qFrC1IRnH3miFwduQLsDOT2hHZ5g2afreZYJhyd84_6CrIKJQmvG0TCoDPRg/exec";
-const LS_KEY = "NVN_TASK_API_URL";
-
-let API_URL = localStorage.getItem(LS_KEY) || DEFAULT_API_URL;
-document.getElementById("apiUrl").value = API_URL;
-
 const WORKER_LS_KEY = "NVN_TASK_WORKER_URL";
 let WORKER_API_URL = localStorage.getItem(WORKER_LS_KEY) || "";
 document.getElementById("workerUrl").value = WORKER_API_URL;
@@ -552,60 +542,67 @@ function toast(msg, type = "s") {
   setTimeout(() => el.remove(), 3000);
 }
 
+function getTasksEndpoint() {
+  let base = "";
+  if (window.location.protocol === "file:") {
+    const wUrl = document.getElementById("workerUrl").value.trim();
+    if (wUrl) {
+      try {
+        const urlObj = new URL(wUrl);
+        base = urlObj.origin;
+      } catch (e) {
+        base = "https://search-dms-tool.vercel.app";
+      }
+    } else {
+      base = "https://search-dms-tool.vercel.app";
+    }
+  }
+  return base + "/api/r2-tasks";
+}
+
 async function apiGet(qs) {
-  if (!API_URL) { toast("Chưa nhập API URL!", "e"); throw new Error("no url"); }
-  const r = await fetch(`${API_URL}?${qs}`);
+  const endpoint = getTasksEndpoint();
+  const r = await fetch(`${endpoint}?${qs}`);
   return r.json();
 }
 
 async function apiPost(body) {
-  if (!API_URL) { toast("Chưa nhập API URL!", "e"); throw new Error("no url"); }
-  try {
-    // 1. Thử gửi POST thông thường
-    const r = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify(body)
-    });
-    const res = await r.json();
-    
-    // Nếu Apps Script bị redirect chuyển thành GET và báo lỗi action không hợp lệ
-    if (res.status === "error" && (res.message === "Action không hợp lệ" || String(res.message).includes("Action không hợp lệ"))) {
-      console.warn("POST bị redirect thành GET, kích hoạt GET Fallback...");
-      return await apiPostFallback(body);
-    }
-    return res;
-  } catch (err) {
-    console.warn("Lỗi fetch POST, thử GET Fallback:", err);
-    return await apiPostFallback(body);
-  }
-}
-
-// Hàm gửi request ghi dữ liệu thông qua GET parameter (mã hóa dữ liệu) để tránh lỗi CORS redirect
-async function apiPostFallback(body) {
-  const url = `${API_URL}?action=${body.action}&data=${encodeURIComponent(JSON.stringify(body))}`;
-  const r = await fetch(url);
+  const endpoint = getTasksEndpoint();
+  const r = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
   return r.json();
 }
 
 function getR2Endpoint() {
-  return "/api/r2-urls";
+  let base = "";
+  if (window.location.protocol === "file:") {
+    const wUrl = document.getElementById("workerUrl").value.trim();
+    if (wUrl) {
+      try {
+        const urlObj = new URL(wUrl);
+        base = urlObj.origin;
+      } catch (e) {
+        base = "https://search-dms-tool.vercel.app";
+      }
+    } else {
+      base = "https://search-dms-tool.vercel.app";
+    }
+  }
+  return base + "/api/r2-urls";
 }
 
 async function saveUrl() {
   const newWorkerUrl = document.getElementById("workerUrl").value.trim();
   if (!newWorkerUrl) {
-    toast("Vui lòng nhập Apps Script URL vào ô Worker API URL trước!", "e");
+    toast("Vui lòng nhập Worker API URL trước!", "e");
     return;
   }
   
-  // Đồng bộ cả 2 ô và lưu local
   WORKER_API_URL = newWorkerUrl;
   localStorage.setItem(WORKER_LS_KEY, newWorkerUrl);
-
-  API_URL = newWorkerUrl;
-  localStorage.setItem(LS_KEY, newWorkerUrl);
-  document.getElementById("apiUrl").value = newWorkerUrl;
   
   toast("Đã lưu cấu hình cục bộ!", "s");
 
@@ -627,7 +624,7 @@ async function saveUrl() {
     try { result = JSON.parse(rawText); } catch(e) { throw new Error("Response không phải JSON: " + rawText); }
     
     if (result.status === "success" || result.success) {
-      toast("✅ Đã đồng bộ URL Task Pending từ ô Worker API URL lên R2!", "s");
+      toast("✅ Đã đồng bộ URL Task Pending lên R2!", "s");
     } else {
       const detail = [result.message, result.r2Body].filter(Boolean).join(" | R2: ");
       toast("⚠️ Lưu R2 thất bại: " + (detail || "lỗi không rõ"), "e");
@@ -639,6 +636,7 @@ async function saveUrl() {
 
   loadAll();
 }
+
 
 function loadAll() {
   loadMembers();
@@ -970,6 +968,32 @@ document.addEventListener("click", e => {
 /* ──────────────────────────────────────────────────────────────────────────
    MEMBERS – LOAD, RENDER, CRUD (NAME-BASED FROM COLUMN I)
 ────────────────────────────────────────────────────────────────────────── */
+// Tự động tải URL Task Pending từ R2 khi mở trang
+async function autoDetectTaskUrl() {
+  const endpoint = getR2Endpoint();
+  try {
+    const res = await fetch(`${endpoint}${endpoint.includes("?") ? "&" : "?"}t=${Date.now()}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    
+    const sheetUrl = data["Task pending"] || data["Task Pending"] || data["task pending"] || data["task_pending"];
+    if (sheetUrl) {
+      const cleanUrl = sheetUrl.trim();
+      const localUrl = localStorage.getItem(WORKER_LS_KEY) || "";
+      if (cleanUrl && cleanUrl !== localUrl) {
+        // Đồng bộ local storage
+        document.getElementById("workerUrl").value = cleanUrl;
+        localStorage.setItem(WORKER_LS_KEY, cleanUrl);
+        WORKER_API_URL = cleanUrl;
+ 
+        console.log("[R2 Sync] Tự động tải URL Task Pending từ R2 và điền vào cấu hình:", cleanUrl);
+      }
+    }
+  } catch (err) {
+    console.warn("Lỗi auto-detect URL từ R2:", err);
+  }
+}
+
 async function loadMembers() {
   try {
     const res = await apiGet("action=read_members");
@@ -1133,35 +1157,7 @@ async function saveSystemUrlToWorker() {
   }
 }
 
-// Tự động tải URL Task Pending từ R2 khi mở trang
-async function autoDetectTaskUrl() {
-  const endpoint = getR2Endpoint();
-  try {
-    const res = await fetch(`${endpoint}${endpoint.includes("?") ? "&" : "?"}t=${Date.now()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    
-    const sheetUrl = data["Task pending"] || data["Task Pending"] || data["task pending"] || data["task_pending"];
-    if (sheetUrl) {
-      const cleanUrl = sheetUrl.trim();
-      const localUrl = localStorage.getItem(WORKER_LS_KEY) || "";
-      if (cleanUrl && cleanUrl !== localUrl) {
-        // Đồng bộ cả 2 ô và local storage
-        document.getElementById("workerUrl").value = cleanUrl;
-        localStorage.setItem(WORKER_LS_KEY, cleanUrl);
-        WORKER_API_URL = cleanUrl;
 
-        document.getElementById("apiUrl").value = cleanUrl;
-        localStorage.setItem(LS_KEY, cleanUrl);
-        API_URL = cleanUrl;
-
-        console.log("[R2 Sync] Tự động tải URL Task Pending từ R2 và điền vào cấu hình:", cleanUrl);
-      }
-    }
-  } catch (err) {
-    console.warn("Lỗi auto-detect URL từ R2:", err);
-  }
-}
 
 /* ──────────────────────────────────────────────────────────────────────────
    INIT
