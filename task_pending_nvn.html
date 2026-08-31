@@ -589,30 +589,29 @@ async function apiPostFallback(body) {
 }
 
 function getR2Endpoint() {
-  const w = document.getElementById("workerUrl").value.trim();
-  return w || "/api/r2-urls";
+  return "/api/r2-urls";
 }
 
 async function saveUrl() {
-  const newUrl = document.getElementById("apiUrl").value.trim();
-  if (!newUrl) {
-    toast("Vui lòng nhập Apps Script URL trước!", "e");
+  const newWorkerUrl = document.getElementById("workerUrl").value.trim();
+  if (!newWorkerUrl) {
+    toast("Vui lòng nhập Apps Script URL vào ô Worker API URL trước!", "e");
     return;
   }
   
-  // Lưu local
-  API_URL = newUrl;
-  localStorage.setItem(LS_KEY, API_URL);
-  
-  const newWorkerUrl = document.getElementById("workerUrl").value.trim();
-  localStorage.setItem(WORKER_LS_KEY, newWorkerUrl);
+  // Đồng bộ cả 2 ô và lưu local
   WORKER_API_URL = newWorkerUrl;
+  localStorage.setItem(WORKER_LS_KEY, newWorkerUrl);
+
+  API_URL = newWorkerUrl;
+  localStorage.setItem(LS_KEY, newWorkerUrl);
+  document.getElementById("apiUrl").value = newWorkerUrl;
   
   toast("Đã lưu cấu hình cục bộ!", "s");
 
   // Đồng bộ lên R2
   try {
-    const payload = JSON.stringify({ action: "save_url", name: "Task pending", url: newUrl });
+    const payload = JSON.stringify({ action: "save_url", name: "Task pending", url: newWorkerUrl });
     const endpoint = getR2Endpoint();
     const separator = endpoint.includes("?") ? "&" : "?";
     const requestUrl = `${endpoint}${separator}data=${encodeURIComponent(payload)}&t=${Date.now()}`;
@@ -628,7 +627,7 @@ async function saveUrl() {
     try { result = JSON.parse(rawText); } catch(e) { throw new Error("Response không phải JSON: " + rawText); }
     
     if (result.status === "success" || result.success) {
-      toast("✅ Đã đồng bộ URL Task Pending lên R2!", "s");
+      toast("✅ Đã đồng bộ URL Task Pending từ ô Worker API URL lên R2!", "s");
     } else {
       const detail = [result.message, result.r2Body].filter(Boolean).join(" | R2: ");
       toast("⚠️ Lưu R2 thất bại: " + (detail || "lỗi không rõ"), "e");
@@ -1145,12 +1144,18 @@ async function autoDetectTaskUrl() {
     const sheetUrl = data["Task pending"] || data["Task Pending"] || data["task pending"] || data["task_pending"];
     if (sheetUrl) {
       const cleanUrl = sheetUrl.trim();
-      const localUrl = localStorage.getItem(LS_KEY) || "";
+      const localUrl = localStorage.getItem(WORKER_LS_KEY) || "";
       if (cleanUrl && cleanUrl !== localUrl) {
-        API_URL = cleanUrl;
+        // Đồng bộ cả 2 ô và local storage
+        document.getElementById("workerUrl").value = cleanUrl;
+        localStorage.setItem(WORKER_LS_KEY, cleanUrl);
+        WORKER_API_URL = cleanUrl;
+
         document.getElementById("apiUrl").value = cleanUrl;
         localStorage.setItem(LS_KEY, cleanUrl);
-        console.log("[R2 Sync] Tự động tải URL Task Pending từ R2:", cleanUrl);
+        API_URL = cleanUrl;
+
+        console.log("[R2 Sync] Tự động tải URL Task Pending từ R2 và điền vào cấu hình:", cleanUrl);
       }
     }
   } catch (err) {

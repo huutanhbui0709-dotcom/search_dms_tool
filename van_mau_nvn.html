@@ -646,50 +646,53 @@
     let allTemplates = [];
     let filteredTemplates = [];
 
-    // Trả về R2 endpoint: Worker URL nếu có, không thì dùng /api/r2-urls (server-side proxy)
+    // R2 endpoint luôn là /api/r2-urls trên Vercel production
     function getR2Endpoint() {
-      const w = document.getElementById("workerUrlInput").value.trim();
-      return w || "/api/r2-urls";
+      return "/api/r2-urls";
     }
 
     // Lưu URL Apps Script cấu hình (localStorage & R2)
     async function saveApiUrl() {
-      const inputVal = document.getElementById("apiUrlInput").value.trim();
-      API_URL = inputVal;
-      localStorage.setItem(VM_LS_KEY, inputVal);
-
       const workerVal = document.getElementById("workerUrlInput").value.trim();
+      if (!workerVal) {
+        alert("Vui lòng dán URL Apps Script vào ô Worker API URL trước khi lưu.");
+        return;
+      }
+
+      // Lưu local và đồng bộ cả 2 ô
       localStorage.setItem(WORKER_LS_KEY, workerVal);
       WORKER_API_URL = workerVal;
 
+      localStorage.setItem(VM_LS_KEY, workerVal);
+      API_URL = workerVal;
+      document.getElementById("apiUrlInput").value = workerVal;
+
       showToast("Đã lưu cấu hình cục bộ!", "success");
 
-      // Đồng bộ lên R2 (dùng /api/r2-urls nếu không có Worker URL)
-      if (inputVal) {
-        try {
-          const payload = JSON.stringify({ action: "save_url", name: "Văn mẫu", url: inputVal });
-          const endpoint = getR2Endpoint();
-          const separator = endpoint.includes("?") ? "&" : "?";
-          const requestUrl = `${endpoint}${separator}data=${encodeURIComponent(payload)}&t=${Date.now()}`;
+      // Đồng bộ lên R2
+      try {
+        const payload = JSON.stringify({ action: "save_url", name: "Văn mẫu", url: workerVal });
+        const endpoint = getR2Endpoint();
+        const separator = endpoint.includes("?") ? "&" : "?";
+        const requestUrl = `${endpoint}${separator}data=${encodeURIComponent(payload)}&t=${Date.now()}`;
 
-          const res = await fetch(requestUrl);
-          const rawText = await res.text();
-          console.log("[R2 Save] endpoint:", requestUrl);
-          console.log("[R2 Save] HTTP status:", res.status);
-          console.log("[R2 Save] response body:", rawText);
-          if (!res.ok) throw new Error(`HTTP ${res.status}: ${rawText}`);
-          let result;
-          try { result = JSON.parse(rawText); } catch(e) { throw new Error("Response không phải JSON: " + rawText); }
-          if (result.status === "success" || result.success) {
-            showToast("✅ Đã đồng bộ URL Văn mẫu lên R2!", "success");
-          } else {
-            const detail = [result.message, result.r2Body].filter(Boolean).join(" | R2: ");
-            showToast("⚠️ Lưu R2 thất bại: " + (detail || "lỗi không rõ"), "error");
-          }
-        } catch (err) {
-          console.error("[R2 Save] Error:", err);
-          alert(`Lưu R2 thất bại:\n${err.message}`);
+        const res = await fetch(requestUrl);
+        const rawText = await res.text();
+        console.log("[R2 Save] endpoint:", requestUrl);
+        console.log("[R2 Save] HTTP status:", res.status);
+        console.log("[R2 Save] response body:", rawText);
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${rawText}`);
+        let result;
+        try { result = JSON.parse(rawText); } catch(e) { throw new Error("Response không phải JSON: " + rawText); }
+        if (result.status === "success" || result.success) {
+          showToast("✅ Đã đồng bộ URL Văn mẫu từ ô Worker API URL lên R2!", "success");
+        } else {
+          const detail = [result.message, result.r2Body].filter(Boolean).join(" | R2: ");
+          showToast("⚠️ Lưu R2 thất bại: " + (detail || "lỗi không rõ"), "error");
         }
+      } catch (err) {
+        console.error("[R2 Save] Error:", err);
+        alert(`Lưu R2 thất bại:\n${err.message}`);
       }
       
       loadData();
@@ -707,12 +710,18 @@
         const vmUrl = data["Văn mẫu"] || data["Văn mẫu NVN"] || data["van mau"] || data["template"];
         if (vmUrl) {
           const cleanUrl = vmUrl.trim();
-          const localUrl = localStorage.getItem(VM_LS_KEY) || "";
+          const localUrl = localStorage.getItem(WORKER_LS_KEY) || "";
           if (cleanUrl && cleanUrl !== localUrl) {
-            API_URL = cleanUrl;
-            localStorage.setItem(VM_LS_KEY, cleanUrl);
+            // Đồng bộ cả 2 ô cấu hình và local storage
+            document.getElementById("workerUrlInput").value = cleanUrl;
+            localStorage.setItem(WORKER_LS_KEY, cleanUrl);
+            WORKER_API_URL = cleanUrl;
+
             document.getElementById("apiUrlInput").value = cleanUrl;
-            console.log("[R2 Sync] Tự động tải URL Văn mẫu từ R2:", cleanUrl);
+            localStorage.setItem(VM_LS_KEY, cleanUrl);
+            API_URL = cleanUrl;
+
+            console.log("[R2 Sync] Tự động tải URL Văn mẫu từ R2 và điền vào cấu hình:", cleanUrl);
           }
         }
       } catch (err) {

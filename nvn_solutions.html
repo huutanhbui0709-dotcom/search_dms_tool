@@ -881,8 +881,6 @@
 
         // Lưu local
         localStorage.setItem("NVN_SOLUTIONS_API_URL", url);
-        const workerUrlVal = document.getElementById("workerUrlInput").value.trim();
-        localStorage.setItem("NVN_WORKER_API_URL", workerUrlVal);
 
         setImportLoading(true, "Đang tải JSON từ URL...");
         try {
@@ -900,26 +898,43 @@
         }
       });
 
-      // Trả về R2 endpoint: Worker URL nếu có, không thì dùng /api/r2-urls (server-side proxy)
+      // R2 endpoint luôn là /api/r2-urls trên Vercel production
       function getR2Endpoint() {
-        const w = document.getElementById("workerUrlInput").value.trim();
-        return w || "/api/r2-urls";
+        return "/api/r2-urls";
+      }
+
+      // Hàm tải dữ liệu chung từ URL bất kỳ (Apps Script hoặc JSON URL)
+      async function loadDataFromUrl(url, sourceName = "JSON URL API") {
+        if (!url) return;
+        setImportLoading(true, "Đang gọi dữ liệu API từ URL...");
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          workbookData = null;
+          rows = buildRowsFromJson(data);
+          await applyLoadedRows(sourceName);
+        } catch (err) {
+          alert("Tải dữ liệu từ URL thất bại.\n" + err.message);
+          console.error(err);
+        } finally {
+          setImportLoading(false);
+        }
       }
 
       const saveR2Button = document.getElementById("saveR2Button");
       saveR2Button.addEventListener("click", async () => {
-        const url = jsonUrlInput.value.trim();
-        if (!url) {
-          alert("Vui lòng dán URL JSON NVN Solutions trước khi lưu.");
+        const workerUrlVal = document.getElementById("workerUrlInput").value.trim();
+        if (!workerUrlVal) {
+          alert("Vui lòng dán URL Apps Script vào ô Worker API URL trước khi lưu.");
           return;
         }
 
         // Lưu local
-        localStorage.setItem("NVN_SOLUTIONS_API_URL", url);
-        localStorage.setItem("NVN_WORKER_API_URL", document.getElementById("workerUrlInput").value.trim());
+        localStorage.setItem("NVN_WORKER_API_URL", workerUrlVal);
 
         try {
-          const payload = JSON.stringify({ action: "save_url", name: "Solution", url: url });
+          const payload = JSON.stringify({ action: "save_url", name: "Solution", url: workerUrlVal });
           const endpoint = getR2Endpoint();
           const separator = endpoint.includes("?") ? "&" : "?";
           const requestUrl = `${endpoint}${separator}data=${encodeURIComponent(payload)}&t=${Date.now()}`;
@@ -933,7 +948,9 @@
           let result;
           try { result = JSON.parse(rawText); } catch(e) { throw new Error("Response không phải JSON: " + rawText); }
           if (result.status === "success" || result.success) {
-            alert("✅ Đã đồng bộ URL Solutions lên R2 thành công!");
+            alert("✅ Đã đồng bộ URL Solutions từ ô Worker API URL lên R2 thành công!");
+            // Sau khi lưu thành công, tải lại dữ liệu từ URL này
+            loadDataFromUrl(workerUrlVal, "Solution R2 API");
           } else {
             const detail = [result.message, result.r2Body].filter(Boolean).join(" | R2: ");
             alert("⚠️ Lưu R2 thất bại: " + (detail || "lỗi không rõ"));
@@ -994,11 +1011,11 @@
           const sheetUrl = data["Solution"] || data["Solutions"] || data["solution"] || data["NVN Solutions"] || data["NVN Solution"];
           if (sheetUrl) {
             const cleanUrl = sheetUrl.trim();
-            const localUrl = localStorage.getItem("NVN_SOLUTIONS_API_URL") || "";
+            const localUrl = localStorage.getItem("NVN_WORKER_API_URL") || "";
             if (cleanUrl && cleanUrl !== localUrl) {
-              jsonUrlInput.value = cleanUrl;
-              localStorage.setItem("NVN_SOLUTIONS_API_URL", cleanUrl);
-              console.log("[R2 Sync] Tự động tải URL Solutions từ R2:", cleanUrl);
+              document.getElementById("workerUrlInput").value = cleanUrl;
+              localStorage.setItem("NVN_WORKER_API_URL", cleanUrl);
+              console.log("[R2 Sync] Tự động tải URL Solutions từ R2 và điền vào Worker API URL:", cleanUrl);
             }
           }
         } catch (err) {
@@ -1007,10 +1024,15 @@
       }
 
       restoreCachedData().then(async () => {
-        // 1. Tải URL mới nhất từ R2 Worker trước
+        // 1. Tải URL mới nhất từ R2 trước và điền vào ô Worker API URL
         await autoDetectSolutionsUrl();
-        // 2. Tự động load dữ liệu từ URL khi mở trang
-        loadJsonButton.click();
+        // 2. Tự động load dữ liệu từ Worker API URL (Apps Script) nếu có, nếu không thì dùng JSON URL (tải từ URL)
+        const workerUrl = document.getElementById("workerUrlInput").value.trim();
+        if (workerUrl) {
+          loadDataFromUrl(workerUrl, "Solution R2 API");
+        } else {
+          loadJsonButton.click();
+        }
       });
 
       function setImportLoading(isLoading, message = "Đang xử lý...") {
