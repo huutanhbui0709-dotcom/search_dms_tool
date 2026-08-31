@@ -381,7 +381,17 @@
     <script>
     (function() {
       /* ── Config ── */
+      // Frequency map: key → milliseconds
+      const FREQ_MS = {
+        "1_day":   86400000,
+        "3_days":  259200000,
+        "1_week":  604800000,
+        "2_weeks": 1209600000,
+        "1_month": 2592000000
+      };
+      // Fallback intervals by priority (if no alert_frequency set)
       const PRIORITY_INTERVALS = { P1: 3600000, P2: 10800000, P3: 86400000 };
+
       const LS_TASKS_KEY    = "app_tasks_data";
       const LS_NOTIFIED_KEY = "task_last_notified";
       const CHECK_INTERVAL  = 60000; // check every 1 min
@@ -405,10 +415,14 @@
         el.className = `g-toast ${p}`;
         const issue = (task.issue || "").substring(0, 80);
         const assignees = (task.assignees || []).join(", ") || "Chưa phân công";
+        const freqLabel = {
+          "1_day":"Mỗi 1 ngày","3_days":"Mỗi 3 ngày","1_week":"Mỗi 1 tuần",
+          "2_weeks":"Mỗi 2 tuần","1_month":"Mỗi 1 tháng"
+        }[task.alert_frequency] || "";
         el.innerHTML = `
           <div class="g-toast-icon">${ICONS[task.priority] || "📣"}</div>
           <div class="g-toast-body">
-            <div class="g-toast-priority">${LABELS[task.priority] || task.priority}</div>
+            <div class="g-toast-priority">${LABELS[task.priority] || task.priority}${freqLabel ? ` · ${freqLabel}` : ""}</div>
             <div class="g-toast-title">${escHtml(issue)}</div>
             <div class="g-toast-sub">▶ ${escHtml(assignees)}</div>
           </div>
@@ -417,8 +431,8 @@
         setTimeout(() => el.remove(), 5100);
       }
 
-      /* ── OS / Web Notification (fires even when user is on another app) ── */
-      let _notifPermission = Notification.permission; // "granted" | "denied" | "default"
+      /* ── OS / Web Notification ── */
+      let _notifPermission = Notification.permission;
 
       async function requestNotifPermission() {
         if (_notifPermission === "granted") return true;
@@ -434,15 +448,18 @@
         const issue = (task.issue || "").substring(0, 100);
         const assignees = (task.assignees || []).join(", ") || "Chưa phân công";
         const priorityLabel = { P1: "🚨 KHẨN CẤP (P1)", P2: "⚠️ Cao (P2)", P3: "📣 Bình thường (P3)" }[task.priority] || task.priority;
+        const freqLabel = {
+          "1_day":"Mỗi 1 ngày","3_days":"Mỗi 3 ngày","1_week":"Mỗi 1 tuần",
+          "2_weeks":"Mỗi 2 tuần","1_month":"Mỗi 1 tháng"
+        }[task.alert_frequency] || "";
         try {
           const n = new Notification(`${priorityLabel} – Task NVN`, {
-            body: `${issue}\n👤 ${assignees}`,
+            body: `${issue}\n👤 ${assignees}${freqLabel ? `\n🔔 ${freqLabel} · ⏰ ${task.alert_time || "09:00"}` : ""}`,
             icon: "https://cdn-icons-png.flaticon.com/512/190/190406.png",
-            tag: `task-priority-${task.id}`, // deduplicate: same tag = replace, not stack
-            requireInteraction: task.priority === "P1", // P1 stays until dismissed
+            tag: `task-priority-${task.id}`,
+            requireInteraction: task.priority === "P1",
             silent: false
           });
-          // Click on OS notification → focus the browser tab
           n.onclick = () => { window.focus(); n.close(); };
         } catch(e) {}
       }
@@ -465,7 +482,6 @@
         document.title = _originalTitle;
       }
 
-      // Stop blinking once user returns to the tab
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") stopTitleBlink();
       });
@@ -475,34 +491,50 @@
           .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
       }
 
+      /* ── Core: check time window + alert_time gate ── */
+      function shouldAlert(task, lastMs, nowMs) {
+        // 1. Resolve frequency interval
+        const freq = task.alert_frequency;
+        const intv = FREQ_MS[freq] || PRIORITY_INTERVALS[task.priority || "P3"] || PRIORITY_INTERVALS.P3;
+
+        // 2. Enough time elapsed since last notification?
+        if ((nowMs - lastMs) < intv) return false;
+
+        // 3. Current wall-clock time >= task alert_time?
+        const alertTime = task.alert_time || "09:00"; // "HH:MM"
+        const [ah, am] = alertTime.split(":").map(Number);
+        const now = new Date(nowMs);
+        const curMinutes = now.getHours() * 60 + now.getMinutes();
+        const alertMinutes = (ah || 9) * 60 + (am || 0);
+        if (curMinutes < alertMinutes) return false;
+
+        return true;
+      }
+
       function checkAndNotify() {
         let tasks;
         try { tasks = JSON.parse(localStorage.getItem(LS_TASKS_KEY) || "[]"); }
         catch(e) { return; }
 
-        const now = Date.now();
-        const ts  = loadTimestamps();
+        const nowMs = Date.now();
+        const ts    = loadTimestamps();
         let updated = false;
 
         tasks.forEach(task => {
           if (task.status === "Done") return;
-          const p    = task.priority || "P3";
-          const intv = PRIORITY_INTERVALS[p] || PRIORITY_INTERVALS.P3;
           const last = ts[task.id] || 0;
 
-          if ((now - last) >= intv) {
+          if (shouldAlert(task, last, nowMs)) {
             const isHidden = document.visibilityState !== "visible";
 
-            // Always show in-app toast (visible when tab is active)
             showGToast(task);
 
-            // When user is on another app → OS notification + title blink
             if (isHidden) {
               sendOsNotification(task);
               startTitleBlink();
             }
 
-            ts[task.id] = now;
+            ts[task.id] = nowMs;
             updated = true;
           }
         });
@@ -511,7 +543,6 @@
       }
 
       document.addEventListener("DOMContentLoaded", async () => {
-        // Request OS notification permission proactively on first load
         await requestNotifPermission();
         checkAndNotify();
         setInterval(checkAndNotify, CHECK_INTERVAL);

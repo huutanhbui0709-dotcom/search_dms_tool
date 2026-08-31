@@ -1284,6 +1284,23 @@
               <div class="member-dropdown" id="msDropdown" style="display:none;"></div>
             </div>
           </div>
+          <!-- Alert settings row -->
+          <div class="form-row" style="grid-template-columns:1fr 1fr; gap:12px; margin-top:4px;">
+            <div class="fg">
+              <label style="display:flex;align-items:center;gap:6px;"><i class="fa-regular fa-clock" style="color:var(--accent);"></i> Giờ cảnh báo</label>
+              <input type="time" class="fc" id="tAlertTime" value="09:00" />
+            </div>
+            <div class="fg">
+              <label style="display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-bell" style="color:var(--accent);"></i> Tần suất nhắc</label>
+              <select class="fc" id="tAlertFrequency">
+                <option value="1_day">Mỗi 1 ngày</option>
+                <option value="3_days">Mỗi 3 ngày</option>
+                <option value="1_week" selected>Mỗi 1 tuần</option>
+                <option value="2_weeks">Mỗi 2 tuần</option>
+                <option value="1_month">Mỗi 1 tháng</option>
+              </select>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-outline" onclick="closeTaskModal()"><i class="fa-solid fa-xmark"></i>
@@ -1512,7 +1529,9 @@
               note: t.note || "",
               assignees: Array.isArray(t.assignees) ? t.assignees : [],
               status: statusVal,
-              priority
+              priority,
+              alert_time: t.alert_time || "09:00",
+              alert_frequency: t.alert_frequency || "1_week"
             };
           });
 
@@ -1763,7 +1782,7 @@
       if (dueTasks.length > 0) {
         body.innerHTML = dueTasks.map(t => `
       <div class="due-alert-card">
-        <div class="due-alert-title">🚨 Task cần làm ngay</div>
+        <div class="due-alert-title">🚨 Task cần LƯU Ý</div>
         <div class="due-alert-issue">${esc(t.issue)}</div>
         ${t.note ? `<div class="due-alert-note"><b>Ghi chú:</b> ${esc(t.note)}</div>` : ''}
         <div class="due-alert-assignees">
@@ -1811,6 +1830,8 @@
       document.getElementById("tNote").value = "";
       document.getElementById("tStatus").value = "Pending";
       document.getElementById("tPriority").value = "P3";
+      document.getElementById("tAlertTime").value = "09:00";
+      document.getElementById("tAlertFrequency").value = "1_week";
       selectedAssignees = [];
       renderPills();
       document.getElementById("taskModal").classList.add("show");
@@ -1853,6 +1874,8 @@
       document.getElementById("tNote").value = t.note || "";
       document.getElementById("tStatus").value = t.status || "Pending";
       document.getElementById("tPriority").value = t.priority || "P3";
+      document.getElementById("tAlertTime").value = t.alert_time || "09:00";
+      document.getElementById("tAlertFrequency").value = t.alert_frequency || "1_week";
       selectedAssignees = [...(t.assignees || [])];
       renderPills();
       document.getElementById("taskModal").classList.add("show");
@@ -1874,12 +1897,14 @@
       const note = document.getElementById("tNote").value.trim();
       const status = document.getElementById("tStatus").value;
       const priority = document.getElementById("tPriority").value;
+      const alert_time = document.getElementById("tAlertTime").value || "09:00";
+      const alert_frequency = document.getElementById("tAlertFrequency").value || "1_week";
 
       const payload = {
         action: "save_task",
         deadline, issue, note,
         assignees: selectedAssignees,
-        status, priority
+        status, priority, alert_time, alert_frequency
       };
       if (id) payload.id = parseInt(id);
 
