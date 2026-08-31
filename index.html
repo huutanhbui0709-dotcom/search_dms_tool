@@ -417,6 +417,59 @@
         setTimeout(() => el.remove(), 5100);
       }
 
+      /* ── OS / Web Notification (fires even when user is on another app) ── */
+      let _notifPermission = Notification.permission; // "granted" | "denied" | "default"
+
+      async function requestNotifPermission() {
+        if (_notifPermission === "granted") return true;
+        if (_notifPermission === "denied") return false;
+        try {
+          _notifPermission = await Notification.requestPermission();
+          return _notifPermission === "granted";
+        } catch(e) { return false; }
+      }
+
+      function sendOsNotification(task) {
+        if (_notifPermission !== "granted") return;
+        const issue = (task.issue || "").substring(0, 100);
+        const assignees = (task.assignees || []).join(", ") || "Chưa phân công";
+        const priorityLabel = { P1: "🚨 KHẨN CẤP (P1)", P2: "⚠️ Cao (P2)", P3: "📣 Bình thường (P3)" }[task.priority] || task.priority;
+        try {
+          const n = new Notification(`${priorityLabel} – Task NVN`, {
+            body: `${issue}\n👤 ${assignees}`,
+            icon: "https://cdn-icons-png.flaticon.com/512/190/190406.png",
+            tag: `task-priority-${task.id}`, // deduplicate: same tag = replace, not stack
+            requireInteraction: task.priority === "P1", // P1 stays until dismissed
+            silent: false
+          });
+          // Click on OS notification → focus the browser tab
+          n.onclick = () => { window.focus(); n.close(); };
+        } catch(e) {}
+      }
+
+      /* ── Tab-title blink when hidden ── */
+      let _blinkInterval = null;
+      let _originalTitle = document.title;
+
+      function startTitleBlink() {
+        if (_blinkInterval) return;
+        let on = true;
+        _blinkInterval = setInterval(() => {
+          document.title = on ? `🔔 Task Alert! – ${_originalTitle}` : _originalTitle;
+          on = !on;
+        }, 900);
+      }
+
+      function stopTitleBlink() {
+        if (_blinkInterval) { clearInterval(_blinkInterval); _blinkInterval = null; }
+        document.title = _originalTitle;
+      }
+
+      // Stop blinking once user returns to the tab
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") stopTitleBlink();
+      });
+
       function escHtml(s) {
         return String(s || "")
           .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -438,7 +491,17 @@
           const last = ts[task.id] || 0;
 
           if ((now - last) >= intv) {
+            const isHidden = document.visibilityState !== "visible";
+
+            // Always show in-app toast (visible when tab is active)
             showGToast(task);
+
+            // When user is on another app → OS notification + title blink
+            if (isHidden) {
+              sendOsNotification(task);
+              startTitleBlink();
+            }
+
             ts[task.id] = now;
             updated = true;
           }
@@ -447,13 +510,17 @@
         if (updated) saveTimestamps(ts);
       }
 
-      document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("DOMContentLoaded", async () => {
+        // Request OS notification permission proactively on first load
+        await requestNotifPermission();
         checkAndNotify();
         setInterval(checkAndNotify, CHECK_INTERVAL);
       });
     })();
+    </script>
 
-    /* ── Notification Bell Controller ── */
+    <!-- ── Notification Bell Controller ── -->
+    <script>
     (function() {
       const LS_TASKS_KEY    = "app_tasks_data";
       const LS_READ_KEY     = "task_alerts_read";
