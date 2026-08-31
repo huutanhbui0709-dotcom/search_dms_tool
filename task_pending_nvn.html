@@ -1483,14 +1483,17 @@
     /* ──────────────────────────────────────────────────────────────────────────
        TASKS – LOAD & RENDER
     ────────────────────────────────────────────────────────────────────────── */
-    async function loadTasks() {
+    // silent=true → called from auto-sync polling; skips spinner & aborts if data unchanged
+    async function loadTasks(silent = false) {
       const tbody = document.getElementById("taskTbody");
-      tbody.innerHTML = `<tr><td colspan="8"><div class="state-box"><div class="spinner"></div><div>Đang tải task...</div></div></td></tr>`;
+      if (!silent) {
+        tbody.innerHTML = `<tr><td colspan="8"><div class="state-box"><div class="spinner"></div><div>Đang tải task...</div></div></td></tr>`;
+      }
       try {
         const res = await apiGet("action=read_tasks");
         if (res.status === "success") {
           const rawTasks = res.data || res.tasks || [];
-          allTasks = rawTasks.map(t => {
+          const newTasks = rawTasks.map(t => {
             let dl = t.deadline || t.dueDate || "";
             if (dl && dl.includes("T")) dl = dl.split("T")[0];
             let statusVal = String(t.status || "").trim().toLowerCase();
@@ -1506,15 +1509,27 @@
               priority
             };
           });
+
+          // Deep-compare: skip ALL DOM updates if data is identical
+          if (silent && JSON.stringify(newTasks) === JSON.stringify(allTasks)) {
+            console.log("[Auto-Sync] Data unchanged — skipping re-render.");
+            return;
+          }
+
+          allTasks = newTasks;
           // Cache tasks to localStorage for global notification system
           try { localStorage.setItem("app_tasks_data", JSON.stringify(allTasks)); } catch (e) { }
           applyFilters();
         } else {
-          tbody.innerHTML = `<tr><td colspan="8"><div class="state-box">Lỗi: ${res.message || 'không rõ'}</div></td></tr>`;
+          if (!silent) {
+            tbody.innerHTML = `<tr><td colspan="8"><div class="state-box">Lỗi: ${res.message || 'không rõ'}</div></td></tr>`;
+          }
         }
       } catch (err) {
         console.error("Lỗi load task:", err);
-        tbody.innerHTML = `<tr><td colspan="8"><div class="state-box" style="color:var(--danger);">Lỗi kết nối API: ${err.message}</div></td></tr>`;
+        if (!silent) {
+          tbody.innerHTML = `<tr><td colspan="8"><div class="state-box" style="color:var(--danger);">Lỗi kết nối API: ${err.message}</div></td></tr>`;
+        }
       }
     }
 
@@ -2177,10 +2192,15 @@
         if (!res.ok) return;
         const newEtag = res.headers.get("ETag") || res.headers.get("Last-Modified");
         if (newEtag && newEtag !== currentEtag) {
-          console.log("[Auto-Sync] ETag changed from", currentEtag, "to", newEtag, "- reloading tasks...");
+          console.log("[Auto-Sync] ETag changed:", currentEtag, "→", newEtag, "- fetching tasks...");
           currentEtag = newEtag;
           localStorage.setItem("r2_tasks_etag", newEtag);
-          await loadTasks();
+          // silent=true: deep-compare inside loadTasks will guard against unnecessary re-renders
+          await loadTasks(true);
+        }
+        // ETag absent (server doesn't expose it) → always silent-fetch & let deep-compare decide
+        if (!newEtag) {
+          await loadTasks(true);
         }
       } catch (err) {
         console.warn("[Auto-Sync] HEAD request failed:", err);
