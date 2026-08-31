@@ -606,20 +606,32 @@
 
         const priorityIcons = { P1: "🔴", P2: "🟡", P3: "🟣" };
         const priorityLabels = { P1: "P1 – Khẩn cấp", P2: "P2 – Cao", P3: "P3 – Thường" };
+        const freqLabels = {
+          "1_day": "Mỗi 1 ngày",
+          "3_days": "Mỗi 3 ngày",
+          "1_week": "Mỗi 1 tuần",
+          "2_weeks": "Mỗi 2 tuần",
+          "1_month": "Mỗi 1 tháng"
+        };
 
         listContainer.innerHTML = sortedAlerts.map(t => {
           const isUnread = !readIds.includes(t.id);
           const classes = `bell-item ${isUnread ? 'unread' : ''}`;
           const deadlineLabel = t.deadline ? formatDate(t.deadline) : "Không hạn";
+          const freqText = freqLabels[t.alert_frequency] || t.alert_frequency || "Mỗi 1 tuần";
+          const timeText = t.alert_time || "09:00";
 
           return `
             <div class="${classes}" data-task-id="${t.id}">
               <div class="bell-item-icon">${priorityIcons[t.priority] || "📣"}</div>
               <div class="bell-item-body">
                 <div class="bell-item-title">${escHtml(t.issue || "")}</div>
-                <div class="bell-item-meta">
+                <div class="bell-item-meta" style="display:flex; flex-wrap:wrap; align-items:center; gap:6px;">
                   <span class="bell-item-p-badge ${String(t.priority).toLowerCase()}">${priorityLabels[t.priority] || t.priority}</span>
                   <span>Hạn: ${escHtml(deadlineLabel)}</span>
+                  <span style="background:var(--accent-bg); color:var(--accent); padding:1px 5px; border-radius:4px; font-size:10px; display:inline-flex; align-items:center; gap:4px; font-weight:500;">
+                    <i class="fa-solid fa-bell" style="font-size:8px;"></i> ${freqText} · <i class="fa-regular fa-clock" style="font-size:8px;"></i> ${timeText}
+                  </span>
                 </div>
               </div>
             </div>
