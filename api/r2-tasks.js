@@ -11,11 +11,12 @@ function hmacSha256(key, msg, enc) {
   return crypto.createHmac("sha256", key).update(msg, "utf8").digest(enc);
 }
 function sha256hex(msg) {
-  return crypto.createHash("sha256").update(msg, "utf8").digest("hex");
+  const buf = Buffer.isBuffer(msg) ? msg : Buffer.from(String(msg || ""), "utf8");
+  return crypto.createHash("sha256").update(buf).digest("hex");
 }
 
 function buildR2Request(method, body) {
-  body = body || "";
+  const bodyBuf = body ? (Buffer.isBuffer(body) ? body : Buffer.from(String(body), "utf8")) : Buffer.alloc(0);
   const host      = R2_ACCOUNT_ID + ".r2.cloudflarestorage.com";
   const uriPath   = "/" + R2_BUCKET_NAME + "/" + R2_OBJECT_KEY;
   const now       = new Date();
@@ -24,8 +25,8 @@ function buildR2Request(method, body) {
   const region    = "auto";
   const service   = "s3";
 
-  const payloadHash  = sha256hex(body);
-  const contentType  = method === "PUT" ? "application/json" : "";
+  const payloadHash  = sha256hex(bodyBuf);
+  const contentType  = method === "PUT" ? "application/json; charset=utf-8" : "";
 
   let canonicalHeaders = "host:" + host + "\nx-amz-content-sha256:" + payloadHash + "\nx-amz-date:" + amzDate + "\n";
   let signedHeaders    = "host;x-amz-content-sha256;x-amz-date";
@@ -51,8 +52,11 @@ function buildR2Request(method, body) {
     "x-amz-date":           amzDate,
     "x-amz-content-sha256": payloadHash
   };
-  if (contentType) headers["Content-Type"] = contentType;
-  return { host: host, path: uriPath, headers: headers };
+  if (contentType) {
+    headers["Content-Type"] = contentType;
+    headers["Content-Length"] = bodyBuf.length;
+  }
+  return { host: host, path: uriPath, headers: headers, bodyBuf: bodyBuf };
 }
 
 function r2Fetch(method, body) {
@@ -61,12 +65,17 @@ function r2Fetch(method, body) {
     const info = buildR2Request(method, body);
     const options = { hostname: info.host, path: info.path, method: method, headers: info.headers };
     const req = https.request(options, function(res) {
-      let data = "";
-      res.on("data", function(c) { data += c; });
-      res.on("end", function() { resolve({ statusCode: res.statusCode, body: data, headers: res.headers }); });
+      const chunks = [];
+      res.on("data", function(c) { chunks.push(c); });
+      res.on("end", function() {
+        const fullBody = Buffer.concat(chunks).toString("utf8");
+        resolve({ statusCode: res.statusCode, body: fullBody, headers: res.headers });
+      });
     });
     req.on("error", reject);
-    if (body) req.write(body);
+    if (info.bodyBuf && info.bodyBuf.length > 0) {
+      req.write(info.bodyBuf);
+    }
     req.end();
   });
 }
@@ -115,6 +124,7 @@ module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
 
   try {
     if (req.method === "HEAD") {
