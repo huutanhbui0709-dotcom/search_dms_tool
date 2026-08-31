@@ -1677,11 +1677,33 @@
         return matchStatus && matchMember;
       });
 
-      // Tự động đẩy các task đã hoàn thành (Done) xuống dưới cùng của bảng
+      // Sắp xếp danh sách:
+      // 1. Task "Pending" lên trên, "Done" xuống dưới cùng
+      // 2. Trong nhóm "Pending": Task CÓ due date (hạn chót) lên trước task KHÔNG CÓ due date
+      // 3. Trong nhóm có due date: Sắp theo ngày gần nhất -> xa nhất (nếu trùng ngày: P1 > P2 > P3)
+      // 4. Trong nhóm không có due date: Sắp theo độ ưu tiên (P1 > P2 > P3)
+      const pWeight = { P1: 1, P2: 2, P3: 3 };
       filteredTasks.sort((a, b) => {
         const aDone = (a.status === "Done");
         const bDone = (b.status === "Done");
         if (aDone !== bDone) return aDone ? 1 : -1;
+
+        if (!aDone && !bDone) {
+          const aHasDate = !!(a.deadline && String(a.deadline).trim());
+          const bHasDate = !!(b.deadline && String(b.deadline).trim());
+          if (aHasDate !== bHasDate) return aHasDate ? -1 : 1;
+
+          if (aHasDate && bHasDate) {
+            const aIso = parseToIsoDate(a.deadline);
+            const bIso = parseToIsoDate(b.deadline);
+            if (aIso && bIso && aIso !== bIso) return aIso.localeCompare(bIso);
+          }
+
+          const aP = pWeight[a.priority] || 3;
+          const bP = pWeight[b.priority] || 3;
+          if (aP !== bP) return aP - bP;
+        }
+
         return 0;
       });
 
