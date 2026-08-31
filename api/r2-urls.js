@@ -82,6 +82,17 @@ module.exports = async function handler(req, res) {
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method === "OPTIONS") return res.status(204).end();
 
+  // Debug endpoint: /api/r2-urls?debug=1
+  const urlParts0 = require("url").parse(req.url, true);
+  if (urlParts0.query && urlParts0.query.debug === "1") {
+    return res.status(200).json({
+      R2_ACCOUNT_ID:        R2_ACCOUNT_ID        ? "✅ SET (" + R2_ACCOUNT_ID.slice(0,6) + "...)" : "❌ MISSING",
+      R2_ACCESS_KEY_ID:     R2_ACCESS_KEY_ID     ? "✅ SET (" + R2_ACCESS_KEY_ID.slice(0,6) + "...)" : "❌ MISSING",
+      R2_SECRET_ACCESS_KEY: R2_SECRET_ACCESS_KEY ? "✅ SET (" + R2_SECRET_ACCESS_KEY.slice(0,4) + "...)" : "❌ MISSING",
+      R2_BUCKET_NAME:       R2_BUCKET_NAME       ? "✅ SET (" + R2_BUCKET_NAME + ")" : "❌ MISSING",
+    });
+  }
+
   if (req.method === "GET") {
     const urlParts = require("url").parse(req.url, true);
     const dataParam = (req.query && req.query.data) || (urlParts.query && urlParts.query.data);
@@ -105,10 +116,10 @@ module.exports = async function handler(req, res) {
         if (putR.statusCode >= 200 && putR.statusCode < 300) {
           return res.status(200).json({ status: "success", data: current });
         } else {
-          return res.status(502).json({ status: "error", message: "R2 PUT failed: " + putR.statusCode });
+          return res.status(502).json({ status: "error", message: "R2 PUT failed HTTP " + putR.statusCode, r2Body: putR.body });
         }
       } catch (err) {
-        return res.status(500).json({ status: "error", message: err.message });
+        return res.status(500).json({ status: "error", message: err.message, stack: err.stack });
       }
     } else {
       try {
@@ -139,10 +150,10 @@ module.exports = async function handler(req, res) {
       if (putR.statusCode >= 200 && putR.statusCode < 300) {
         return res.status(200).json({ status: "success", data: current });
       } else {
-        return res.status(502).json({ status: "error", message: "R2 PUT failed: " + putR.statusCode });
+        return res.status(502).json({ status: "error", message: "R2 PUT failed HTTP " + putR.statusCode, r2Body: putR.body });
       }
     } catch (err) {
-      return res.status(500).json({ status: "error", message: err.message });
+      return res.status(500).json({ status: "error", message: err.message, stack: err.stack });
     }
   }
 

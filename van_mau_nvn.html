@@ -673,16 +673,22 @@
           const requestUrl = `${endpoint}${separator}data=${encodeURIComponent(payload)}&t=${Date.now()}`;
 
           const res = await fetch(requestUrl);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const result = await res.json();
+          const rawText = await res.text();
+          console.log("[R2 Save] endpoint:", requestUrl);
+          console.log("[R2 Save] HTTP status:", res.status);
+          console.log("[R2 Save] response body:", rawText);
+          if (!res.ok) throw new Error(`HTTP ${res.status}: ${rawText}`);
+          let result;
+          try { result = JSON.parse(rawText); } catch(e) { throw new Error("Response không phải JSON: " + rawText); }
           if (result.status === "success" || result.success) {
             showToast("✅ Đã đồng bộ URL Văn mẫu lên R2!", "success");
           } else {
-            showToast("⚠️ Lưu R2 thất bại: " + (result.message || "lỗi không rõ"), "error");
+            const detail = [result.message, result.r2Body].filter(Boolean).join(" | R2: ");
+            showToast("⚠️ Lưu R2 thất bại: " + (detail || "lỗi không rõ"), "error");
           }
         } catch (err) {
-          console.error(err);
-          alert(`Lưu R2 thất bại: ${err.message || JSON.stringify(err)}`);
+          console.error("[R2 Save] Error:", err);
+          alert(`Lưu R2 thất bại:\n${err.message}`);
         }
       }
       
