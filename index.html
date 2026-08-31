@@ -516,6 +516,11 @@
       function shouldAlert(task, lastMs, nowMs) {
         const now = new Date(nowMs);
         const freq = task.alert_frequency;
+
+        // Mức P3 không cảnh báo theo độ ưu tiên mặc định;
+        // chỉ cảnh báo nếu đã cài đặt tần suất cụ thể (alert_frequency)
+        if ((task.priority || "P3") === "P3" && !FREQ_MS[freq]) return false;
+
         const intv = FREQ_MS[freq] || PRIORITY_INTERVALS[task.priority || "P3"] || PRIORITY_INTERVALS.P3;
 
         // ── Day Matching: If alert_frequency is 1_week or 2_weeks ──
@@ -594,8 +599,6 @@
 
         tasks.forEach(task => {
           if (task.status === "Done") return;
-          // Mức P3 không cần cảnh báo – chỉ cảnh báo P1 và P2
-          if ((task.priority || "P3") === "P3") return;
           const last = ts[task.id] || ts[String(task.id)] || 0;
 
           if (shouldAlert(task, last, nowMs)) {
@@ -683,8 +686,14 @@
       function getActiveAlerts() {
         const tasks = loadTasks();
         const notified = loadTimestamps();
-        // Chỉ hiển thị P1 và P2 trong chuông thông báo (P3 không cần cảnh báo)
-        return tasks.filter(t => t.status !== "Done" && ["P1","P2"].includes(t.priority) && (notified[t.id] || notified[String(t.id)]));
+        // P3 chỉ xuất hiện trong chuông nếu đã có tần suất cụ thể
+        const FREQ_MS_BELL = {"1_day":86400000,"3_days":259200000,"1_week":604800000,"2_weeks":1209600000,"1_month":2592000000};
+        return tasks.filter(t => {
+          if (t.status === "Done") return false;
+          if (!notified[t.id] && !notified[String(t.id)]) return false;
+          if ((t.priority || "P3") === "P3" && !FREQ_MS_BELL[t.alert_frequency]) return false;
+          return true;
+        });
       }
 
       function updateBellUI() {
