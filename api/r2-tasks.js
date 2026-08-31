@@ -223,9 +223,9 @@ module.exports = async function handler(req, res) {
           };
           currentData.tasks.push(newTask);
         }
-
+        const savedTaskId = id ? Number(id) : currentData.tasks[currentData.tasks.length - 1].id;
         await saveTasksData(currentData);
-        return res.status(200).json({ status: "success" });
+        return res.status(200).json({ status: "success", id: savedTaskId });
       }
 
       if (action === "delete_task") {

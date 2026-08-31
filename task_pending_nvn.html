@@ -1836,6 +1836,25 @@
       try {
         const res = await apiPost(payload);
         if (res.status === "success") {
+          const savedTaskId = id ? Number(id) : (res.id ? Number(res.id) : null);
+          if (savedTaskId && alert_time) {
+            const parts = alert_time.split(":");
+            const ah = parseInt(parts[0], 10);
+            const am = parseInt(parts[1] || "0", 10);
+            if (!isNaN(ah) && !isNaN(am)) {
+              const now = new Date();
+              const curTotalMin = now.getHours() * 60 + now.getMinutes();
+              const targetTotalMin = ah * 60 + am;
+              // Nếu giờ cài đặt hôm nay đã qua, ghi nhận mốc thời gian để không bắn thông báo trễ ngay sau khi Lưu
+              if (curTotalMin >= targetTotalMin) {
+                try {
+                  const notifMap = JSON.parse(localStorage.getItem("task_last_notified") || "{}");
+                  notifMap[savedTaskId] = Date.now();
+                  localStorage.setItem("task_last_notified", JSON.stringify(notifMap));
+                } catch(e) {}
+              }
+            }
+          }
           toast(id ? "Cập nhật task thành công!" : "Thêm task thành công!", "s");
           closeTaskModal();
           loadTasks();
