@@ -594,6 +594,8 @@
 
         tasks.forEach(task => {
           if (task.status === "Done") return;
+          // Mức P3 không cần cảnh báo – chỉ cảnh báo P1 và P2
+          if ((task.priority || "P3") === "P3") return;
           const last = ts[task.id] || ts[String(task.id)] || 0;
 
           if (shouldAlert(task, last, nowMs)) {
@@ -681,7 +683,8 @@
       function getActiveAlerts() {
         const tasks = loadTasks();
         const notified = loadTimestamps();
-        return tasks.filter(t => t.status !== "Done" && ["P1","P2","P3"].includes(t.priority) && (notified[t.id] || notified[String(t.id)]));
+        // Chỉ hiển thị P1 và P2 trong chuông thông báo (P3 không cần cảnh báo)
+        return tasks.filter(t => t.status !== "Done" && ["P1","P2"].includes(t.priority) && (notified[t.id] || notified[String(t.id)]));
       }
 
       function updateBellUI() {
