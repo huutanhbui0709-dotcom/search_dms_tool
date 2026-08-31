@@ -173,10 +173,13 @@ module.exports = async function handler(req, res) {
       const currentData = await getTasksData();
 
       if (action === "save_task") {
-        const { id, deadline, issue, note, assignees, status, priority } = payload;
+        const { id, deadline, issue, note, assignees, status, priority, alert_time, alert_frequency } = payload;
         const taskStatus = (String(status || "").trim().toLowerCase() === "done") ? "Done" : "Pending";
         const taskPriority = ["P1","P2","P3"].includes(priority) ? priority : "P3";
-        
+        const taskAlertTime = alert_time || "09:00";
+        const taskAlertFreq = ["1_day","3_days","1_week","2_weeks","1_month"].includes(alert_frequency)
+          ? alert_frequency : "1_week";
+
         if (id) {
           // Edit task
           const taskIndex = currentData.tasks.findIndex(t => Number(t.id) === Number(id));
@@ -188,7 +191,9 @@ module.exports = async function handler(req, res) {
               note: note || "",
               assignees: Array.isArray(assignees) ? assignees : [],
               status: taskStatus,
-              priority: taskPriority
+              priority: taskPriority,
+              alert_time: taskAlertTime,
+              alert_frequency: taskAlertFreq
             };
           } else {
             return res.status(404).json({ status: "error", message: "Không tìm thấy task cần chỉnh sửa" });
@@ -202,7 +207,9 @@ module.exports = async function handler(req, res) {
             note: note || "",
             assignees: Array.isArray(assignees) ? assignees : [],
             status: taskStatus,
-            priority: taskPriority
+            priority: taskPriority,
+            alert_time: taskAlertTime,
+            alert_frequency: taskAlertFreq
           };
           currentData.tasks.push(newTask);
         }
