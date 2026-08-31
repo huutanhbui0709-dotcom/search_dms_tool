@@ -16,47 +16,47 @@
     }
 
     :root {
-      --bg: #f0f4ff;
+      --bg: #f8fafc;
       --surface: #ffffff;
-      --border: #dde3f5;
-      --border-s: #b0bdd8;
-      --text: #1a1f36;
-      --text-2: #4a5568;
-      --text-muted: #8898b4;
+      --border: #e2e8f0;
+      --border-s: #cbd5e1;
+      --text: #0f172a;
+      --text-2: #334155;
+      --text-muted: #64748b;
       --accent: #4f46e5;
       --accent-h: #3730a3;
-      --accent-bg: #eef2ff;
-      --accent-bdr: #c7d2fe;
-      --hdr: #1e1b4b;
-      --hdr-txt: #f0f4ff;
-      --row-alt: #f7f9ff;
+      --accent-bg: #f5f3ff;
+      --accent-bdr: #ddd6fe;
+      --hdr: #1e293b;
+      --hdr-txt: #f8fafc;
+      --row-alt: #f8fafc;
       --pending-bg: #fee2e2;
-      --pending-txt: #b91c1c;
-      --done-bg: #dcfce7;
-      --done-txt: #166534;
+      --pending-txt: #ef4444;
+      --done-bg: #d1fae5;
+      --done-txt: #10b981;
       --danger: #ef4444;
-      --danger-h: #b91c1c;
+      --danger-h: #dc2626;
       --success: #10b981;
       --warn: #f59e0b;
-      --r-sm: 6px;
+      --r-sm: 8px;
       --r-md: 10px;
-      --r-lg: 14px;
-      --sh-sm: 0 1px 3px rgba(79, 70, 229, .08);
-      --sh-md: 0 6px 20px rgba(79, 70, 229, .12);
+      --r-lg: 12px;
+      --sh-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --sh-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
     }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: "Segoe UI", Arial, sans-serif;
-      font-size: 14px;
-      line-height: 1.6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 13.5px;
+      line-height: 1.5;
       min-height: 100vh;
-      transition: padding-right 0.3s ease;
+      transition: padding-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     body.sidebar-open {
-      padding-right: 350px;
+      padding-right: 360px;
     }
 
     /* ── Layout ───────────────────────────────────────────────────────────── */
@@ -71,7 +71,7 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
       justify-content: space-between;
     }
 
@@ -82,26 +82,28 @@
     }
 
     .hero-icon {
-      width: 42px;
-      height: 42px;
+      width: 40px;
+      height: 40px;
       border-radius: var(--r-md);
-      background: var(--hdr);
+      background: var(--accent-bg);
+      color: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 18px;
       flex-shrink: 0;
     }
 
     .hero h1 {
-      font-size: 19px;
+      font-size: 18px;
       font-weight: 700;
+      color: #0f172a;
       letter-spacing: -0.3px;
     }
 
     .hero p {
       font-size: 12.5px;
-      color: var(--accent);
+      color: var(--text-muted);
       margin-top: 1px;
     }
 
@@ -140,30 +142,30 @@
     /* ── Toolbar / Filter Row ──────────────────────────────────────────────── */
     .toolbar {
       display: flex;
-      gap: 8px;
+      justify-content: space-between;
       align-items: center;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
     }
 
     .toolbar-left {
       display: flex;
-      gap: 8px;
-      flex: 1;
-      flex-wrap: wrap;
+      gap: 12px;
     }
 
     /* ── Filters ──────────────────────────────────────────────────────────── */
     select.filter-sel {
-      padding: 7px 11px;
-      border: 1px solid var(--border-s);
+      padding: 8px 12px;
+      border: 1px solid var(--border);
       border-radius: var(--r-md);
       font-size: 13px;
+      font-weight: 600;
       outline: none;
       background: var(--surface);
-      color: var(--text);
+      color: var(--text-2);
       cursor: pointer;
-      height: 36px;
+      height: 38px;
+      transition: border-color 0.15s;
     }
 
     select.filter-sel:focus {
@@ -189,6 +191,9 @@
       background: var(--accent);
       color: #fff;
       border-color: var(--accent);
+      border-radius: 10px;
+      height: 38px;
+      padding: 8px 16px;
     }
 
     .btn-primary:hover {
@@ -198,14 +203,28 @@
 
     .btn-outline {
       background: transparent;
-      border-color: var(--border-s);
-      color: var(--text);
+      border-color: var(--border);
+      color: var(--text-2);
+      border-radius: 10px;
+      height: 38px;
+      padding: 8px 16px;
     }
 
     .btn-outline:hover {
       background: var(--accent-bg);
-      border-color: var(--accent);
+      border-color: var(--accent-bdr);
       color: var(--accent);
+    }
+
+    .btn-outline-danger {
+      background: #ffffff;
+      border: 1px solid #fee2e2;
+      color: #ef4444;
+      transition: background 0.15s;
+    }
+
+    .btn-outline-danger:hover {
+      background: #fee2e2;
     }
 
     .btn-danger {
@@ -244,6 +263,44 @@
       border-radius: 5px;
     }
 
+    .btn-action-edit {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      padding: 6px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn-action-edit:hover {
+      background: #e2e8f0;
+      border-color: #cbd5e1;
+    }
+
+    .btn-action-delete {
+      background: #fff5f5;
+      border: 1px solid #fee2e2;
+      color: #ef4444;
+      padding: 6px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn-action-delete:hover {
+      background: #fee2e2;
+      border-color: #fca5a5;
+    }
+
     /* ── Card / Table ─────────────────────────────────────────────────────── */
     .card {
       background: var(--surface);
@@ -264,12 +321,13 @@
     }
 
     th {
-      background: var(--hdr);
-      color: var(--hdr-txt);
-      font-size: 12.5px;
+      background: #1e293b;
+      color: #f8fafc;
+      font-size: 12px;
       font-weight: 700;
-      padding: 11px 14px;
-      letter-spacing: 0.4px;
+      padding: 12px 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       white-space: nowrap;
     }
 
@@ -282,13 +340,11 @@
     }
 
     td {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 13px;
+      color: #334155;
       vertical-align: middle;
-    }
-
-    tr:nth-child(even) td {
-      background: var(--row-alt);
     }
 
     tr:last-child td {
@@ -296,8 +352,7 @@
     }
 
     tr:hover td {
-      background: var(--accent-bg);
-      transition: background .12s;
+      background: #f8fafc;
     }
 
     .col-stt {
@@ -308,7 +363,7 @@
     }
 
     .col-priority {
-      width: 70px;
+      width: 80px;
       text-align: center;
     }
 
@@ -318,14 +373,14 @@
     }
 
     .col-issue {
-      min-width: 200px;
+      min-width: 240px;
       white-space: pre-wrap;
       word-break: break-word;
     }
 
     .col-note {
-      min-width: 130px;
-      color: var(--text-2);
+      min-width: 150px;
+      color: var(--text-muted);
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -339,38 +394,37 @@
     }
 
     .col-actions {
-      width: 120px;
+      width: 100px;
       text-align: center;
     }
 
     /* Priority badges */
     .badge-p1 {
       background: #fee2e2;
-      color: #b91c1c;
+      color: #ef4444;
       border: 1px solid #fca5a5;
-      font-weight: 800;
     }
 
     .badge-p2 {
       background: #fef3c7;
-      color: #92400e;
+      color: #d97706;
       border: 1px solid #fde68a;
-      font-weight: 800;
     }
 
     .badge-p3 {
-      background: #ede9fe;
-      color: #4c1d95;
-      border: 1px solid #c4b5fd;
-      font-weight: 800;
+      background: #f3e8ff;
+      color: #9333ea;
+      border: 1px solid #e9d5ff;
     }
 
     /* ── Badges ───────────────────────────────────────────────────────────── */
     .badge {
-      display: inline-block;
-      padding: 2px 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 10px;
       border-radius: 20px;
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 700;
       margin: 2px 2px 2px 0;
     }
@@ -384,11 +438,13 @@
     .badge-pending {
       background: var(--pending-bg);
       color: var(--pending-txt);
+      border: 1px solid #fca5a5;
     }
 
     .badge-done {
       background: var(--done-bg);
       color: var(--done-txt);
+      border: 1px solid #a7f3d0;
     }
 
     /* ── Deadline indicator ───────────────────────────────────────────────── */
@@ -403,7 +459,7 @@
     }
 
     .deadline-upcoming {
-      color: var(--text);
+      color: var(--text-2);
     }
 
     /* ── Empty / Loading ──────────────────────────────────────────────────── */
@@ -436,29 +492,45 @@
     .stats-bar {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 16px;
+      margin-bottom: 20px;
     }
 
     .stat-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: var(--r-lg);
-      padding: 14px 18px;
+      padding: 16px 20px;
       display: flex;
       align-items: center;
-      gap: 14px;
-      border: 1px solid transparent;
+      gap: 16px;
       box-shadow: var(--sh-sm);
     }
 
     .stat-chip .stat-icon {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: var(--r-md);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 20px;
       flex-shrink: 0;
+    }
+
+    .stat-chip.total .stat-icon {
+      background: #eff6ff;
+      color: #3b82f6;
+    }
+
+    .stat-chip.pending .stat-icon {
+      background: #fff5f5;
+      color: #ef4444;
+    }
+
+    .stat-chip.done .stat-icon {
+      background: #ecfdf5;
+      color: #10b981;
     }
 
     .stat-chip .stat-info {
@@ -467,80 +539,29 @@
     }
 
     .stat-chip b {
-      font-size: 26px;
+      font-size: 22px;
       font-weight: 800;
+      color: var(--text);
       line-height: 1.1;
     }
 
-    .stat-chip span {
-      font-size: 12px;
-      font-weight: 600;
-      opacity: .75;
-      margin-top: 1px;
+    .stat-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-2);
     }
 
-    /* Total – indigo */
-    .stat-chip.total {
-      background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-      border-color: #c7d2fe;
-    }
-
-    .stat-chip.total .stat-icon {
-      background: #4f46e5;
-      color: #fff;
-    }
-
-    .stat-chip.total b {
-      color: #3730a3;
-    }
-
-    .stat-chip.total span {
-      color: #4338ca;
-    }
-
-    /* Pending – red/orange */
-    .stat-chip.pending {
-      background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
-      border-color: #fecdd3;
-    }
-
-    .stat-chip.pending .stat-icon {
-      background: #ef4444;
-      color: #fff;
-    }
-
-    .stat-chip.pending b {
-      color: #b91c1c;
-    }
-
-    .stat-chip.pending span {
-      color: #dc2626;
-    }
-
-    /* Done – green */
-    .stat-chip.done {
-      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-      border-color: #bbf7d0;
-    }
-
-    .stat-chip.done .stat-icon {
-      background: #10b981;
-      color: #fff;
-    }
-
-    .stat-chip.done b {
-      color: #166534;
-    }
-
-    .stat-chip.done span {
-      color: #15803d;
+    .stat-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
     }
 
     /* ── Modal ────────────────────────────────────────────────────────────── */
     .modal-bg {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, .45);
+      background: rgba(15, 23, 42, 0.3);
       backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
@@ -568,6 +589,7 @@
       flex-direction: column;
       transform: translateY(-18px);
       transition: transform .22s ease;
+      border: 1px solid var(--border);
     }
 
     .modal form {
@@ -582,9 +604,9 @@
     }
 
     .modal-hdr {
-      background: var(--hdr);
-      color: var(--hdr-txt);
-      padding: 15px 20px;
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 16px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -592,14 +614,14 @@
     }
 
     .modal-hdr h3 {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
     }
 
     .modal-hdr button {
       background: none;
       border: none;
-      color: #9ca3af;
+      color: #94a3b8;
       font-size: 22px;
       line-height: 1;
       padding: 0 4px;
@@ -611,14 +633,14 @@
     }
 
     .modal-body {
-      padding: 18px 20px;
+      padding: 20px;
       overflow-y: auto;
       flex: 1;
     }
 
     .modal-footer {
-      padding: 12px 20px;
-      background: var(--row-alt);
+      padding: 14px 20px;
+      background: #f8fafc;
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: flex-end;
@@ -642,7 +664,6 @@
     }
 
     @media (max-width: 580px) {
-
       .form-row,
       .form-row.triple {
         grid-template-columns: 1fr;
@@ -658,6 +679,7 @@
       font-weight: 700;
       font-size: 12.5px;
       margin-bottom: 5px;
+      color: var(--text-2);
     }
 
     .fg .req {
@@ -666,12 +688,14 @@
 
     .fc {
       width: 100%;
-      padding: 9px 12px;
-      border: 1px solid var(--border-s);
+      padding: 8px 12px;
+      border: 1px solid var(--border);
       border-radius: var(--r-md);
-      font-size: 14px;
+      font-size: 13.5px;
       font-family: inherit;
       outline: none;
+      background: #ffffff;
+      color: var(--text);
     }
 
     .fc:focus {
@@ -691,7 +715,7 @@
 
     /* ── Multi-select member pills ────────────────────────────────────────── */
     .multi-select-wrap {
-      border: 1px solid var(--border-s);
+      border: 1px solid var(--border);
       border-radius: var(--r-md);
       padding: 8px 10px;
       background: var(--surface);
@@ -743,7 +767,7 @@
       left: 0;
       right: 0;
       background: var(--surface);
-      border: 1px solid var(--border-s);
+      border: 1px solid var(--border);
       border-radius: var(--r-md);
       box-shadow: var(--sh-md);
       z-index: 500;
@@ -801,7 +825,7 @@
       border-radius: var(--r-sm);
       border: 1px solid var(--border);
       margin-bottom: 6px;
-      background: var(--row-alt);
+      background: var(--bg);
     }
 
     .member-list-item:hover {
@@ -916,8 +940,8 @@
     }
 
     .toast {
-      background: #1f2937;
-      color: #fff;
+      background: #1e293b;
+      color: #f8fafc;
       padding: 10px 16px;
       border-radius: var(--r-md);
       box-shadow: var(--sh-md);
@@ -925,7 +949,7 @@
       align-items: center;
       gap: 8px;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
       opacity: 0;
       transform: translateY(18px);
       animation: tIn .28s forwards, tOut .28s 2.72s forwards;
@@ -957,18 +981,18 @@
       }
     }
 
-    /* ── Due Sidebar ──────────────────────────────────────────────────────── */
+    /* ── Refactored Right Drawer (Sidebar) ── */
     .due-sidebar {
       position: fixed;
       top: 0;
-      right: -350px;
-      width: 350px;
+      right: -360px;
+      width: 360px;
       height: 100vh;
-      background: var(--surface);
-      border-left: 1px solid var(--border);
-      box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
-      z-index: 950;
-      transition: right 0.3s ease;
+      background: #ffffff;
+      border-left: 1px solid #e2e8f0;
+      box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+      z-index: 1100;
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
     }
@@ -978,27 +1002,29 @@
     }
 
     .due-sidebar-header {
-      background: var(--danger);
-      color: #fff;
-      padding: 15px 20px;
+      background: #ef4444;
+      color: #ffffff;
+      padding: 16px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
     }
 
     .due-sidebar-header h3 {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .due-sidebar-close {
       background: none;
       border: none;
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 24px;
-      line-height: 1;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 22px;
       cursor: pointer;
-      padding: 0 4px;
       transition: color 0.15s;
     }
 
@@ -1116,25 +1142,40 @@
           <p>Quản lý công việc đang chờ xử lý, phân công và theo dõi tiến độ cho cả nhóm.</p>
         </div>
       </div>
-      <button class="btn-outline" onclick="openMemberModal()"
-        style="font-size:12.5px;padding:7px 14px;white-space:nowrap;">⚙ Quản lý Thành viên</button>
+      <button class="btn-outline" onclick="openMemberModal()">👥 Quản lý thành viên</button>
     </div>
-
-
 
     <!-- ── Summary Cards ── -->
     <div class="stats-bar" id="statsBar">
       <div class="stat-chip total">
         <div class="stat-icon">📋</div>
-        <div class="stat-info"><b id="stTotal">0</b><span>Tổng task</span></div>
+        <div class="stat-info">
+          <div style="display:flex; align-items:baseline; gap:8px;">
+            <b id="stTotal">0</b>
+            <span class="stat-label">Tổng task</span>
+          </div>
+          <span class="stat-desc">Toàn bộ công việc</span>
+        </div>
       </div>
       <div class="stat-chip pending">
         <div class="stat-icon">⏳</div>
-        <div class="stat-info"><b id="stPending">0</b><span>Pending</span></div>
+        <div class="stat-info">
+          <div style="display:flex; align-items:baseline; gap:8px;">
+            <b id="stPending">0</b>
+            <span class="stat-label">Pending</span>
+          </div>
+          <span class="stat-desc">Đang chờ xử lý</span>
+        </div>
       </div>
       <div class="stat-chip done">
         <div class="stat-icon">✅</div>
-        <div class="stat-info"><b id="stDone">0</b><span>Done</span></div>
+        <div class="stat-info">
+          <div style="display:flex; align-items:baseline; gap:8px;">
+            <b id="stDone">0</b>
+            <span class="stat-label">Done</span>
+          </div>
+          <span class="stat-desc">Đã hoàn thành</span>
+        </div>
       </div>
     </div>
 
@@ -1150,8 +1191,8 @@
           <option value="">👤 Tất cả thành viên</option>
         </select>
       </div>
-      <button class="btn-primary" onclick="openTaskModal()" style="height:36px;">
-        <span>＋</span> Thêm Task mới
+      <button class="btn-primary" onclick="openTaskModal()">
+        <span>＋</span> Thêm task mới
       </button>
     </div>
 
@@ -1486,6 +1527,102 @@
       return "deadline-upcoming";
     }
 
+    function getDaysRemaining(deadlineStr) {
+      if (!deadlineStr) return "Không hạn";
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const deadline = new Date(parseToIsoDate(deadlineStr));
+      deadline.setHours(0, 0, 0, 0);
+      const diffTime = deadline.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays === 0) return "Còn 0 ngày";
+      if (diffDays < 0) return `Trễ ${Math.abs(diffDays)} ngày`;
+      return `Còn ${diffDays} ngày`;
+    }
+
+    function updateDueSidebar() {
+      const todayStr = getTodayLocalDate();
+      const dueTasks = allTasks.filter(t => {
+        const taskDate = parseToIsoDate(t.deadline);
+        return taskDate === todayStr && t.status !== "Done";
+      });
+
+      const sidebar = document.getElementById("dueSidebar");
+      const trigger = document.getElementById("dueAlertTrigger");
+      const body = document.getElementById("dueSidebarBody");
+
+      if (dueTasks.length > 0) {
+        body.innerHTML = dueTasks.map(t => {
+          const daysLabel = getDaysRemaining(t.deadline);
+          const formattedDl = t.deadline ? formatDate(t.deadline) : "—";
+          return `
+            <div class="due-task-detail">
+              <div class="detail-section">
+                <div class="section-label">📅 Ngày đến hạn</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                  <span class="detail-date">${esc(formattedDl)}</span>
+                  <span class="countdown-badge">${esc(daysLabel)}</span>
+                </div>
+              </div>
+
+              <hr style="border:0; border-top:1px solid #e2e8f0; margin:16px 0;" />
+
+              <div class="detail-section">
+                <h4 style="font-size:13.5px; font-weight:700; margin-bottom:12px; color:#1e293b;">Thông tin task</h4>
+                
+                <div class="field-wrap">
+                  <div class="field-label">Issue</div>
+                  <div class="field-value issue-text">${esc(t.issue)}</div>
+                </div>
+
+                ${t.note ? `
+                <div class="field-wrap">
+                  <div class="field-label">Ghi chú</div>
+                  <div class="field-value note-box">${esc(t.note)}</div>
+                </div>` : ''}
+
+                <div class="field-wrap">
+                  <div class="field-label">Người phụ trách</div>
+                  <div class="field-value" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+                    ${(t.assignees || []).map(a => `<span class="badge badge-member">${esc(a)}</span>`).join(" ") || '<span style="color:#94a3b8">—</span>'}
+                  </div>
+                </div>
+
+                <div class="field-wrap" style="margin-bottom: 24px;">
+                  <div class="field-label">Trạng thái</div>
+                  <div class="field-value" style="margin-top:4px;">
+                    <span class="badge badge-pending">Pending</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <button class="btn-outline" onclick="openEditTask(${t.id})" style="width:100%; justify-content:center; height:38px; border-radius:10px; font-size:12.5px; font-weight:600; color:#4f46e5; border-color:#4f46e5;">
+                  📝 Mở chi tiết task
+                </button>
+                <button class="btn-outline-danger" onclick="deleteTask(${t.id}, '${esc(t.issue).substring(0, 40)}')" style="width:100%; justify-content:center; height:38px; border-radius:10px; font-size:12.5px; font-weight:600; padding:8px 14px;">
+                  🗑️ Xóa task
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("<hr style='border:0; border-top:2px dashed #e2e8f0; margin:24px 0;' />");
+
+        if (sidebar.classList.contains("show")) {
+          trigger.style.display = "none";
+          document.body.classList.add("sidebar-open");
+        } else {
+          sidebar.classList.add("show");
+          document.body.classList.add("sidebar-open");
+          trigger.style.display = "none";
+        }
+      } else {
+        body.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding: 20px 0;">Không có task nào đến hạn hôm nay cần xử lý.</div>`;
+        sidebar.classList.remove("show");
+        document.body.classList.remove("sidebar-open");
+        trigger.style.display = "none";
+      }
+    }
+
     function renderTasks() {
       const tbody = document.getElementById("taskTbody");
       tbody.innerHTML = "";
@@ -1515,9 +1652,9 @@
       <td class="col-note">${esc(t.note || "")}</td>
       <td class="col-assignee">${badgesHtml || '<span style="color:var(--text-muted)">—</span>'}</td>
       <td class="col-status">${statusBadge}</td>
-      <td class="col-actions">
-        <button class="btn-warn btn-sm" onclick="openEditTask(${t.id})">Sửa</button>
-        <button class="btn-danger btn-sm" onclick="deleteTask(${t.id},'${esc(t.issue).substring(0, 40)}')">Xóa</button>
+      <td class="col-actions" style="display:flex; justify-content:center; gap:6px;">
+        <button class="btn-action-edit" onclick="openEditTask(${t.id})" title="Sửa">📝</button>
+        <button class="btn-action-delete" onclick="deleteTask(${t.id},'${esc(t.issue).substring(0, 40)}')" title="Xóa">🗑️</button>
       </td>
     `;
         tbody.appendChild(tr);
