@@ -493,31 +493,48 @@
 
       /* ── Core: check time window + alert_time gate ── */
       function shouldAlert(task, lastMs, nowMs) {
-        // 1. Resolve frequency interval in ms
+        const now = new Date(nowMs);
         const freq = task.alert_frequency;
         const intv = FREQ_MS[freq] || PRIORITY_INTERVALS[task.priority || "P3"] || PRIORITY_INTERVALS.P3;
 
-        // 2. Interval check: if already notified previously, ensure interval has elapsed
-        if (lastMs && (nowMs - lastMs) < intv) {
-          return false;
+        // ── Branch A: no alert_time set → simple elapsed-time check ──
+        const timeStr = (task.alert_time || "").trim();
+        if (!timeStr) {
+          if (lastMs && (nowMs - lastMs) < intv) return false;
+          return true;
         }
 
-        // 3. Time matching logic (alert_time: "HH:mm")
-        if (task.alert_time && String(task.alert_time).trim()) {
-          const parts = String(task.alert_time).trim().split(":");
-          if (parts.length >= 2) {
-            const ah = parseInt(parts[0], 10);
-            const am = parseInt(parts[1], 10);
-            if (!isNaN(ah) && !isNaN(am)) {
-              const now = new Date(nowMs);
-              const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
-              const targetTotalMinutes  = ah * 60 + am;
-              if (currentTotalMinutes < targetTotalMinutes) {
-                return false;
-              }
-            }
-          }
+        // ── Branch B: alert_time is set ──
+        const parts = timeStr.split(":");
+        const ah = parseInt(parts[0], 10);
+        const am = parseInt(parts[1] || "0", 10);
+        if (isNaN(ah) || isNaN(am)) {
+          // Unparseable: fall back to elapsed check
+          if (lastMs && (nowMs - lastMs) < intv) return false;
+          return true;
         }
+
+        // Time gate: current wall-clock time must have reached alert_time
+        const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
+        const targetTotalMinutes  = ah * 60 + am;
+        if (currentTotalMinutes < targetTotalMinutes) return false;
+
+        // Window-based de-duplication so changing alert_time within the day still triggers
+        // todayAlertStart = today's date at alert_time (we know current time >= alert_time)
+        const todayAlertStartMs = new Date(
+          now.getFullYear(), now.getMonth(), now.getDate(), ah, am, 0, 0
+        ).getTime();
+
+        let windowStartMs;
+        if (intv <= 86400000) {
+          // Daily or shorter: at most once per calendar-day at alert_time
+          windowStartMs = todayAlertStartMs;
+        } else {
+          // Multi-day: at most once per intv, anchored to today's alert_time
+          windowStartMs = todayAlertStartMs - intv;
+        }
+
+        if (lastMs && lastMs >= windowStartMs) return false;
 
         return true;
       }
