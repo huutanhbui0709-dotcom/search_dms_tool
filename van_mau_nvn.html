@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Văn mẫu NVN</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     * {
       box-sizing: border-box;
@@ -550,7 +551,7 @@
       <label for="workerUrlInput" style="margin-left: 10px;">Worker API URL:</label>
       <input type="text" id="workerUrlInput" placeholder="Dán Worker API URL tại đây..." style="width: 250px;" />
       
-      <button class="btn-primary" onclick="saveApiUrl()" style="padding: 6px 12px; font-size:12px;">Lưu &amp; Tải</button>
+      <button class="btn-primary" onclick="saveApiUrl()" style="padding: 6px 12px; font-size:12px;"><i class="fa-solid fa-floppy-disk"></i> Lưu &amp; Tải</button>
     </div>
 
     <div class="action-bar">
@@ -564,9 +565,7 @@
           oninput="handleSearch()" />
       </div>
       <button class="btn-primary" onclick="openAddModal()">
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 2px;">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
-        </svg>
+        <i class="fa-solid fa-plus"></i>
         Thêm mới mẫu
       </button>
     </div>
@@ -604,7 +603,7 @@
     <div class="modal-container">
       <div class="modal-header">
         <h3 id="modalTitle">Thêm mới câu văn mẫu</h3>
-        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <button class="modal-close" onclick="closeModal()" title="Đóng"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <form id="templateForm" onsubmit="handleSubmit(event)">
         <input type="hidden" id="templateId" />
@@ -623,8 +622,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-outline" onclick="closeModal()">Đóng</button>
-          <button type="submit" class="btn-primary" id="btnSubmit">Lưu lại</button>
+          <button type="button" class="btn-outline" onclick="closeModal()"><i class="fa-solid fa-xmark"></i> Đóng</button>
+          <button type="submit" class="btn-primary" id="btnSubmit"><i class="fa-solid fa-floppy-disk"></i> Lưu lại</button>
         </div>
       </form>
     </div>

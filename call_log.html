@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Call Log</title>
-    <style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
       * {
         box-sizing: border-box;
         margin: 0;
@@ -482,8 +483,8 @@
           cursor:pointer; flex-shrink:0; display:flex; align-items:center; gap:5px;
           box-shadow:var(--shadow-sm); white-space:nowrap;
         ">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Tải dữ liệu <span id="toggleUploadArrow">▾</span>
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          Tải dữ liệu <span id="toggleUploadArrow"><i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></span>
         </button>
       </div>
 
@@ -510,12 +511,12 @@
           <div class="url-loader" style="display:flex; flex-direction:column; gap:8px; width:100%;">
             <div style="display:flex; gap:8px; width:100%;">
               <input id="jsonUrlInput" type="text" placeholder="Dán URL JSON Call Log..." style="flex:1" />
-              <button id="loadJsonButton" type="button">Tải từ URL</button>
+              <button id="loadJsonButton" type="button"><i class="fa-solid fa-link"></i> Tải từ URL</button>
             </div>
             <div style="display:flex; gap:8px; width:100%; align-items:center;">
               <label style="font-size:11px; font-weight:600; color:var(--text-secondary); white-space:nowrap;">Worker API URL:</label>
               <input id="workerUrlInput" type="text" placeholder="Dán Cloudflare Worker URL tại đây để đồng bộ..." style="flex:1; padding:6px 10px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-size:13px; outline:none;" />
-              <button id="saveR2Button" type="button" style="padding: 6px 12px; font-size:13px;">Lưu vào R2</button>
+              <button id="saveR2Button" type="button" style="padding: 6px 12px; font-size:13px;"><i class="fa-solid fa-floppy-disk"></i> Lưu vào R2</button>
             </div>
           </div>
           <div class="upload-overlay" id="uploadLoading">
@@ -620,9 +621,9 @@
         <label class="field-label" for="dateFilterInput">Lọc theo ngày</label>
         <input id="dateFilterInput" type="date" />
         <div class="date-filter-actions">
-          <button id="clearDateFilterButton" type="button">Xóa lọc</button>
+          <button id="clearDateFilterButton" type="button"><i class="fa-solid fa-xmark"></i> Xóa lọc</button>
           <button class="primary" id="applyDateFilterButton" type="button">
-            Áp dụng
+            <i class="fa-solid fa-filter"></i> Áp dụng
           </button>
         </div>
       </div>

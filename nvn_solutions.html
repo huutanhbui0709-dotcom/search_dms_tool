@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tìm kiếm nhanh dữ liệu Excel</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
       * {
         box-sizing: border-box;
@@ -551,8 +552,8 @@
           cursor:pointer; flex-shrink:0; display:flex; align-items:center; gap:5px;
           box-shadow:0 1px 3px rgba(0,0,0,0.07); white-space:nowrap;
         ">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Tải dữ liệu <span id="toggleUploadArrow">▾</span>
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          Tải dữ liệu <span id="toggleUploadArrow"><i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></span>
         </button>
       </div>
       <!-- Upload (hidden by default) -->
@@ -578,12 +579,12 @@
           <div class="url-loader" style="display:flex; flex-direction:column; gap:8px; width:100%;">
             <div style="display:flex; gap:8px; width:100%;">
               <input id="jsonUrlInput" type="text" placeholder="Dán URL JSON NVN Solutions..." style="flex:1" />
-              <button class="primary" id="loadJsonButton" type="button">Tải từ URL</button>
+              <button class="primary" id="loadJsonButton" type="button"><i class="fa-solid fa-link"></i> Tải từ URL</button>
             </div>
             <div style="display:flex; gap:8px; width:100%; align-items:center;">
               <label style="font-size:11px; font-weight:600; color:var(--text-secondary); white-space:nowrap;">Worker API URL:</label>
               <input id="workerUrlInput" type="text" placeholder="Dán Cloudflare Worker URL tại đây để đồng bộ..." style="flex:1; padding:6px 10px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-size:13px; outline:none;" />
-              <button id="saveR2Button" type="button" class="primary" style="padding: 6px 12px; font-size:13px;">Lưu vào R2</button>
+              <button id="saveR2Button" type="button" class="primary" style="padding: 6px 12px; font-size:13px;"><i class="fa-solid fa-floppy-disk"></i> Lưu vào R2</button>
             </div>
           </div>
           <div class="upload-overlay" id="uploadLoading">
@@ -595,10 +596,10 @@
 
       <div class="panel-toggles" id="panelToggles">
         <button class="panel-toggle" id="toggleAiPanelButton" type="button">
-          Hiện Trợ lý AI
+          <i class="fa-solid fa-robot"></i> Hiện Trợ lý AI
         </button>
         <button class="panel-toggle" id="toggleColumnPanelButton" type="button">
-          Hiện cấu hình cột
+          <i class="fa-solid fa-table-columns"></i> Hiện cấu hình cột
         </button>
       </div>
 
@@ -631,40 +632,15 @@
           </div>
           <div class="ai-btns">
             <button class="primary" id="askGeminiButton" type="button">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
+              <i class="fa-solid fa-paper-plane"></i>
               Hỏi AI
             </button>
             <button id="loadGeminiModelsButton" type="button">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <polyline points="23 4 23 10 17 10" />
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-              </svg>
+              <i class="fa-solid fa-rotate"></i>
               Tải model
             </button>
             <button id="clearGeminiButton" type="button" title="Xóa kết quả AI">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                style="margin: 0; width: 15px; height: 15px"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              <i class="fa-solid fa-xmark" style="margin: 0; width: 15px; height: 15px"></i>
             </button>
           </div>
         </div>
