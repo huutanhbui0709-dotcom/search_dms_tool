@@ -1692,9 +1692,11 @@
       <td class="col-note">${esc(t.note || "")}</td>
       <td class="col-assignee">${badgesHtml || '<span style="color:var(--text-muted)">—</span>'}</td>
       <td class="col-status">${statusBadge}</td>
-      <td class="col-actions" style="display:flex; justify-content:center; gap:6px;">
-        <button class="btn-action-edit" onclick="openEditTask(${t.id})" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></button>
-        <button class="btn-action-delete" onclick="deleteTask(${t.id},'${esc(t.issue).substring(0, 40)}')" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
+      <td class="col-actions">
+        <div style="display: flex; justify-content: center; align-items: center; gap: 6px;">
+          <button class="btn-action-edit" onclick="openEditTask(${t.id})" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></button>
+          <button class="btn-action-delete" onclick="deleteTask(${t.id},'${esc(t.issue).substring(0, 40)}')" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
+        </div>
       </td>
     `;
         tbody.appendChild(tr);
