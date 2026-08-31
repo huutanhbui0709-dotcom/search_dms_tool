@@ -330,6 +330,100 @@
     .toast.tw { border-left: 4px solid var(--warn); }
     @keyframes tIn  { to { opacity:1; transform:translateY(0); } }
     @keyframes tOut { to { opacity:0; transform:translateY(-14px); } }
+    /* ── Due Sidebar ──────────────────────────────────────────────────────── */
+    .due-sidebar {
+      position: fixed;
+      top: 0;
+      right: -350px;
+      width: 350px;
+      height: 100vh;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+      z-index: 950;
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .due-sidebar.show {
+      right: 0;
+    }
+    .due-sidebar-header {
+      background: var(--danger);
+      color: #fff;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .due-sidebar-header h3 {
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .due-sidebar-close {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 4px;
+      transition: color 0.15s;
+    }
+    .due-sidebar-close:hover:not(:disabled) {
+      color: #fff;
+    }
+    .due-sidebar-close.locked {
+      cursor: not-allowed;
+      opacity: 0.3;
+      pointer-events: none;
+    }
+    .due-sidebar-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      background: #fcfdfe;
+    }
+    .due-alert-card {
+      background: #fff5f5;
+      border: 1px solid #fee2e2;
+      border-left: 4px solid var(--danger);
+      border-radius: var(--r-md);
+      padding: 14px;
+      box-shadow: 0 2px 5px rgba(239, 68, 68, 0.05);
+    }
+    .due-alert-title {
+      font-weight: 700;
+      color: var(--danger);
+      font-size: 13px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .due-alert-issue {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 13.5px;
+      margin-bottom: 8px;
+      white-space: pre-wrap;
+    }
+    .due-alert-note {
+      font-size: 12px;
+      color: var(--text-2);
+      background: #fff;
+      border: 1px solid #f3f4f6;
+      padding: 6px 8px;
+      border-radius: var(--r-sm);
+      margin-bottom: 8px;
+    }
+    .due-alert-assignees {
+      font-size: 12px;
+      color: var(--text-2);
+    }
   </style>
 </head>
 <body>
@@ -511,6 +605,15 @@
 </div>
 
 <div id="toastBox"></div>
+
+<!-- Due Alert Sidebar -->
+<div class="due-sidebar" id="dueSidebar">
+  <div class="due-sidebar-header">
+    <h3>⚠️ Task Đến Hạn Hôm Nay</h3>
+    <button class="due-sidebar-close" id="dueSidebarCloseBtn" onclick="toggleDueSidebar(false)">&times;</button>
+  </div>
+  <div class="due-sidebar-body" id="dueSidebarBody"></div>
+</div>
 
 <!-- ════════════════════════════════════════════════════════════════════════ -->
 <!-- ── JAVASCRIPT ── -->
@@ -766,6 +869,63 @@ function applyFilters() {
   });
   updateStats(allTasks);
   renderTasks();
+  updateDueSidebar();
+}
+
+function getTodayLocalDate() {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function toggleDueSidebar(show) {
+  const sidebar = document.getElementById("dueSidebar");
+  if (show) {
+    sidebar.classList.add("show");
+  } else {
+    const closeBtn = document.getElementById("dueSidebarCloseBtn");
+    if (!closeBtn.disabled) {
+      sidebar.classList.remove("show");
+    }
+  }
+}
+
+function updateDueSidebar() {
+  const todayStr = getTodayLocalDate();
+  const dueTasks = allTasks.filter(t => {
+    const taskDate = parseToIsoDate(t.deadline);
+    return taskDate === todayStr && t.status !== "Done";
+  });
+
+  const sidebar = document.getElementById("dueSidebar");
+  const closeBtn = document.getElementById("dueSidebarCloseBtn");
+  const body = document.getElementById("dueSidebarBody");
+
+  if (dueTasks.length > 0) {
+    body.innerHTML = dueTasks.map(t => `
+      <div class="due-alert-card">
+        <div class="due-alert-title">🚨 Task cần làm ngay</div>
+        <div class="due-alert-issue">${esc(t.issue)}</div>
+        ${t.note ? `<div class="due-alert-note"><b>Ghi chú:</b> ${esc(t.note)}</div>` : ''}
+        <div class="due-alert-assignees">
+          <b>Phụ trách:</b> ${(t.assignees || []).map(a => `<span class="badge badge-member">${esc(a)}</span>`).join(" ")}
+        </div>
+      </div>
+    `).join("");
+
+    sidebar.classList.add("show");
+    closeBtn.disabled = true;
+    closeBtn.classList.add("locked");
+    closeBtn.title = "Có task đến hạn chưa hoàn thành, không thể đóng cảnh báo!";
+  } else {
+    body.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding: 20px 0;">Không có task nào đến hạn hôm nay cần xử lý.</div>`;
+    closeBtn.disabled = false;
+    closeBtn.classList.remove("locked");
+    closeBtn.removeAttribute("title");
+    sidebar.classList.remove("show");
+  }
 }
 
 function populateMemberFilter() {
