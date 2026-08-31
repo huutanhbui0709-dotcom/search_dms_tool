@@ -657,6 +657,19 @@
         try { localStorage.setItem(LS_READ_KEY, JSON.stringify(ids)); } catch(e) {}
       }
 
+      const DAY_LABELS = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6", sat: "Thứ 7" };
+      function formatTaskFreq(task) {
+        const freqMap = {
+          "1_day": "Mỗi 1 ngày", "3_days": "Mỗi 3 ngày", "1_week": "Mỗi 1 tuần",
+          "2_weeks": "Mỗi 2 tuần", "1_month": "Mỗi 1 tháng"
+        };
+        const base = freqMap[task.alert_frequency] || task.alert_frequency || "Mỗi 1 tuần";
+        if ((task.alert_frequency === "1_week" || task.alert_frequency === "2_weeks") && task.alert_days && DAY_LABELS[task.alert_days]) {
+          return `${base} (${DAY_LABELS[task.alert_days]})`;
+        }
+        return base;
+      }
+
       function loadTimestamps() {
         try { return JSON.parse(localStorage.getItem(LS_NOTIFIED_KEY) || "{}"); }
         catch(e) { return {}; }
