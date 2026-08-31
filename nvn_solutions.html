@@ -802,7 +802,7 @@
       // Thiết lập giá trị ban đầu cho các input từ localStorage
       const defaultJsonUrl = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnRy4OcIKBmKuP6pDcca_yzalKKkwCpcOLdb1WoVT_YJ4h2OYW06C24wxLbPrca9ECZQmH_8-gMpjvOvxFmQflJRDYjZG-DMlov5PmjB968By6eB0y_6LSWOm7tdBbRdwcPYGjaNSV2sFq7h0oeMaxvXO_JgOng9xjLFBkReuj6RhgkKcBrm1ND7B4Qts7WhQyHkEDMyMRA7PN5x8OGt5r9XTN5NEpig-nkgFhlxTJOykBT0xuh-Q0aB3p2beEHombmuVvEq4ifNU5vqN1CrgXJFcgqCdg&lib=MMhwz9pBNVli5DJbMNtBflfD8R0iiSsw_";
       jsonUrlInput.value = localStorage.getItem("NVN_SOLUTIONS_API_URL") || defaultJsonUrl;
-      document.getElementById("workerUrlInput").value = localStorage.getItem("NVN_WORKER_API_URL") || "";
+      document.getElementById("workerUrlInput").value = localStorage.getItem("NVN_SOLUTIONS_WORKER_URL") || "";
       const columnPanel = document.getElementById("columnPanel");
       const sheetChooser = document.getElementById("sheetChooser");
       const sheetSelect = document.getElementById("sheetSelect");
@@ -931,7 +931,7 @@
         }
 
         // Lưu local
-        localStorage.setItem("NVN_WORKER_API_URL", workerUrlVal);
+        localStorage.setItem("NVN_SOLUTIONS_WORKER_URL", workerUrlVal);
 
         try {
           const payload = JSON.stringify({ action: "save_url", name: "Solution", url: workerUrlVal });
@@ -1011,10 +1011,10 @@
           const sheetUrl = data["Solution"] || data["Solutions"] || data["solution"] || data["NVN Solutions"] || data["NVN Solution"];
           if (sheetUrl) {
             const cleanUrl = sheetUrl.trim();
-            const localUrl = localStorage.getItem("NVN_WORKER_API_URL") || "";
+            const localUrl = localStorage.getItem("NVN_SOLUTIONS_WORKER_URL") || "";
             if (cleanUrl && cleanUrl !== localUrl) {
               document.getElementById("workerUrlInput").value = cleanUrl;
-              localStorage.setItem("NVN_WORKER_API_URL", cleanUrl);
+              localStorage.setItem("NVN_SOLUTIONS_WORKER_URL", cleanUrl);
               console.log("[R2 Sync] Tự động tải URL Solutions từ R2 và điền vào Worker API URL:", cleanUrl);
             }
           }

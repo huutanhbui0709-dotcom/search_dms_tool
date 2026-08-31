@@ -666,7 +666,7 @@
       // Thiết lập giá trị ban đầu cho các input từ localStorage
       const defaultJsonUrl = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnQriClrMCaJ9F8HHot9e9Ga_-KJ6CrQ7Q6Wrzup3qPLY3ww8uHqom8bNpiQK7ZRc9jIkd6wc-3kOJYrVYutIqQR99LlysYPyfl1cvDD2QleXX1BFUu74q9wClKTKVunKZyqJ6Gjn-_6bSO-7wBd_nfBRcFBu__1jkBsgSd433Zzm-EJMGrIUOSZm76cRwJ6mD7dTK3FEc8gdJMS4kNskDdlZhZMQbGxE7zZW18NvIaiNqYiDnRoS1szvu49MZI3oB6Y4DJ2gndNTrbN9BU&lib=MbAocym1j8DklnQRpycQv5_D8R0iiSsw_";
       jsonUrlInput.value = localStorage.getItem("NVN_CALLLOG_API_URL") || defaultJsonUrl;
-      document.getElementById("workerUrlInput").value = localStorage.getItem("NVN_WORKER_API_URL") || "";
+      document.getElementById("workerUrlInput").value = localStorage.getItem("NVN_CALLLOG_WORKER_URL") || "";
       const tableWrap = document.getElementById("tableWrap");
       const tableHead = document.getElementById("tableHead");
       const tableBody = document.getElementById("tableBody");
@@ -771,7 +771,7 @@
         }
 
         // Lưu local
-        localStorage.setItem("NVN_WORKER_API_URL", workerUrlVal);
+        localStorage.setItem("NVN_CALLLOG_WORKER_URL", workerUrlVal);
 
         try {
           const payload = JSON.stringify({ action: "save_url", name: "Call log", url: workerUrlVal });
@@ -862,10 +862,10 @@
           const sheetUrl = data["Call log"] || data["Calllog"] || data["Call Log"] || data["calllog"];
           if (sheetUrl) {
             const cleanUrl = sheetUrl.trim();
-            const localUrl = localStorage.getItem("NVN_WORKER_API_URL") || "";
+            const localUrl = localStorage.getItem("NVN_CALLLOG_WORKER_URL") || "";
             if (cleanUrl && cleanUrl !== localUrl) {
               document.getElementById("workerUrlInput").value = cleanUrl;
-              localStorage.setItem("NVN_WORKER_API_URL", cleanUrl);
+              localStorage.setItem("NVN_CALLLOG_WORKER_URL", cleanUrl);
               console.log("[R2 Sync] Tự động tải URL Call Log từ R2 và điền vào Worker API URL:", cleanUrl);
             }
           }
