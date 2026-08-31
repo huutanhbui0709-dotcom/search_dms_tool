@@ -82,7 +82,7 @@ function doGet(e) {
     } catch (err) {
       return responseJSON({ status: "error", message: "Dữ liệu JSON fallback không hợp lệ" });
     }
-    return handlePostActions(action, params);
+    return handlePostActions(params.action || action, params);
   }
 
   // ── TASK: Đọc danh sách Task ───────────────────────────────────────────────
