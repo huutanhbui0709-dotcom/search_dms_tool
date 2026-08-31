@@ -407,6 +407,19 @@
         try { localStorage.setItem(LS_NOTIFIED_KEY, JSON.stringify(ts)); } catch(e) {}
       }
 
+      const DAY_LABELS = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6", sat: "Thứ 7" };
+      function formatTaskFreq(task) {
+        const freqMap = {
+          "1_day": "Mỗi 1 ngày", "3_days": "Mỗi 3 ngày", "1_week": "Mỗi 1 tuần",
+          "2_weeks": "Mỗi 2 tuần", "1_month": "Mỗi 1 tháng"
+        };
+        const base = freqMap[task.alert_frequency] || task.alert_frequency || "Mỗi 1 tuần";
+        if ((task.alert_frequency === "1_week" || task.alert_frequency === "2_weeks") && task.alert_days && DAY_LABELS[task.alert_days]) {
+          return `${base} (${DAY_LABELS[task.alert_days]})`;
+        }
+        return base;
+      }
+
       function showGToast(task) {
         const box = document.getElementById("gNotifyBox");
         if (!box) return;
@@ -415,10 +428,7 @@
         el.className = `g-toast ${p}`;
         const issue = (task.issue || "").substring(0, 80);
         const assignees = (task.assignees || []).join(", ") || "Chưa phân công";
-        const freqLabel = {
-          "1_day":"Mỗi 1 ngày","3_days":"Mỗi 3 ngày","1_week":"Mỗi 1 tuần",
-          "2_weeks":"Mỗi 2 tuần","1_month":"Mỗi 1 tháng"
-        }[task.alert_frequency] || "";
+        const freqLabel = formatTaskFreq(task);
         el.innerHTML = `
           <div class="g-toast-icon">${ICONS[task.priority] || "📣"}</div>
           <div class="g-toast-body">
@@ -448,10 +458,7 @@
         const issue = (task.issue || "").substring(0, 100);
         const assignees = (task.assignees || []).join(", ") || "Chưa phân công";
         const priorityLabel = { P1: "🚨 KHẨN CẤP (P1)", P2: "⚠️ Cao (P2)", P3: "📣 Bình thường (P3)" }[task.priority] || task.priority;
-        const freqLabel = {
-          "1_day":"Mỗi 1 ngày","3_days":"Mỗi 3 ngày","1_week":"Mỗi 1 tuần",
-          "2_weeks":"Mỗi 2 tuần","1_month":"Mỗi 1 tháng"
-        }[task.alert_frequency] || "";
+        const freqLabel = formatTaskFreq(task);
         try {
           const n = new Notification(`${priorityLabel} – Task NVN`, {
             body: `${issue}\n👤 ${assignees}${freqLabel ? `\n🔔 ${freqLabel} · ⏰ ${task.alert_time || "09:00"}` : ""}`,
@@ -496,6 +503,18 @@
         const now = new Date(nowMs);
         const freq = task.alert_frequency;
         const intv = FREQ_MS[freq] || PRIORITY_INTERVALS[task.priority || "P3"] || PRIORITY_INTERVALS.P3;
+
+        // ── Day Matching: If alert_frequency is 1_week or 2_weeks ──
+        if (freq === "1_week" || freq === "2_weeks") {
+          const dayIndex = now.getDay(); // 0 = Sunday, 1 = Mon, ..., 6 = Sat
+          if (dayIndex === 0) return false; // Exclude Sunday
+          const dayMap = { 1: "mon", 2: "tue", 3: "wed", 4: "thu", 5: "fri", 6: "sat" };
+          const currentDayCode = dayMap[dayIndex];
+          const taskDay = task.alert_days || "mon";
+          if (taskDay && taskDay !== currentDayCode) {
+            return false;
+          }
+        }
 
         // ── Branch A: no alert_time set → simple elapsed-time check ──
         const timeStr = (task.alert_time || "").trim();
@@ -682,8 +701,7 @@
         listContainer.innerHTML = sortedAlerts.map(t => {
           const isUnread = !readIds.includes(Number(t.id));
           const classes = `bell-item ${isUnread ? 'unread' : ''}`;
-          const deadlineLabel = t.deadline ? formatDate(t.deadline) : "Không hạn";
-          const freqText = freqLabels[t.alert_frequency] || t.alert_frequency || "Mỗi 1 tuần";
+          const freqText = formatTaskFreq(t);
           const timeText = t.alert_time || "09:00";
 
           return `

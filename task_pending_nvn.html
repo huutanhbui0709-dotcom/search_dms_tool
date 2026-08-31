@@ -1297,12 +1297,26 @@
             </div>
             <div class="fg">
               <label style="display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-bell" style="color:var(--accent);"></i> Tần suất nhắc</label>
-              <select class="fc" id="tAlertFrequency">
+              <select class="fc" id="tAlertFrequency" onchange="onAlertFreqChange()">
                 <option value="1_day">Mỗi 1 ngày</option>
                 <option value="3_days">Mỗi 3 ngày</option>
                 <option value="1_week" selected>Mỗi 1 tuần</option>
                 <option value="2_weeks">Mỗi 2 tuần</option>
                 <option value="1_month">Mỗi 1 tháng</option>
+              </select>
+            </div>
+          </div>
+          <!-- Alert days row (shown only for 1_week / 2_weeks) -->
+          <div id="alertDaysRow" class="form-row" style="grid-template-columns:1fr; gap:12px; margin-top:4px;">
+            <div class="fg">
+              <label style="display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-calendar-days" style="color:var(--accent);"></i> Ngày nhắc trong tuần (Thứ 2 - Thứ 7)</label>
+              <select class="fc" id="tAlertDays">
+                <option value="mon">Thứ Hai</option>
+                <option value="tue">Thứ Ba</option>
+                <option value="wed">Thứ Tư</option>
+                <option value="thu">Thứ Năm</option>
+                <option value="fri">Thứ Sáu</option>
+                <option value="sat">Thứ Bảy</option>
               </select>
             </div>
           </div>
@@ -1527,6 +1541,8 @@
             let statusVal = String(t.status || "").trim().toLowerCase();
             statusVal = (statusVal === "done") ? "Done" : "Pending";
             const priority = ["P1", "P2", "P3"].includes(t.priority) ? t.priority : "P3";
+            const validDays = ["mon","tue","wed","thu","fri","sat",""];
+            const alertDays = validDays.includes(t.alert_days || "") ? (t.alert_days || "") : "";
             return {
               id: t.id,
               deadline: dl,
@@ -1536,7 +1552,8 @@
               status: statusVal,
               priority,
               alert_time: t.alert_time || "09:00",
-              alert_frequency: t.alert_frequency || "1_week"
+              alert_frequency: t.alert_frequency || "1_week",
+              alert_days: alertDays
             };
           });
 
@@ -1766,6 +1783,8 @@
       document.getElementById("tPriority").value = "P3";
       document.getElementById("tAlertTime").value = "09:00";
       document.getElementById("tAlertFrequency").value = "1_week";
+      document.getElementById("tAlertDays").value = "mon";
+      onAlertFreqChange();
       selectedAssignees = [];
       renderPills();
       document.getElementById("taskModal").classList.add("show");
@@ -1810,9 +1829,23 @@
       document.getElementById("tPriority").value = t.priority || "P3";
       document.getElementById("tAlertTime").value = t.alert_time || "09:00";
       document.getElementById("tAlertFrequency").value = t.alert_frequency || "1_week";
+      document.getElementById("tAlertDays").value = t.alert_days || "mon";
+      onAlertFreqChange();
       selectedAssignees = [...(t.assignees || [])];
       renderPills();
       document.getElementById("taskModal").classList.add("show");
+    }
+
+    function onAlertFreqChange() {
+      const freq = document.getElementById("tAlertFrequency").value;
+      const row = document.getElementById("alertDaysRow");
+      if (row) {
+        if (freq === "1_week" || freq === "2_weeks") {
+          row.style.display = "grid";
+        } else {
+          row.style.display = "none";
+        }
+      }
     }
 
     function closeTaskModal() {
@@ -1833,12 +1866,14 @@
       const priority = document.getElementById("tPriority").value;
       const alert_time = document.getElementById("tAlertTime").value || "09:00";
       const alert_frequency = document.getElementById("tAlertFrequency").value || "1_week";
+      const freqHasDays = ["1_week","2_weeks"].includes(alert_frequency);
+      const alert_days = freqHasDays ? (document.getElementById("tAlertDays").value || "") : "";
 
       const payload = {
         action: "save_task",
         deadline, issue, note,
         assignees: selectedAssignees,
-        status, priority, alert_time, alert_frequency
+        status, priority, alert_time, alert_frequency, alert_days
       };
       if (id) payload.id = parseInt(id);
 
