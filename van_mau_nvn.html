@@ -317,14 +317,16 @@
 
     /* ── Config URL Panel ── */
     .config-panel {
-      display: flex;
+      display: none;
       gap: 10px;
       align-items: center;
+      flex-wrap: wrap;
       margin-bottom: 16px;
       background: #fff;
-      padding: 12px;
+      padding: 12px 16px;
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
     }
 
     .config-panel label {
@@ -543,8 +545,8 @@
       </div>
     </div>
 
-    <!-- Cấu hình API URL linh hoạt -->
-    <div class="config-panel" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <!-- Cấu hình API URL linh hoạt (mặc định ẩn) -->
+    <div class="config-panel" id="configPanel" style="display: none;">
       <label for="apiUrlInput">Google Apps Script Web App URL (Văn mẫu):</label>
       <input type="text" id="apiUrlInput" placeholder="Dán Web App URL của Văn mẫu tại đây..." style="flex: 1; min-width: 250px;" />
       
@@ -564,10 +566,15 @@
         <input type="text" class="search-input" id="searchBar" placeholder="Tìm kiếm nhanh Tiếng Anh, Tiếng Việt, Note..."
           oninput="handleSearch()" />
       </div>
-      <button class="btn-primary" onclick="openAddModal()">
-        <i class="fa-solid fa-plus"></i>
-        Thêm mới mẫu
-      </button>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button class="btn-outline" onclick="toggleConfigPanel()" title="Cấu hình URL API" style="padding: 9px 13px; border-radius: var(--radius-md);">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+        <button class="btn-primary" onclick="openAddModal()">
+          <i class="fa-solid fa-plus"></i>
+          Thêm mới mẫu
+        </button>
+      </div>
     </div>
 
     <div class="card">
@@ -644,6 +651,14 @@
 
     let allTemplates = [];
     let filteredTemplates = [];
+
+    // Bật/tắt thanh cấu hình URL
+    function toggleConfigPanel() {
+      const panel = document.getElementById("configPanel");
+      if (panel) {
+        panel.style.display = (panel.style.display === "none" || !panel.style.display) ? "flex" : "none";
+      }
+    }
 
     // R2 endpoint luôn là /api/r2-urls trên Vercel production
     function getR2Endpoint() {
