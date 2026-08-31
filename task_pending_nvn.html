@@ -1,39 +1,48 @@
 <!doctype html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Task Pending – NVN Team</title>
   <style>
     /* ── Reset & Tokens ───────────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
-      --bg:           #f0f4ff;
-      --surface:      #ffffff;
-      --border:       #dde3f5;
-      --border-s:     #b0bdd8;
-      --text:         #1a1f36;
-      --text-2:       #4a5568;
-      --text-muted:   #8898b4;
-      --accent:       #4f46e5;
-      --accent-h:     #3730a3;
-      --accent-bg:    #eef2ff;
-      --accent-bdr:   #c7d2fe;
-      --hdr:          #1e1b4b;
-      --hdr-txt:      #f0f4ff;
-      --row-alt:      #f7f9ff;
-      --pending-bg:   #fee2e2;
-      --pending-txt:  #b91c1c;
-      --done-bg:      #dcfce7;
-      --done-txt:     #166534;
-      --danger:       #ef4444;
-      --danger-h:     #b91c1c;
-      --success:      #10b981;
-      --warn:         #f59e0b;
-      --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
-      --sh-sm: 0 1px 3px rgba(79,70,229,.08);
-      --sh-md: 0 6px 20px rgba(79,70,229,.12);
+      --bg: #f0f4ff;
+      --surface: #ffffff;
+      --border: #dde3f5;
+      --border-s: #b0bdd8;
+      --text: #1a1f36;
+      --text-2: #4a5568;
+      --text-muted: #8898b4;
+      --accent: #4f46e5;
+      --accent-h: #3730a3;
+      --accent-bg: #eef2ff;
+      --accent-bdr: #c7d2fe;
+      --hdr: #1e1b4b;
+      --hdr-txt: #f0f4ff;
+      --row-alt: #f7f9ff;
+      --pending-bg: #fee2e2;
+      --pending-txt: #b91c1c;
+      --done-bg: #dcfce7;
+      --done-txt: #166534;
+      --danger: #ef4444;
+      --danger-h: #b91c1c;
+      --success: #10b981;
+      --warn: #f59e0b;
+      --r-sm: 6px;
+      --r-md: 10px;
+      --r-lg: 14px;
+      --sh-sm: 0 1px 3px rgba(79, 70, 229, .08);
+      --sh-md: 0 6px 20px rgba(79, 70, 229, .12);
     }
 
     body {
@@ -45,335 +54,909 @@
       min-height: 100vh;
       transition: padding-right 0.3s ease;
     }
+
     body.sidebar-open {
       padding-right: 350px;
     }
 
     /* ── Layout ───────────────────────────────────────────────────────────── */
-    .page { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
 
     /* ── Hero ─────────────────────────────────────────────────────────────── */
     .hero {
-      display: flex; align-items: center; gap: 14px;
-      margin-bottom: 18px; justify-content: space-between;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+      justify-content: space-between;
     }
-    .hero-left { display: flex; align-items: center; gap: 12px; }
+
+    .hero-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
     .hero-icon {
-      width: 42px; height: 42px; border-radius: var(--r-md);
-      background: var(--hdr); display: flex; align-items: center;
-      justify-content: center; font-size: 20px; flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: var(--r-md);
+      background: var(--hdr);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
     }
-    .hero h1 { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; }
-    .hero p  { font-size: 12.5px; color: var(--accent); margin-top: 1px; }
+
+    .hero h1 {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .hero p {
+      font-size: 12.5px;
+      color: var(--accent);
+      margin-top: 1px;
+    }
 
     /* ── Config bar ───────────────────────────────────────────────────────── */
     .config-bar {
-      display: flex; gap: 8px; align-items: center;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--r-md); padding: 10px 14px; margin-bottom: 16px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 10px 14px;
+      margin-bottom: 16px;
     }
-    .config-bar label { font-weight: 700; font-size: 12px; white-space: nowrap; color: var(--text-2); }
+
+    .config-bar label {
+      font-weight: 700;
+      font-size: 12px;
+      white-space: nowrap;
+      color: var(--text-2);
+    }
+
     .config-bar input {
-      flex: 1; padding: 6px 10px; border: 1px solid var(--border-s);
-      border-radius: var(--r-sm); font-size: 13px; outline: none;
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid var(--border-s);
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      outline: none;
     }
-    .config-bar input:focus { border-color: var(--accent); }
+
+    .config-bar input:focus {
+      border-color: var(--accent);
+    }
 
     /* ── Toolbar / Filter Row ──────────────────────────────────────────────── */
     .toolbar {
-      display: flex; gap: 8px;
-      align-items: center; margin-bottom: 14px; flex-wrap: wrap;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
     }
-    .toolbar-left { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; }
+
+    .toolbar-left {
+      display: flex;
+      gap: 8px;
+      flex: 1;
+      flex-wrap: wrap;
+    }
 
     /* ── Filters ──────────────────────────────────────────────────────────── */
     select.filter-sel {
-      padding: 7px 11px; border: 1px solid var(--border-s);
-      border-radius: var(--r-md); font-size: 13px; outline: none;
-      background: var(--surface); color: var(--text); cursor: pointer;
+      padding: 7px 11px;
+      border: 1px solid var(--border-s);
+      border-radius: var(--r-md);
+      font-size: 13px;
+      outline: none;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
       height: 36px;
     }
-    select.filter-sel:focus { border-color: var(--accent); }
+
+    select.filter-sel:focus {
+      border-color: var(--accent);
+    }
 
     /* ── Buttons ──────────────────────────────────────────────────────────── */
     button {
-      border: 1px solid transparent; border-radius: var(--r-sm);
-      cursor: pointer; font-size: 13px; font-weight: 600;
-      padding: 8px 14px; white-space: nowrap;
+      border: 1px solid transparent;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 14px;
+      white-space: nowrap;
       transition: background .15s, border-color .15s, color .15s;
-      display: inline-flex; align-items: center; gap: 5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
-    .btn-primary   { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .btn-primary:hover { background: var(--accent-h); border-color: var(--accent-h); }
-    .btn-outline   { background: transparent; border-color: var(--border-s); color: var(--text); }
-    .btn-outline:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
-    .btn-danger    { background: #fee2e2; color: var(--danger); border-color: #fca5a5; }
-    .btn-danger:hover { background: #fecaca; }
-    .btn-success   { background: #dcfce7; color: #166534; border-color: #86efac; }
-    .btn-success:hover { background: #bbf7d0; }
-    .btn-warn      { background: #fef9c3; color: #92400e; border-color: #fde68a; }
-    .btn-warn:hover { background: #fef08a; }
-    .btn-sm { padding: 4px 9px; font-size: 12px; border-radius: 5px; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-h);
+      border-color: var(--accent-h);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border-color: var(--border-s);
+      color: var(--text);
+    }
+
+    .btn-outline:hover {
+      background: var(--accent-bg);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: var(--danger);
+      border-color: #fca5a5;
+    }
+
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+
+    .btn-success {
+      background: #dcfce7;
+      color: #166534;
+      border-color: #86efac;
+    }
+
+    .btn-success:hover {
+      background: #bbf7d0;
+    }
+
+    .btn-warn {
+      background: #fef9c3;
+      color: #92400e;
+      border-color: #fde68a;
+    }
+
+    .btn-warn:hover {
+      background: #fef08a;
+    }
+
+    .btn-sm {
+      padding: 4px 9px;
+      font-size: 12px;
+      border-radius: 5px;
+    }
 
     /* ── Card / Table ─────────────────────────────────────────────────────── */
     .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--r-lg); box-shadow: var(--sh-sm); overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--sh-sm);
+      overflow: hidden;
     }
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th {
-      background: var(--hdr); color: var(--hdr-txt);
-      font-size: 12.5px; font-weight: 700; padding: 11px 14px;
-      letter-spacing: 0.4px; white-space: nowrap;
-    }
-    th:first-child { border-radius: var(--r-sm) 0 0 0; }
-    th:last-child  { border-radius: 0 var(--r-sm) 0 0; }
-    td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    tr:nth-child(even) td { background: var(--row-alt); }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: var(--accent-bg); transition: background .12s; }
 
-    .col-stt      { width: 50px; text-align: center; font-weight: 700; color: var(--text-muted); }
-    .col-priority { width: 70px; text-align: center; }
-    .col-deadline { width: 110px; white-space: nowrap; }
-    .col-issue    { min-width: 200px; white-space: pre-wrap; word-break: break-word; }
-    .col-note     { min-width: 130px; color: var(--text-2); white-space: pre-wrap; word-break: break-word; }
-    .col-assignee { min-width: 150px; }
-    .col-status   { width: 110px; }
-    .col-actions  { width: 120px; text-align: center; }
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      background: var(--hdr);
+      color: var(--hdr-txt);
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 11px 14px;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    th:first-child {
+      border-radius: var(--r-sm) 0 0 0;
+    }
+
+    th:last-child {
+      border-radius: 0 var(--r-sm) 0 0;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tr:nth-child(even) td {
+      background: var(--row-alt);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: var(--accent-bg);
+      transition: background .12s;
+    }
+
+    .col-stt {
+      width: 50px;
+      text-align: center;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .col-priority {
+      width: 70px;
+      text-align: center;
+    }
+
+    .col-deadline {
+      width: 110px;
+      white-space: nowrap;
+    }
+
+    .col-issue {
+      min-width: 200px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .col-note {
+      min-width: 130px;
+      color: var(--text-2);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .col-assignee {
+      min-width: 150px;
+    }
+
+    .col-status {
+      width: 110px;
+    }
+
+    .col-actions {
+      width: 120px;
+      text-align: center;
+    }
 
     /* Priority badges */
-    .badge-p1 { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; font-weight: 800; }
-    .badge-p2 { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-weight: 800; }
-    .badge-p3 { background: #ede9fe; color: #4c1d95; border: 1px solid #c4b5fd; font-weight: 800; }
+    .badge-p1 {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+      font-weight: 800;
+    }
+
+    .badge-p2 {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+      font-weight: 800;
+    }
+
+    .badge-p3 {
+      background: #ede9fe;
+      color: #4c1d95;
+      border: 1px solid #c4b5fd;
+      font-weight: 800;
+    }
 
     /* ── Badges ───────────────────────────────────────────────────────────── */
     .badge {
-      display: inline-block; padding: 2px 9px; border-radius: 20px;
-      font-size: 11.5px; font-weight: 700; margin: 2px 2px 2px 0;
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 700;
+      margin: 2px 2px 2px 0;
     }
+
     .badge-member {
-      background: var(--accent-bg); color: var(--accent);
+      background: var(--accent-bg);
+      color: var(--accent);
       border: 1px solid var(--accent-bdr);
     }
+
     .badge-pending {
-      background: var(--pending-bg); color: var(--pending-txt);
+      background: var(--pending-bg);
+      color: var(--pending-txt);
     }
+
     .badge-done {
-      background: var(--done-bg); color: var(--done-txt);
+      background: var(--done-bg);
+      color: var(--done-txt);
     }
 
     /* ── Deadline indicator ───────────────────────────────────────────────── */
-    .deadline-overdue  { color: var(--danger); font-weight: 700; }
-    .deadline-today    { color: var(--warn);   font-weight: 700; }
-    .deadline-upcoming { color: var(--text);   }
+    .deadline-overdue {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .deadline-today {
+      color: var(--warn);
+      font-weight: 700;
+    }
+
+    .deadline-upcoming {
+      color: var(--text);
+    }
 
     /* ── Empty / Loading ──────────────────────────────────────────────────── */
     .state-box {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; padding: 40px; color: var(--text-muted); gap: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--text-muted);
+      gap: 10px;
     }
+
     .spinner {
-      width: 30px; height: 30px;
-      border: 3px solid var(--accent-bdr); border-top-color: var(--accent);
-      border-radius: 50%; animation: spin .8s linear infinite;
+      width: 30px;
+      height: 30px;
+      border: 3px solid var(--accent-bdr);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
     /* ── Summary Cards ───────────────────────────────────────────────────── */
     .stats-bar {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 12px; margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
     }
+
     .stat-chip {
-      border-radius: var(--r-lg); padding: 14px 18px;
-      display: flex; align-items: center; gap: 14px;
-      border: 1px solid transparent; box-shadow: var(--sh-sm);
+      border-radius: var(--r-lg);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid transparent;
+      box-shadow: var(--sh-sm);
     }
+
     .stat-chip .stat-icon {
-      width: 40px; height: 40px; border-radius: var(--r-md);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--r-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
     }
-    .stat-chip .stat-info { display: flex; flex-direction: column; }
-    .stat-chip b { font-size: 26px; font-weight: 800; line-height: 1.1; }
-    .stat-chip span { font-size: 12px; font-weight: 600; opacity: .75; margin-top: 1px; }
+
+    .stat-chip .stat-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-chip b {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .stat-chip span {
+      font-size: 12px;
+      font-weight: 600;
+      opacity: .75;
+      margin-top: 1px;
+    }
+
     /* Total – indigo */
     .stat-chip.total {
       background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
       border-color: #c7d2fe;
     }
-    .stat-chip.total .stat-icon { background: #4f46e5; color: #fff; }
-    .stat-chip.total b  { color: #3730a3; }
-    .stat-chip.total span { color: #4338ca; }
+
+    .stat-chip.total .stat-icon {
+      background: #4f46e5;
+      color: #fff;
+    }
+
+    .stat-chip.total b {
+      color: #3730a3;
+    }
+
+    .stat-chip.total span {
+      color: #4338ca;
+    }
+
     /* Pending – red/orange */
     .stat-chip.pending {
       background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
       border-color: #fecdd3;
     }
-    .stat-chip.pending .stat-icon { background: #ef4444; color: #fff; }
-    .stat-chip.pending b  { color: #b91c1c; }
-    .stat-chip.pending span { color: #dc2626; }
+
+    .stat-chip.pending .stat-icon {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .stat-chip.pending b {
+      color: #b91c1c;
+    }
+
+    .stat-chip.pending span {
+      color: #dc2626;
+    }
+
     /* Done – green */
     .stat-chip.done {
       background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
       border-color: #bbf7d0;
     }
-    .stat-chip.done .stat-icon { background: #10b981; color: #fff; }
-    .stat-chip.done b  { color: #166534; }
-    .stat-chip.done span { color: #15803d; }
+
+    .stat-chip.done .stat-icon {
+      background: #10b981;
+      color: #fff;
+    }
+
+    .stat-chip.done b {
+      color: #166534;
+    }
+
+    .stat-chip.done span {
+      color: #15803d;
+    }
 
     /* ── Modal ────────────────────────────────────────────────────────────── */
     .modal-bg {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none;
-      transition: opacity .22s ease; z-index: 1000;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .45);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s ease;
+      z-index: 1000;
     }
-    .modal-bg.show { opacity: 1; pointer-events: auto; }
+
+    .modal-bg.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
     .modal {
-      background: var(--surface); border-radius: var(--r-lg);
-      width: 100%; max-width: 600px; box-shadow: var(--sh-md);
-      overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;
-      transform: translateY(-18px); transition: transform .22s ease;
+      background: var(--surface);
+      border-radius: var(--r-lg);
+      width: 100%;
+      max-width: 600px;
+      box-shadow: var(--sh-md);
+      overflow: hidden;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(-18px);
+      transition: transform .22s ease;
     }
-    .modal-bg.show .modal { transform: translateY(0); }
+
+    .modal form {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .modal-bg.show .modal {
+      transform: translateY(0);
+    }
 
     .modal-hdr {
-      background: var(--hdr); color: var(--hdr-txt);
-      padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
+      background: var(--hdr);
+      color: var(--hdr-txt);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       flex-shrink: 0;
     }
-    .modal-hdr h3 { font-size: 15px; font-weight: 700; }
-    .modal-hdr button {
-      background: none; border: none; color: #9ca3af;
-      font-size: 22px; line-height: 1; padding: 0 4px; cursor: pointer;
+
+    .modal-hdr h3 {
+      font-size: 15px;
+      font-weight: 700;
     }
-    .modal-hdr button:hover { color: #fff; }
-    .modal-body { padding: 18px 20px; overflow-y: auto; flex: 1; }
+
+    .modal-hdr button {
+      background: none;
+      border: none;
+      color: #9ca3af;
+      font-size: 22px;
+      line-height: 1;
+      padding: 0 4px;
+      cursor: pointer;
+    }
+
+    .modal-hdr button:hover {
+      color: #fff;
+    }
+
+    .modal-body {
+      padding: 18px 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
     .modal-footer {
-      padding: 12px 20px; background: var(--row-alt);
-      border-top: 1px solid var(--border); display: flex;
-      justify-content: flex-end; gap: 8px; flex-shrink: 0;
+      padding: 12px 20px;
+      background: var(--row-alt);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     /* ── Form ─────────────────────────────────────────────────────────────── */
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .form-row.single { grid-template-columns: 1fr; }
-    .fg { margin-bottom: 14px; }
-    .fg label { display: block; font-weight: 700; font-size: 12.5px; margin-bottom: 5px; }
-    .fg .req   { color: var(--danger); }
-    .fc {
-      width: 100%; padding: 9px 12px; border: 1px solid var(--border-s);
-      border-radius: var(--r-md); font-size: 14px; font-family: inherit; outline: none;
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
     }
-    .fc:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
-    textarea.fc { resize: vertical; min-height: 72px; }
-    select.fc   { background: var(--surface); cursor: pointer; }
+
+    .form-row.single {
+      grid-template-columns: 1fr;
+    }
+
+    .form-row.triple {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    @media (max-width: 580px) {
+
+      .form-row,
+      .form-row.triple {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .fg {
+      margin-bottom: 14px;
+    }
+
+    .fg label {
+      display: block;
+      font-weight: 700;
+      font-size: 12.5px;
+      margin-bottom: 5px;
+    }
+
+    .fg .req {
+      color: var(--danger);
+    }
+
+    .fc {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border-s);
+      border-radius: var(--r-md);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .fc:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, .1);
+    }
+
+    textarea.fc {
+      resize: vertical;
+      min-height: 72px;
+    }
+
+    select.fc {
+      background: var(--surface);
+      cursor: pointer;
+    }
 
     /* ── Multi-select member pills ────────────────────────────────────────── */
     .multi-select-wrap {
-      border: 1px solid var(--border-s); border-radius: var(--r-md);
-      padding: 8px 10px; background: var(--surface); cursor: text;
-      min-height: 44px; display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+      border: 1px solid var(--border-s);
+      border-radius: var(--r-md);
+      padding: 8px 10px;
+      background: var(--surface);
+      cursor: text;
+      min-height: 44px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
       transition: border-color .15s, box-shadow .15s;
     }
+
     .multi-select-wrap.focused {
-      border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, .1);
     }
+
     .pill {
-      display: inline-flex; align-items: center; gap: 4px;
-      background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-bdr);
-      border-radius: 20px; padding: 2px 10px; font-size: 12px; font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--accent-bg);
+      color: var(--accent);
+      border: 1px solid var(--accent-bdr);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 600;
     }
+
     .pill .pill-x {
-      cursor: pointer; line-height: 1; font-size: 14px; color: var(--accent);
-      opacity: .7; border: none; background: none; padding: 0;
+      cursor: pointer;
+      line-height: 1;
+      font-size: 14px;
+      color: var(--accent);
+      opacity: .7;
+      border: none;
+      background: none;
+      padding: 0;
     }
-    .pill .pill-x:hover { opacity: 1; }
+
+    .pill .pill-x:hover {
+      opacity: 1;
+    }
+
     .member-dropdown {
-      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-      background: var(--surface); border: 1px solid var(--border-s);
-      border-radius: var(--r-md); box-shadow: var(--sh-md);
-      z-index: 500; max-height: 180px; overflow-y: auto;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border-s);
+      border-radius: var(--r-md);
+      box-shadow: var(--sh-md);
+      z-index: 500;
+      max-height: 180px;
+      overflow-y: auto;
     }
+
     .member-dropdown-item {
-      padding: 8px 14px; cursor: pointer; font-size: 13px;
+      padding: 8px 14px;
+      cursor: pointer;
+      font-size: 13px;
       transition: background .1s;
     }
-    .member-dropdown-item:hover { background: var(--accent-bg); color: var(--accent); }
-    .member-dropdown-item.selected { background: var(--accent-bg); font-weight: 700; color: var(--accent); }
-    .ms-wrap { position: relative; }
-    .ms-input {
-      border: none; outline: none; font-size: 13px; min-width: 100px;
-      flex: 1; font-family: inherit; color: var(--text);
+
+    .member-dropdown-item:hover {
+      background: var(--accent-bg);
+      color: var(--accent);
     }
-    .ms-input::placeholder { color: var(--text-muted); }
+
+    .member-dropdown-item.selected {
+      background: var(--accent-bg);
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .ms-wrap {
+      position: relative;
+    }
+
+    .ms-input {
+      border: none;
+      outline: none;
+      font-size: 13px;
+      min-width: 100px;
+      flex: 1;
+      font-family: inherit;
+      color: var(--text);
+    }
+
+    .ms-input::placeholder {
+      color: var(--text-muted);
+    }
 
     /* ── Member manager ───────────────────────────────────────────────────── */
-    .member-list { list-style: none; margin-top: 12px; }
+    .member-list {
+      list-style: none;
+      margin-top: 12px;
+    }
+
     .member-list-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 8px 10px; border-radius: var(--r-sm);
-      border: 1px solid var(--border); margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      margin-bottom: 6px;
       background: var(--row-alt);
     }
-    .member-list-item:hover { border-color: var(--accent-bdr); background: var(--accent-bg); }
-    .member-name { font-weight: 600; font-size: 13.5px; }
-    .member-actions { display: flex; gap: 6px; }
+
+    .member-list-item:hover {
+      border-color: var(--accent-bdr);
+      background: var(--accent-bg);
+    }
+
+    .member-name {
+      font-weight: 600;
+      font-size: 13.5px;
+    }
+
+    .member-actions {
+      display: flex;
+      gap: 6px;
+    }
+
     .member-edit-input {
-      border: 1px solid var(--accent); border-radius: 5px; padding: 3px 8px;
-      font-size: 13px; outline: none; flex: 1; margin-right: 6px;
+      border: 1px solid var(--accent);
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 13px;
+      outline: none;
+      flex: 1;
+      margin-right: 6px;
     }
 
     /* ── System Links Dropdown ────────────────────────────────────────────── */
-    .syslinks-wrap { position: relative; display: inline-block; }
+    .syslinks-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
     .syslinks-btn {
-      background: var(--surface); border: 1px solid var(--border-s); color: var(--text);
-      padding: 6px 12px; border-radius: var(--r-sm); font-size: 12px; font-weight: 600;
-      cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+      background: var(--surface);
+      border: 1px solid var(--border-s);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: var(--r-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
       transition: border-color .15s, background .15s;
     }
-    .syslinks-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
-    .syslinks-menu {
-      display: none; position: absolute; top: calc(100% + 4px); left: 0;
-      background: var(--surface); border: 1px solid var(--border-s);
-      border-radius: var(--r-md); box-shadow: var(--sh-md);
-      min-width: 220px; z-index: 900; overflow: hidden;
+
+    .syslinks-btn:hover {
+      background: var(--accent-bg);
+      border-color: var(--accent);
+      color: var(--accent);
     }
+
+    .syslinks-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      background: var(--surface);
+      border: 1px solid var(--border-s);
+      border-radius: var(--r-md);
+      box-shadow: var(--sh-md);
+      min-width: 220px;
+      z-index: 900;
+      overflow: hidden;
+    }
+
     .syslinks-wrap:hover .syslinks-menu,
-    .syslinks-wrap.open  .syslinks-menu { display: block; }
+    .syslinks-wrap.open .syslinks-menu {
+      display: block;
+    }
+
     .syslinks-menu a {
-      display: flex; align-items: center; gap: 8px;
-      padding: 9px 14px; font-size: 13px; font-weight: 500;
-      color: var(--text); text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      text-decoration: none;
       transition: background .1s;
     }
-    .syslinks-menu a:hover { background: var(--accent-bg); color: var(--accent); }
-    .syslinks-menu a.active-sys {
-      background: var(--accent-bg); color: var(--accent); font-weight: 700;
+
+    .syslinks-menu a:hover {
+      background: var(--accent-bg);
+      color: var(--accent);
     }
-    .syslinks-divider { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+
+    .syslinks-menu a.active-sys {
+      background: var(--accent-bg);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .syslinks-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 4px 0;
+    }
 
     /* ── Toast ────────────────────────────────────────────────────────────── */
     #toastBox {
-      position: fixed; bottom: 22px; right: 22px;
-      z-index: 2000; display: flex; flex-direction: column; gap: 8px;
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
+
     .toast {
-      background: #1f2937; color: #fff; padding: 10px 16px;
-      border-radius: var(--r-md); box-shadow: var(--sh-md);
-      display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500;
-      opacity: 0; transform: translateY(18px);
+      background: #1f2937;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: var(--r-md);
+      box-shadow: var(--sh-md);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(18px);
       animation: tIn .28s forwards, tOut .28s 2.72s forwards;
     }
-    .toast.ts { border-left: 4px solid var(--success); }
-    .toast.te { border-left: 4px solid var(--danger); }
-    .toast.tw { border-left: 4px solid var(--warn); }
-    @keyframes tIn  { to { opacity:1; transform:translateY(0); } }
-    @keyframes tOut { to { opacity:0; transform:translateY(-14px); } }
+
+    .toast.ts {
+      border-left: 4px solid var(--success);
+    }
+
+    .toast.te {
+      border-left: 4px solid var(--danger);
+    }
+
+    .toast.tw {
+      border-left: 4px solid var(--warn);
+    }
+
+    @keyframes tIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes tOut {
+      to {
+        opacity: 0;
+        transform: translateY(-14px);
+      }
+    }
+
     /* ── Due Sidebar ──────────────────────────────────────────────────────── */
     .due-sidebar {
       position: fixed;
@@ -389,9 +972,11 @@
       display: flex;
       flex-direction: column;
     }
+
     .due-sidebar.show {
       right: 0;
     }
+
     .due-sidebar-header {
       background: var(--danger);
       color: #fff;
@@ -400,10 +985,12 @@
       justify-content: space-between;
       align-items: center;
     }
+
     .due-sidebar-header h3 {
       font-size: 15px;
       font-weight: 700;
     }
+
     .due-sidebar-close {
       background: none;
       border: none;
@@ -414,12 +1001,15 @@
       padding: 0 4px;
       transition: color 0.15s;
     }
+
     .due-sidebar-close:hover:not(:disabled) {
       color: #fff;
     }
+
     .due-sidebar-close.locked {
       cursor: pointer;
     }
+
     .due-sidebar-body {
       padding: 20px;
       overflow-y: auto;
@@ -429,6 +1019,7 @@
       gap: 15px;
       background: #fcfdfe;
     }
+
     .due-alert-card {
       background: #fff5f5;
       border: 1px solid #fee2e2;
@@ -437,6 +1028,7 @@
       padding: 14px;
       box-shadow: 0 2px 5px rgba(239, 68, 68, 0.05);
     }
+
     .due-alert-title {
       font-weight: 700;
       color: var(--danger);
@@ -446,6 +1038,7 @@
       align-items: center;
       gap: 5px;
     }
+
     .due-alert-issue {
       font-weight: 600;
       color: var(--text);
@@ -453,6 +1046,7 @@
       margin-bottom: 8px;
       white-space: pre-wrap;
     }
+
     .due-alert-note {
       font-size: 12px;
       color: var(--text-2);
@@ -462,10 +1056,12 @@
       border-radius: var(--r-sm);
       margin-bottom: 8px;
     }
+
     .due-alert-assignees {
       font-size: 12px;
       color: var(--text-2);
     }
+
     /* Floating alert trigger */
     .due-alert-trigger {
       position: fixed;
@@ -487,410 +1083,424 @@
       animation: pulseAlert 2s infinite;
       transition: transform 0.2s;
     }
+
     .due-alert-trigger:hover {
       transform: scale(1.1);
     }
+
     @keyframes pulseAlert {
       0% {
         box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
       }
+
       70% {
         box-shadow: 0 0 0 12px rgba(239, 68, 68, 0);
       }
+
       100% {
         box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
       }
     }
   </style>
 </head>
-<body>
-<div class="page">
 
-  <!-- ── Hero ── -->
-  <div class="hero">
-    <div class="hero-left">
-      <div class="hero-icon">📋</div>
-      <div>
-        <h1>Task Pending – NVN Team</h1>
-        <p>Quản lý công việc đang chờ xử lý, phân công và theo dõi tiến độ cho cả nhóm.</p>
+<body>
+  <div class="page">
+
+    <!-- ── Hero ── -->
+    <div class="hero">
+      <div class="hero-left">
+        <div class="hero-icon">📋</div>
+        <div>
+          <h1>Task Pending – NVN Team</h1>
+          <p>Quản lý công việc đang chờ xử lý, phân công và theo dõi tiến độ cho cả nhóm.</p>
+        </div>
+      </div>
+      <button class="btn-outline" onclick="openMemberModal()"
+        style="font-size:12.5px;padding:7px 14px;white-space:nowrap;">⚙ Quản lý Thành viên</button>
+    </div>
+
+
+
+    <!-- ── Summary Cards ── -->
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-chip total">
+        <div class="stat-icon">📋</div>
+        <div class="stat-info"><b id="stTotal">0</b><span>Tổng task</span></div>
+      </div>
+      <div class="stat-chip pending">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-info"><b id="stPending">0</b><span>Pending</span></div>
+      </div>
+      <div class="stat-chip done">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info"><b id="stDone">0</b><span>Done</span></div>
       </div>
     </div>
-    <button class="btn-outline" onclick="openMemberModal()" style="font-size:12.5px;padding:7px 14px;white-space:nowrap;">⚙ Quản lý Thành viên</button>
-  </div>
 
-
-
-  <!-- ── Summary Cards ── -->
-  <div class="stats-bar" id="statsBar">
-    <div class="stat-chip total">
-      <div class="stat-icon">📋</div>
-      <div class="stat-info"><b id="stTotal">0</b><span>Tổng task</span></div>
+    <!-- ── Filter + Add Row ── -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <select class="filter-sel" id="filterStatus" onchange="applyFilters()">
+          <option value="">📂 Tất cả trạng thái</option>
+          <option value="Pending">🔴 Pending</option>
+          <option value="Done">🟢 Done</option>
+        </select>
+        <select class="filter-sel" id="filterMember" onchange="applyFilters()">
+          <option value="">👤 Tất cả thành viên</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="openTaskModal()" style="height:36px;">
+        <span>＋</span> Thêm Task mới
+      </button>
     </div>
-    <div class="stat-chip pending">
-      <div class="stat-icon">⏳</div>
-      <div class="stat-info"><b id="stPending">0</b><span>Pending</span></div>
-    </div>
-    <div class="stat-chip done">
-      <div class="stat-icon">✅</div>
-      <div class="stat-info"><b id="stDone">0</b><span>Done</span></div>
-    </div>
-  </div>
 
-  <!-- ── Filter + Add Row ── -->
-  <div class="toolbar">
-    <div class="toolbar-left">
-      <select class="filter-sel" id="filterStatus" onchange="applyFilters()">
-        <option value="">📂 Tất cả trạng thái</option>
-        <option value="Pending">🔴 Pending</option>
-        <option value="Done">🟢 Done</option>
-      </select>
-      <select class="filter-sel" id="filterMember" onchange="applyFilters()">
-        <option value="">👤 Tất cả thành viên</option>
-      </select>
-    </div>
-    <button class="btn-primary" onclick="openTaskModal()" style="height:36px;">
-      <span>＋</span> Thêm Task mới
-    </button>
-  </div>
-
-  <!-- ── Table ── -->
-  <div class="card">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th class="col-stt">STT</th>
-            <th class="col-priority">P</th>
-            <th class="col-deadline">Hạn cuối</th>
-            <th class="col-issue">Issue</th>
-            <th class="col-note">Ghi chú</th>
-            <th class="col-assignee">Người phụ trách</th>
-            <th class="col-status">Trạng thái</th>
-            <th class="col-actions">Thao tác</th>
-          </tr>
-        </thead>
-        <tbody id="taskTbody">
-          <tr><td colspan="8"><div class="state-box">
-            <div>Đang tải task...</div>
-          </div></td></tr>
-        </tbody>
-      </table>
+    <!-- ── Table ── -->
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-stt">STT</th>
+              <th class="col-priority">Độ ưu tiên</th>
+              <th class="col-deadline">Hạn cuối</th>
+              <th class="col-issue">Issue</th>
+              <th class="col-note">Ghi chú</th>
+              <th class="col-assignee">Người phụ trách</th>
+              <th class="col-status">Trạng thái</th>
+              <th class="col-actions">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="taskTbody">
+            <tr>
+              <td colspan="8">
+                <div class="state-box">
+                  <div>Đang tải task...</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ════════════════════════════════════════════════════════════════════════ -->
-<!-- ── MODAL: Thêm/Sửa Task ── -->
-<!-- ════════════════════════════════════════════════════════════════════════ -->
-<div class="modal-bg" id="taskModal">
-  <div class="modal">
-    <div class="modal-hdr">
-      <h3 id="taskModalTitle">Thêm Task mới</h3>
-      <button onclick="closeTaskModal()">&times;</button>
-    </div>
-    <form id="taskForm" onsubmit="submitTask(event)">
-      <input type="hidden" id="editId" />
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="fg">
-            <label>Hạn cuối</label>
-            <input type="date" class="fc" id="tDeadline" />
-          </div>
-          <div class="fg">
-            <label>Trạng thái <span class="req">*</span></label>
-            <select class="fc" id="tStatus" required>
-              <option value="Pending">🔴 Pending</option>
-              <option value="Done">🟢 Done</option>
-            </select>
-          </div>
-          <div class="fg">
-            <label>Mức ưu tiên <span class="req">*</span></label>
-            <select class="fc" id="tPriority" required>
-              <option value="P1">🔴 P1 – Khẩn cấp (1h)</option>
-              <option value="P2">🟡 P2 – Cao (3h)</option>
-              <option value="P3" selected>🟣 P3 – Bình thường (24h)</option>
-            </select>
-          </div>
-        </div>
-        <div class="fg form-row single">
-          <div>
-            <label>Issue (Công việc) <span class="req">*</span></label>
-            <textarea class="fc" id="tIssue" rows="3" placeholder="Mô tả công việc cần xử lý..." required></textarea>
-          </div>
-        </div>
-        <div class="fg form-row single">
-          <div>
-            <label>Ghi chú</label>
-            <textarea class="fc" id="tNote" rows="2" placeholder="Ghi chú thêm (nếu có)..."></textarea>
-          </div>
-        </div>
-        <div class="fg">
-          <label>Người phụ trách</label>
-          <div class="ms-wrap">
-            <div class="multi-select-wrap" id="pillBox" onclick="focusMsInput()">
-              <input class="ms-input" id="msInput" placeholder="Chọn hoặc gõ để tìm..." oninput="filterDropdown()" onfocus="showDropdown()" />
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- ── MODAL: Thêm/Sửa Task ── -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="modal-bg" id="taskModal">
+    <div class="modal">
+      <div class="modal-hdr">
+        <h3 id="taskModalTitle">Thêm Task mới</h3>
+        <button onclick="closeTaskModal()">&times;</button>
+      </div>
+      <form id="taskForm" onsubmit="submitTask(event)">
+        <input type="hidden" id="editId" />
+        <div class="modal-body">
+          <div class="form-row triple">
+            <div class="fg">
+              <label>Hạn cuối</label>
+              <input type="date" class="fc" id="tDeadline" />
             </div>
-            <div class="member-dropdown" id="msDropdown" style="display:none;"></div>
+            <div class="fg">
+              <label>Trạng thái <span class="req">*</span></label>
+              <select class="fc" id="tStatus" required>
+                <option value="Pending">🔴 Pending</option>
+                <option value="Done">🟢 Done</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Mức ưu tiên <span class="req">*</span></label>
+              <select class="fc" id="tPriority" required>
+                <option value="P1">🔴 P1 – Khẩn cấp (1h)</option>
+                <option value="P2">🟡 P2 – Cao (3h)</option>
+                <option value="P3" selected>🟣 P3 – Bình thường (24h)</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg form-row single">
+            <div>
+              <label>Issue (Công việc) <span class="req">*</span></label>
+              <textarea class="fc" id="tIssue" rows="3" placeholder="Mô tả công việc cần xử lý..." required></textarea>
+            </div>
+          </div>
+          <div class="fg form-row single">
+            <div>
+              <label>Ghi chú</label>
+              <textarea class="fc" id="tNote" rows="2" placeholder="Ghi chú thêm (nếu có)..."></textarea>
+            </div>
+          </div>
+          <div class="fg">
+            <label>Phụ trách</label>
+            <div class="ms-wrap">
+              <div class="multi-select-wrap" id="pillBox" onclick="focusMsInput()">
+                <input class="ms-input" id="msInput" placeholder="Chọn hoặc gõ để tìm..." oninput="filterDropdown()"
+                  onfocus="showDropdown()" />
+              </div>
+              <div class="member-dropdown" id="msDropdown" style="display:none;"></div>
+            </div>
           </div>
         </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeTaskModal()">Đóng</button>
+          <button type="submit" class="btn-primary" id="btnSaveTask">Lưu Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- ── MODAL: Quản lý Thành viên ── -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="modal-bg" id="memberModal">
+    <div class="modal" style="max-width:460px;">
+      <div class="modal-hdr">
+        <h3>⚙ Quản lý Thành viên</h3>
+        <button onclick="closeMemberModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+          <input type="text" class="fc" id="newMemberName" placeholder="Nhập tên thành viên mới..." style="flex:1;"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addMember();}" />
+          <button class="btn-primary" onclick="addMember()" style="padding:8px 14px; white-space:nowrap;">＋
+            Thêm</button>
+        </div>
+        <ul class="member-list" id="memberList">
+          <li style="text-align:center; color:var(--text-muted); padding:12px;">Đang tải danh sách...</li>
+        </ul>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn-outline" onclick="closeTaskModal()">Đóng</button>
-        <button type="submit" class="btn-primary" id="btnSaveTask">Lưu Task</button>
+        <button class="btn-outline" onclick="closeMemberModal()">Đóng</button>
       </div>
-    </form>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════════════════════ -->
-<!-- ── MODAL: Quản lý Thành viên ── -->
-<!-- ════════════════════════════════════════════════════════════════════════ -->
-<div class="modal-bg" id="memberModal">
-  <div class="modal" style="max-width:460px;">
-    <div class="modal-hdr">
-      <h3>⚙ Quản lý Thành viên</h3>
-      <button onclick="closeMemberModal()">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div style="display:flex; gap:8px; margin-bottom:12px;">
-        <input type="text" class="fc" id="newMemberName" placeholder="Nhập tên thành viên mới..." style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();addMember();}" />
-        <button class="btn-primary" onclick="addMember()" style="padding:8px 14px; white-space:nowrap;">＋ Thêm</button>
-      </div>
-      <ul class="member-list" id="memberList">
-        <li style="text-align:center; color:var(--text-muted); padding:12px;">Đang tải danh sách...</li>
-      </ul>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-outline" onclick="closeMemberModal()">Đóng</button>
     </div>
   </div>
-</div>
 
-<div id="toastBox"></div>
+  <div id="toastBox"></div>
 
-<!-- Due Alert Sidebar -->
-<div class="due-sidebar" id="dueSidebar">
-  <div class="due-sidebar-header">
-    <h3>⚠️ Task Đến Hạn Hôm Nay</h3>
-    <button class="due-sidebar-close" id="dueSidebarCloseBtn" onclick="toggleDueSidebar(false)">&times;</button>
+  <!-- Due Alert Sidebar -->
+  <div class="due-sidebar" id="dueSidebar">
+    <div class="due-sidebar-header">
+      <h3>⚠️ Task Đến Hạn Hôm Nay</h3>
+      <button class="due-sidebar-close" id="dueSidebarCloseBtn" onclick="toggleDueSidebar(false)">&times;</button>
+    </div>
+    <div class="due-sidebar-body" id="dueSidebarBody"></div>
   </div>
-  <div class="due-sidebar-body" id="dueSidebarBody"></div>
-</div>
 
-<button class="due-alert-trigger" id="dueAlertTrigger" onclick="toggleDueSidebar(true)" title="Có task đến hạn hôm nay!">⚠️</button>
+  <button class="due-alert-trigger" id="dueAlertTrigger" onclick="toggleDueSidebar(true)"
+    title="Có task đến hạn hôm nay!">⚠️</button>
 
-<!-- ════════════════════════════════════════════════════════════════════════ -->
-<!-- ── JAVASCRIPT ── -->
-<!-- ════════════════════════════════════════════════════════════════════════ -->
-<script>
-/* ──────────────────────────────────────────────────────────────────────────
-   CONFIG & STATE
-────────────────────────────────────────────────────────────────────────── */
-// ── URL Config ─────────────────────────────────────────────────────────────
-const WORKER_LS_KEY = "NVN_TASK_WORKER_URL";
-let WORKER_API_URL = localStorage.getItem(WORKER_LS_KEY) || "";
-const workerUrlEl = document.getElementById("workerUrl");
-if (workerUrlEl) workerUrlEl.value = WORKER_API_URL;
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- ── JAVASCRIPT ── -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <script>
+    /* ──────────────────────────────────────────────────────────────────────────
+       CONFIG & STATE
+    ────────────────────────────────────────────────────────────────────────── */
+    // ── URL Config ─────────────────────────────────────────────────────────────
+    const WORKER_LS_KEY = "NVN_TASK_WORKER_URL";
+    let WORKER_API_URL = localStorage.getItem(WORKER_LS_KEY) || "";
+    const workerUrlEl = document.getElementById("workerUrl");
+    if (workerUrlEl) workerUrlEl.value = WORKER_API_URL;
 
-let allTasks       = [];
-let filteredTasks  = [];
-let allMembers     = [];
-let allSystemUrls  = []; 
-let selectedAssignees = [];
+    let allTasks = [];
+    let filteredTasks = [];
+    let allMembers = [];
+    let allSystemUrls = [];
+    let selectedAssignees = [];
 
-/* ──────────────────────────────────────────────────────────────────────────
-   UTILS
-────────────────────────────────────────────────────────────────────────── */
-function toast(msg, type = "s") {
-  const box = document.getElementById("toastBox");
-  const el  = document.createElement("div");
-  el.className = `toast t${type}`;
-  el.innerHTML = `<span>${type==="s"?"✔️":type==="e"?"❌":"⚠️"}</span><span>${msg}</span>`;
-  box.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
-}
+    /* ──────────────────────────────────────────────────────────────────────────
+       UTILS
+    ────────────────────────────────────────────────────────────────────────── */
+    function toast(msg, type = "s") {
+      const box = document.getElementById("toastBox");
+      const el = document.createElement("div");
+      el.className = `toast t${type}`;
+      el.innerHTML = `<span>${type === "s" ? "✔️" : type === "e" ? "❌" : "⚠️"}</span><span>${msg}</span>`;
+      box.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
 
-function getTasksEndpoint() {
-  let base = "";
-  if (window.location.protocol === "file:") {
-    const wUrl = WORKER_API_URL;
-    if (wUrl) {
-      try {
-        const urlObj = new URL(wUrl);
-        base = urlObj.origin;
-      } catch (e) {
-        base = "https://search-dms-tool.vercel.app";
+    function getTasksEndpoint() {
+      let base = "";
+      if (window.location.protocol === "file:") {
+        const wUrl = WORKER_API_URL;
+        if (wUrl) {
+          try {
+            const urlObj = new URL(wUrl);
+            base = urlObj.origin;
+          } catch (e) {
+            base = "https://search-dms-tool.vercel.app";
+          }
+        } else {
+          base = "https://search-dms-tool.vercel.app";
+        }
       }
-    } else {
-      base = "https://search-dms-tool.vercel.app";
+      return base + "/api/r2-tasks";
     }
-  }
-  return base + "/api/r2-tasks";
-}
 
-async function apiGet(qs) {
-  const endpoint = getTasksEndpoint();
-  const r = await fetch(`${endpoint}?${qs}`);
-  return r.json();
-}
-
-async function apiPost(body) {
-  const endpoint = getTasksEndpoint();
-  const r = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  return r.json();
-}
-
-function getR2Endpoint() {
-  let base = "";
-  if (window.location.protocol === "file:") {
-    const wUrl = WORKER_API_URL;
-    if (wUrl) {
-      try {
-        const urlObj = new URL(wUrl);
-        base = urlObj.origin;
-      } catch (e) {
-        base = "https://search-dms-tool.vercel.app";
-      }
-    } else {
-      base = "https://search-dms-tool.vercel.app";
+    async function apiGet(qs) {
+      const endpoint = getTasksEndpoint();
+      const r = await fetch(`${endpoint}?${qs}`);
+      return r.json();
     }
-  }
-  return base + "/api/r2-urls";
-}
 
-async function saveUrl() {
-  const newWorkerUrl = document.getElementById("workerUrl").value.trim();
-  if (!newWorkerUrl) {
-    toast("Vui lòng nhập Worker API URL trước!", "e");
-    return;
-  }
-  
-  WORKER_API_URL = newWorkerUrl;
-  localStorage.setItem(WORKER_LS_KEY, newWorkerUrl);
-  
-  toast("Đã lưu cấu hình cục bộ!", "s");
-
-  // Đồng bộ lên R2
-  try {
-    const payload = JSON.stringify({ action: "save_url", name: "Task pending", url: newWorkerUrl });
-    const endpoint = getR2Endpoint();
-    const separator = endpoint.includes("?") ? "&" : "?";
-    const requestUrl = `${endpoint}${separator}data=${encodeURIComponent(payload)}&t=${Date.now()}`;
-    
-    const res = await fetch(requestUrl);
-    const rawText = await res.text();
-    console.log("[R2 Save] Task Pending endpoint:", requestUrl);
-    console.log("[R2 Save] HTTP status:", res.status);
-    console.log("[R2 Save] response body:", rawText);
-    
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${rawText}`);
-    let result;
-    try { result = JSON.parse(rawText); } catch(e) { throw new Error("Response không phải JSON: " + rawText); }
-    
-    if (result.status === "success" || result.success) {
-      toast("✅ Đã đồng bộ URL Task Pending lên R2!", "s");
-    } else {
-      const detail = [result.message, result.r2Body].filter(Boolean).join(" | R2: ");
-      toast("⚠️ Lưu R2 thất bại: " + (detail || "lỗi không rõ"), "e");
-    }
-  } catch (err) {
-    console.error("[R2 Save] Error:", err);
-    toast(`Lưu R2 thất bại: ${err.message}`, "e");
-  }
-
-  loadAll();
-}
-
-
-function loadAll() {
-  loadMembers();
-  loadTasks();
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   STATS
-────────────────────────────────────────────────────────────────────────── */
-function updateStats(tasks) {
-  // Stats bar is always visible (grid layout)
-  document.getElementById("stTotal").textContent   = tasks.length;
-  document.getElementById("stPending").textContent = tasks.filter(t => t.status === "Pending").length;
-  document.getElementById("stDone").textContent    = tasks.filter(t => t.status === "Done").length;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   TASKS – LOAD & RENDER
-────────────────────────────────────────────────────────────────────────── */
-async function loadTasks() {
-  const tbody = document.getElementById("taskTbody");
-  tbody.innerHTML = `<tr><td colspan="8"><div class="state-box"><div class="spinner"></div><div>Đang tải task...</div></div></td></tr>`;
-  try {
-    const res = await apiGet("action=read_tasks");
-    if (res.status === "success") {
-      const rawTasks = res.data || res.tasks || [];
-      allTasks = rawTasks.map(t => {
-        let dl = t.deadline || t.dueDate || "";
-        if (dl && dl.includes("T")) dl = dl.split("T")[0];
-        let statusVal = String(t.status || "").trim().toLowerCase();
-        statusVal = (statusVal === "done") ? "Done" : "Pending";
-        const priority = ["P1","P2","P3"].includes(t.priority) ? t.priority : "P3";
-        return {
-          id: t.id,
-          deadline: dl,
-          issue: t.issue || "",
-          note: t.note || "",
-          assignees: Array.isArray(t.assignees) ? t.assignees : [],
-          status: statusVal,
-          priority
-        };
+    async function apiPost(body) {
+      const endpoint = getTasksEndpoint();
+      const r = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
       });
-      // Cache tasks to localStorage for global notification system
-      try { localStorage.setItem("app_tasks_data", JSON.stringify(allTasks)); } catch(e) {}
-      applyFilters();
-    } else {
-      tbody.innerHTML = `<tr><td colspan="8"><div class="state-box">Lỗi: ${res.message || 'không rõ'}</div></td></tr>`;
+      return r.json();
     }
-  } catch (err) {
-    console.error("Lỗi load task:", err);
-    tbody.innerHTML = `<tr><td colspan="8"><div class="state-box" style="color:var(--danger);">Lỗi kết nối API: ${err.message}</div></td></tr>`;
-  }
-}
 
-function deadlineClass(dl) {
-  if (!dl) return "";
-  const today = new Date(); today.setHours(0,0,0,0);
-  const d = new Date(dl);
-  if (d < today)  return "deadline-overdue";
-  if (d.toDateString() === today.toDateString()) return "deadline-today";
-  return "deadline-upcoming";
-}
+    function getR2Endpoint() {
+      let base = "";
+      if (window.location.protocol === "file:") {
+        const wUrl = WORKER_API_URL;
+        if (wUrl) {
+          try {
+            const urlObj = new URL(wUrl);
+            base = urlObj.origin;
+          } catch (e) {
+            base = "https://search-dms-tool.vercel.app";
+          }
+        } else {
+          base = "https://search-dms-tool.vercel.app";
+        }
+      }
+      return base + "/api/r2-urls";
+    }
 
-function renderTasks() {
-  const tbody = document.getElementById("taskTbody");
-  tbody.innerHTML = "";
-  if (!filteredTasks.length) {
-    tbody.innerHTML = `<tr><td colspan="8"><div class="state-box">Không có task nào phù hợp.</div></td></tr>`;
-    return;
-  }
-  const priorityClasses = { P1: "badge-p1", P2: "badge-p2", P3: "badge-p3" };
-  filteredTasks.forEach((t, i) => {
-    const tr = document.createElement("tr");
-    const dlClass = deadlineClass(t.deadline);
-    const dlLabel = t.deadline ? formatDate(t.deadline) : "—";
-    const badgesHtml = (t.assignees || []).map(a =>
-      `<span class="badge badge-member">${esc(a)}</span>`
-    ).join("");
-    const statusBadge = t.status === "Done"
-      ? `<span class="badge badge-done">✔ Done</span>`
-      : `<span class="badge badge-pending">● Pending</span>`;
-    const pClass = priorityClasses[t.priority] || "badge-p3";
-    const priorityBadge = `<span class="badge ${pClass}">${t.priority || "P3"}</span>`;
+    async function saveUrl() {
+      const newWorkerUrl = document.getElementById("workerUrl").value.trim();
+      if (!newWorkerUrl) {
+        toast("Vui lòng nhập Worker API URL trước!", "e");
+        return;
+      }
 
-    tr.innerHTML = `
-      <td class="col-stt">${i+1}</td>
+      WORKER_API_URL = newWorkerUrl;
+      localStorage.setItem(WORKER_LS_KEY, newWorkerUrl);
+
+      toast("Đã lưu cấu hình cục bộ!", "s");
+
+      // Đồng bộ lên R2
+      try {
+        const payload = JSON.stringify({ action: "save_url", name: "Task pending", url: newWorkerUrl });
+        const endpoint = getR2Endpoint();
+        const separator = endpoint.includes("?") ? "&" : "?";
+        const requestUrl = `${endpoint}${separator}data=${encodeURIComponent(payload)}&t=${Date.now()}`;
+
+        const res = await fetch(requestUrl);
+        const rawText = await res.text();
+        console.log("[R2 Save] Task Pending endpoint:", requestUrl);
+        console.log("[R2 Save] HTTP status:", res.status);
+        console.log("[R2 Save] response body:", rawText);
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${rawText}`);
+        let result;
+        try { result = JSON.parse(rawText); } catch (e) { throw new Error("Response không phải JSON: " + rawText); }
+
+        if (result.status === "success" || result.success) {
+          toast("✅ Đã đồng bộ URL Task Pending lên R2!", "s");
+        } else {
+          const detail = [result.message, result.r2Body].filter(Boolean).join(" | R2: ");
+          toast("⚠️ Lưu R2 thất bại: " + (detail || "lỗi không rõ"), "e");
+        }
+      } catch (err) {
+        console.error("[R2 Save] Error:", err);
+        toast(`Lưu R2 thất bại: ${err.message}`, "e");
+      }
+
+      loadAll();
+    }
+
+
+    function loadAll() {
+      loadMembers();
+      loadTasks();
+    }
+
+    /* ──────────────────────────────────────────────────────────────────────────
+       STATS
+    ────────────────────────────────────────────────────────────────────────── */
+    function updateStats(tasks) {
+      // Stats bar is always visible (grid layout)
+      document.getElementById("stTotal").textContent = tasks.length;
+      document.getElementById("stPending").textContent = tasks.filter(t => t.status === "Pending").length;
+      document.getElementById("stDone").textContent = tasks.filter(t => t.status === "Done").length;
+    }
+
+    /* ──────────────────────────────────────────────────────────────────────────
+       TASKS – LOAD & RENDER
+    ────────────────────────────────────────────────────────────────────────── */
+    async function loadTasks() {
+      const tbody = document.getElementById("taskTbody");
+      tbody.innerHTML = `<tr><td colspan="8"><div class="state-box"><div class="spinner"></div><div>Đang tải task...</div></div></td></tr>`;
+      try {
+        const res = await apiGet("action=read_tasks");
+        if (res.status === "success") {
+          const rawTasks = res.data || res.tasks || [];
+          allTasks = rawTasks.map(t => {
+            let dl = t.deadline || t.dueDate || "";
+            if (dl && dl.includes("T")) dl = dl.split("T")[0];
+            let statusVal = String(t.status || "").trim().toLowerCase();
+            statusVal = (statusVal === "done") ? "Done" : "Pending";
+            const priority = ["P1", "P2", "P3"].includes(t.priority) ? t.priority : "P3";
+            return {
+              id: t.id,
+              deadline: dl,
+              issue: t.issue || "",
+              note: t.note || "",
+              assignees: Array.isArray(t.assignees) ? t.assignees : [],
+              status: statusVal,
+              priority
+            };
+          });
+          // Cache tasks to localStorage for global notification system
+          try { localStorage.setItem("app_tasks_data", JSON.stringify(allTasks)); } catch (e) { }
+          applyFilters();
+        } else {
+          tbody.innerHTML = `<tr><td colspan="8"><div class="state-box">Lỗi: ${res.message || 'không rõ'}</div></td></tr>`;
+        }
+      } catch (err) {
+        console.error("Lỗi load task:", err);
+        tbody.innerHTML = `<tr><td colspan="8"><div class="state-box" style="color:var(--danger);">Lỗi kết nối API: ${err.message}</div></td></tr>`;
+      }
+    }
+
+    function deadlineClass(dl) {
+      if (!dl) return "";
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const d = new Date(dl);
+      if (d < today) return "deadline-overdue";
+      if (d.toDateString() === today.toDateString()) return "deadline-today";
+      return "deadline-upcoming";
+    }
+
+    function renderTasks() {
+      const tbody = document.getElementById("taskTbody");
+      tbody.innerHTML = "";
+      if (!filteredTasks.length) {
+        tbody.innerHTML = `<tr><td colspan="8"><div class="state-box">Không có task nào phù hợp.</div></td></tr>`;
+        return;
+      }
+      const priorityClasses = { P1: "badge-p1", P2: "badge-p2", P3: "badge-p3" };
+      filteredTasks.forEach((t, i) => {
+        const tr = document.createElement("tr");
+        const dlClass = deadlineClass(t.deadline);
+        const dlLabel = t.deadline ? formatDate(t.deadline) : "—";
+        const badgesHtml = (t.assignees || []).map(a =>
+          `<span class="badge badge-member">${esc(a)}</span>`
+        ).join("");
+        const statusBadge = t.status === "Done"
+          ? `<span class="badge badge-done">✔ Done</span>`
+          : `<span class="badge badge-pending">● Pending</span>`;
+        const pClass = priorityClasses[t.priority] || "badge-p3";
+        const priorityBadge = `<span class="badge ${pClass}">${t.priority || "P3"}</span>`;
+
+        tr.innerHTML = `
+      <td class="col-stt">${i + 1}</td>
       <td class="col-priority">${priorityBadge}</td>
       <td class="col-deadline"><span class="${dlClass}">${esc(dlLabel)}</span></td>
       <td class="col-issue">${esc(t.issue)}</td>
@@ -899,93 +1509,93 @@ function renderTasks() {
       <td class="col-status">${statusBadge}</td>
       <td class="col-actions">
         <button class="btn-warn btn-sm" onclick="openEditTask(${t.id})">Sửa</button>
-        <button class="btn-danger btn-sm" onclick="deleteTask(${t.id},'${esc(t.issue).substring(0,40)}')">Xóa</button>
+        <button class="btn-danger btn-sm" onclick="deleteTask(${t.id},'${esc(t.issue).substring(0, 40)}')">Xóa</button>
       </td>
     `;
-    tbody.appendChild(tr);
-  });
-}
-
-function esc(str) {
-  return String(str || "")
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;");
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  dateStr = String(dateStr).trim();
-  if (dateStr.includes("/")) {
-    return dateStr;
-  }
-  if (dateStr.includes("-")) {
-    const parts = dateStr.split("-");
-    if (parts[0].length === 4) { // yyyy-mm-dd
-      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        tbody.appendChild(tr);
+      });
     }
-    return dateStr;
-  }
-  return dateStr;
-}
 
-/* ──────────────────────────────────────────────────────────────────────────
-   FILTERS
-────────────────────────────────────────────────────────────────────────── */
-function applyFilters() {
-  const fs = document.getElementById("filterStatus").value;
-  const fm = document.getElementById("filterMember").value;
-  filteredTasks = allTasks.filter(t => {
-    const matchStatus = !fs || t.status === fs;
-    const matchMember = !fm || (t.assignees || []).includes(fm);
-    return matchStatus && matchMember;
-  });
-  updateStats(allTasks);
-  renderTasks();
-  updateDueSidebar();
-}
-
-function getTodayLocalDate() {
-  const today = new Date();
-  const y = today.getFullYear();
-  const m = String(today.getMonth() + 1).padStart(2, '0');
-  const d = String(today.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function toggleDueSidebar(show) {
-  const sidebar = document.getElementById("dueSidebar");
-  const trigger = document.getElementById("dueAlertTrigger");
-  const todayStr = getTodayLocalDate();
-  const hasDueTasks = allTasks.some(t => parseToIsoDate(t.deadline) === todayStr && t.status !== "Done");
-
-  if (show) {
-    sidebar.classList.add("show");
-    document.body.classList.add("sidebar-open");
-    trigger.style.display = "none";
-  } else {
-    sidebar.classList.remove("show");
-    document.body.classList.remove("sidebar-open");
-    if (hasDueTasks) {
-      trigger.style.display = "flex";
-    } else {
-      trigger.style.display = "none";
+    function esc(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
     }
-  }
-}
 
-function updateDueSidebar() {
-  const todayStr = getTodayLocalDate();
-  const dueTasks = allTasks.filter(t => {
-    const taskDate = parseToIsoDate(t.deadline);
-    return taskDate === todayStr && t.status !== "Done";
-  });
+    function formatDate(dateStr) {
+      if (!dateStr) return "";
+      dateStr = String(dateStr).trim();
+      if (dateStr.includes("/")) {
+        return dateStr;
+      }
+      if (dateStr.includes("-")) {
+        const parts = dateStr.split("-");
+        if (parts[0].length === 4) { // yyyy-mm-dd
+          return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        return dateStr;
+      }
+      return dateStr;
+    }
 
-  const sidebar = document.getElementById("dueSidebar");
-  const trigger = document.getElementById("dueAlertTrigger");
-  const body = document.getElementById("dueSidebarBody");
+    /* ──────────────────────────────────────────────────────────────────────────
+       FILTERS
+    ────────────────────────────────────────────────────────────────────────── */
+    function applyFilters() {
+      const fs = document.getElementById("filterStatus").value;
+      const fm = document.getElementById("filterMember").value;
+      filteredTasks = allTasks.filter(t => {
+        const matchStatus = !fs || t.status === fs;
+        const matchMember = !fm || (t.assignees || []).includes(fm);
+        return matchStatus && matchMember;
+      });
+      updateStats(allTasks);
+      renderTasks();
+      updateDueSidebar();
+    }
 
-  if (dueTasks.length > 0) {
-    body.innerHTML = dueTasks.map(t => `
+    function getTodayLocalDate() {
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const d = String(today.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function toggleDueSidebar(show) {
+      const sidebar = document.getElementById("dueSidebar");
+      const trigger = document.getElementById("dueAlertTrigger");
+      const todayStr = getTodayLocalDate();
+      const hasDueTasks = allTasks.some(t => parseToIsoDate(t.deadline) === todayStr && t.status !== "Done");
+
+      if (show) {
+        sidebar.classList.add("show");
+        document.body.classList.add("sidebar-open");
+        trigger.style.display = "none";
+      } else {
+        sidebar.classList.remove("show");
+        document.body.classList.remove("sidebar-open");
+        if (hasDueTasks) {
+          trigger.style.display = "flex";
+        } else {
+          trigger.style.display = "none";
+        }
+      }
+    }
+
+    function updateDueSidebar() {
+      const todayStr = getTodayLocalDate();
+      const dueTasks = allTasks.filter(t => {
+        const taskDate = parseToIsoDate(t.deadline);
+        return taskDate === todayStr && t.status !== "Done";
+      });
+
+      const sidebar = document.getElementById("dueSidebar");
+      const trigger = document.getElementById("dueAlertTrigger");
+      const body = document.getElementById("dueSidebarBody");
+
+      if (dueTasks.length > 0) {
+        body.innerHTML = dueTasks.map(t => `
       <div class="due-alert-card">
         <div class="due-alert-title">🚨 Task cần làm ngay</div>
         <div class="due-alert-issue">${esc(t.issue)}</div>
@@ -996,424 +1606,425 @@ function updateDueSidebar() {
       </div>
     `).join("");
 
-    if (sidebar.classList.contains("show")) {
-      trigger.style.display = "none";
-      document.body.classList.add("sidebar-open");
-    } else {
-      sidebar.classList.add("show");
-      document.body.classList.add("sidebar-open");
-      trigger.style.display = "none";
-    }
-  } else {
-    body.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding: 20px 0;">Không có task nào đến hạn hôm nay cần xử lý.</div>`;
-    sidebar.classList.remove("show");
-    document.body.classList.remove("sidebar-open");
-    trigger.style.display = "none";
-  }
-}
-
-function populateMemberFilter() {
-  const sel = document.getElementById("filterMember");
-  const cur = sel.value;
-  sel.innerHTML = `<option value="">👤 Tất cả thành viên</option>`;
-  allMembers.forEach(m => {
-    const opt = document.createElement("option");
-    opt.value = m.name; opt.textContent = m.name;
-    if (m.name === cur) opt.selected = true;
-    sel.appendChild(opt);
-  });
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   TASK MODAL
-────────────────────────────────────────────────────────────────────────── */
-function openTaskModal() {
-  document.getElementById("taskModalTitle").textContent = "Thêm Task mới";
-  document.getElementById("editId").value = "";
-  document.getElementById("tDeadline").value = "";
-  document.getElementById("tIssue").value = "";
-  document.getElementById("tNote").value = "";
-  document.getElementById("tStatus").value = "Pending";
-  document.getElementById("tPriority").value = "P3";
-  selectedAssignees = [];
-  renderPills();
-  document.getElementById("taskModal").classList.add("show");
-}
-
-// Hàm chuyển đổi ngược từ dd/MM/yyyy sang yyyy-MM-dd để gán vào input date
-function parseToIsoDate(dateStr) {
-  if (!dateStr) return "";
-  dateStr = String(dateStr).trim();
-  if (dateStr.includes("/")) {
-    const parts = dateStr.split("/");
-    if (parts.length === 3) {
-      const d = parts[0].padStart(2, '0');
-      const m = parts[1].padStart(2, '0');
-      const y = parts[2];
-      if (y.length === 4) {
-        return `${y}-${m}-${d}`;
+        if (sidebar.classList.contains("show")) {
+          trigger.style.display = "none";
+          document.body.classList.add("sidebar-open");
+        } else {
+          sidebar.classList.add("show");
+          document.body.classList.add("sidebar-open");
+          trigger.style.display = "none";
+        }
+      } else {
+        body.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding: 20px 0;">Không có task nào đến hạn hôm nay cần xử lý.</div>`;
+        sidebar.classList.remove("show");
+        document.body.classList.remove("sidebar-open");
+        trigger.style.display = "none";
       }
     }
-  }
-  if (dateStr.includes("-")) {
-    const parts = dateStr.split("-");
-    if (parts[0].length === 4) {
-      return dateStr; // Đã là yyyy-MM-dd
+
+    function populateMemberFilter() {
+      const sel = document.getElementById("filterMember");
+      const cur = sel.value;
+      sel.innerHTML = `<option value="">👤 Tất cả thành viên</option>`;
+      allMembers.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m.name; opt.textContent = m.name;
+        if (m.name === cur) opt.selected = true;
+        sel.appendChild(opt);
+      });
     }
-    if (parts[2].length === 4) { // dd-MM-yyyy -> yyyy-MM-dd
-      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-    }
-  }
-  return dateStr;
-}
 
-function openEditTask(id) {
-  const t = allTasks.find(x => Number(x.id) === Number(id));
-  if (!t) return;
-  document.getElementById("taskModalTitle").textContent = "Chỉnh sửa Task";
-  document.getElementById("editId").value = id;
-  document.getElementById("tDeadline").value = parseToIsoDate(t.deadline);
-  document.getElementById("tIssue").value = t.issue || "";
-  document.getElementById("tNote").value = t.note || "";
-  document.getElementById("tStatus").value = t.status || "Pending";
-  document.getElementById("tPriority").value = t.priority || "P3";
-  selectedAssignees = [...(t.assignees || [])];
-  renderPills();
-  document.getElementById("taskModal").classList.add("show");
-}
-
-function closeTaskModal() {
-  document.getElementById("taskModal").classList.remove("show");
-  document.getElementById("msDropdown").style.display = "none";
-}
-
-async function submitTask(e) {
-  e.preventDefault();
-  const btn = document.getElementById("btnSaveTask");
-  btn.disabled = true; btn.textContent = "Đang lưu...";
-
-  const id       = document.getElementById("editId").value;
-  const deadline = document.getElementById("tDeadline").value;
-  const issue    = document.getElementById("tIssue").value.trim();
-  const note     = document.getElementById("tNote").value.trim();
-  const status   = document.getElementById("tStatus").value;
-  const priority = document.getElementById("tPriority").value;
-
-  const payload = {
-    action: "save_task",
-    deadline, issue, note,
-    assignees: selectedAssignees,
-    status, priority
-  };
-  if (id) payload.id = parseInt(id);
-
-  try {
-    const res = await apiPost(payload);
-    if (res.status === "success") {
-      toast(id ? "Cập nhật task thành công!" : "Thêm task thành công!", "s");
-      closeTaskModal();
-      loadTasks();
-    } else {
-      toast("Lỗi: " + (res.message || "không rõ"), "e");
-    }
-  } catch (err) {
-    console.error("Lỗi submitTask:", err);
-    toast("Lỗi kết nối: " + err.message, "e");
-  } finally {
-    btn.disabled = false; btn.textContent = "Lưu Task";
-  }
-}
-
-async function deleteTask(id, label) {
-  if (!confirm(`Xóa task này?\n"${label}..."`)) return;
-  try {
-    const res = await apiPost({ action: "delete_task", id });
-    if (res.status === "success") {
-      toast("Đã xóa task!", "s");
-      loadTasks();
-    } else {
-      toast("Lỗi: " + (res.message || "không rõ"), "e");
-    }
-  } catch (err) {
-    console.error("Lỗi deleteTask:", err);
-    toast("Lỗi kết nối: " + err.message, "e");
-  }
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   MULTI-SELECT MEMBER PICKER
-────────────────────────────────────────────────────────────────────────── */
-function renderPills() {
-  const box = document.getElementById("pillBox");
-  // Xóa tất cả pills cũ (giữ lại input)
-  Array.from(box.querySelectorAll(".pill")).forEach(p => p.remove());
-  const input = document.getElementById("msInput");
-
-  selectedAssignees.forEach(name => {
-    const pill = document.createElement("span");
-    pill.className = "pill";
-    pill.innerHTML = `${esc(name)}<button type="button" class="pill-x" data-name="${esc(name)}">&times;</button>`;
-    pill.querySelector(".pill-x").addEventListener("click", () => {
-      selectedAssignees = selectedAssignees.filter(x => x !== name);
+    /* ──────────────────────────────────────────────────────────────────────────
+       TASK MODAL
+    ────────────────────────────────────────────────────────────────────────── */
+    function openTaskModal() {
+      document.getElementById("taskModalTitle").textContent = "Thêm Task mới";
+      document.getElementById("editId").value = "";
+      document.getElementById("tDeadline").value = "";
+      document.getElementById("tIssue").value = "";
+      document.getElementById("tNote").value = "";
+      document.getElementById("tStatus").value = "Pending";
+      document.getElementById("tPriority").value = "P3";
+      selectedAssignees = [];
       renderPills();
-    });
-    box.insertBefore(pill, input);
-  });
-}
+      document.getElementById("taskModal").classList.add("show");
+    }
 
-function focusMsInput() {
-  document.getElementById("msInput").focus();
-}
+    // Hàm chuyển đổi ngược từ dd/MM/yyyy sang yyyy-MM-dd để gán vào input date
+    function parseToIsoDate(dateStr) {
+      if (!dateStr) return "";
+      dateStr = String(dateStr).trim();
+      if (dateStr.includes("/")) {
+        const parts = dateStr.split("/");
+        if (parts.length === 3) {
+          const d = parts[0].padStart(2, '0');
+          const m = parts[1].padStart(2, '0');
+          const y = parts[2];
+          if (y.length === 4) {
+            return `${y}-${m}-${d}`;
+          }
+        }
+      }
+      if (dateStr.includes("-")) {
+        const parts = dateStr.split("-");
+        if (parts[0].length === 4) {
+          return dateStr; // Đã là yyyy-MM-dd
+        }
+        if (parts[2].length === 4) { // dd-MM-yyyy -> yyyy-MM-dd
+          return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        }
+      }
+      return dateStr;
+    }
 
-function showDropdown() {
-  document.getElementById("pillBox").classList.add("focused");
-  filterDropdown();
-  document.getElementById("msDropdown").style.display = "block";
-}
+    function openEditTask(id) {
+      const t = allTasks.find(x => Number(x.id) === Number(id));
+      if (!t) return;
+      document.getElementById("taskModalTitle").textContent = "Chỉnh sửa Task";
+      document.getElementById("editId").value = id;
+      document.getElementById("tDeadline").value = parseToIsoDate(t.deadline);
+      document.getElementById("tIssue").value = t.issue || "";
+      document.getElementById("tNote").value = t.note || "";
+      document.getElementById("tStatus").value = t.status || "Pending";
+      document.getElementById("tPriority").value = t.priority || "P3";
+      selectedAssignees = [...(t.assignees || [])];
+      renderPills();
+      document.getElementById("taskModal").classList.add("show");
+    }
 
-function filterDropdown() {
-  const q   = document.getElementById("msInput").value.toLowerCase();
-  const dd  = document.getElementById("msDropdown");
-  dd.innerHTML = "";
-  const items = allMembers.filter(m => m.name.toLowerCase().includes(q));
-  if (!items.length) {
-    dd.innerHTML = `<div class="member-dropdown-item" style="color:var(--text-muted);">Không tìm thấy</div>`;
-    dd.style.display = "block";
-    return;
-  }
-  items.forEach(m => {
-    const div = document.createElement("div");
-    div.className = "member-dropdown-item" + (selectedAssignees.includes(m.name) ? " selected" : "");
-    div.textContent = (selectedAssignees.includes(m.name) ? "✔ " : "") + m.name;
-    div.onclick = () => toggleAssignee(m.name);
-    dd.appendChild(div);
-  });
-  dd.style.display = "block";
-}
+    function closeTaskModal() {
+      document.getElementById("taskModal").classList.remove("show");
+      document.getElementById("msDropdown").style.display = "none";
+    }
 
-function toggleAssignee(name) {
-  if (selectedAssignees.includes(name)) {
-    selectedAssignees = selectedAssignees.filter(x => x !== name);
-  } else {
-    selectedAssignees.push(name);
-  }
-  document.getElementById("msInput").value = "";
-  renderPills();
-  filterDropdown();
-}
+    async function submitTask(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btnSaveTask");
+      btn.disabled = true; btn.textContent = "Đang lưu...";
 
-// Đóng dropdown khi click ra ngoài
-document.addEventListener("click", e => {
-  const wrap = document.getElementById("pillBox");
-  const dd   = document.getElementById("msDropdown");
-  if (wrap && !wrap.contains(e.target) && !dd.contains(e.target)) {
-    dd.style.display = "none";
-    if (wrap) wrap.classList.remove("focused");
-  }
-});
+      const id = document.getElementById("editId").value;
+      const deadline = document.getElementById("tDeadline").value;
+      const issue = document.getElementById("tIssue").value.trim();
+      const note = document.getElementById("tNote").value.trim();
+      const status = document.getElementById("tStatus").value;
+      const priority = document.getElementById("tPriority").value;
 
-/* ──────────────────────────────────────────────────────────────────────────
-   MEMBERS – LOAD, RENDER, CRUD (NAME-BASED FROM COLUMN I)
-────────────────────────────────────────────────────────────────────────── */
-// Tự động tải URL Task Pending từ R2 khi mở trang
-async function autoDetectTaskUrl() {
-  const endpoint = getR2Endpoint();
-  try {
-    const res = await fetch(`${endpoint}${endpoint.includes("?") ? "&" : "?"}t=${Date.now()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    
-    const sheetUrl = data["Task pending"] || data["Task Pending"] || data["task pending"] || data["task_pending"];
-    if (sheetUrl) {
-      const cleanUrl = sheetUrl.trim();
-      const localUrl = localStorage.getItem(WORKER_LS_KEY) || "";
-      if (cleanUrl && cleanUrl !== localUrl) {
-        // Đồng bộ local storage
-        localStorage.setItem(WORKER_LS_KEY, cleanUrl);
-        WORKER_API_URL = cleanUrl;
-        const workerUrlEl = document.getElementById("workerUrl");
-        if (workerUrlEl) workerUrlEl.value = cleanUrl;
- 
-        console.log("[R2 Sync] Tự động tải URL Task Pending từ R2 và điền vào cấu hình:", cleanUrl);
+      const payload = {
+        action: "save_task",
+        deadline, issue, note,
+        assignees: selectedAssignees,
+        status, priority
+      };
+      if (id) payload.id = parseInt(id);
+
+      try {
+        const res = await apiPost(payload);
+        if (res.status === "success") {
+          toast(id ? "Cập nhật task thành công!" : "Thêm task thành công!", "s");
+          closeTaskModal();
+          loadTasks();
+        } else {
+          toast("Lỗi: " + (res.message || "không rõ"), "e");
+        }
+      } catch (err) {
+        console.error("Lỗi submitTask:", err);
+        toast("Lỗi kết nối: " + err.message, "e");
+      } finally {
+        btn.disabled = false; btn.textContent = "Lưu Task";
       }
     }
-  } catch (err) {
-    console.warn("Lỗi auto-detect URL từ R2:", err);
-  }
-}
 
-async function loadMembers() {
-  try {
-    const res = await apiGet("action=read_members");
-    if (res.status === "success") {
-      allMembers = res.data || []; // m.name
-      populateMemberFilter();
-      renderMemberList();
+    async function deleteTask(id, label) {
+      if (!confirm(`Xóa task này?\n"${label}..."`)) return;
+      try {
+        const res = await apiPost({ action: "delete_task", id });
+        if (res.status === "success") {
+          toast("Đã xóa task!", "s");
+          loadTasks();
+        } else {
+          toast("Lỗi: " + (res.message || "không rõ"), "e");
+        }
+      } catch (err) {
+        console.error("Lỗi deleteTask:", err);
+        toast("Lỗi kết nối: " + err.message, "e");
+      }
     }
-  } catch { /* silent */ }
-}
 
-function renderMemberList() {
-  const ul = document.getElementById("memberList");
-  ul.innerHTML = "";
-  if (!allMembers.length) {
-    ul.innerHTML = `<li style="text-align:center;color:var(--text-muted);padding:12px;">Chưa có thành viên nào.</li>`;
-    return;
-  }
-  allMembers.forEach(m => {
-    const li = document.createElement("li");
-    li.className = "member-list-item";
-    li.innerHTML = `
+    /* ──────────────────────────────────────────────────────────────────────────
+       MULTI-SELECT MEMBER PICKER
+    ────────────────────────────────────────────────────────────────────────── */
+    function renderPills() {
+      const box = document.getElementById("pillBox");
+      // Xóa tất cả pills cũ (giữ lại input)
+      Array.from(box.querySelectorAll(".pill")).forEach(p => p.remove());
+      const input = document.getElementById("msInput");
+
+      selectedAssignees.forEach(name => {
+        const pill = document.createElement("span");
+        pill.className = "pill";
+        pill.innerHTML = `${esc(name)}<button type="button" class="pill-x" data-name="${esc(name)}">&times;</button>`;
+        pill.querySelector(".pill-x").addEventListener("click", () => {
+          selectedAssignees = selectedAssignees.filter(x => x !== name);
+          renderPills();
+        });
+        box.insertBefore(pill, input);
+      });
+    }
+
+    function focusMsInput() {
+      document.getElementById("msInput").focus();
+    }
+
+    function showDropdown() {
+      document.getElementById("pillBox").classList.add("focused");
+      filterDropdown();
+      document.getElementById("msDropdown").style.display = "block";
+    }
+
+    function filterDropdown() {
+      const q = document.getElementById("msInput").value.toLowerCase();
+      const dd = document.getElementById("msDropdown");
+      dd.innerHTML = "";
+      const items = allMembers.filter(m => m.name.toLowerCase().includes(q));
+      if (!items.length) {
+        dd.innerHTML = `<div class="member-dropdown-item" style="color:var(--text-muted);">Không tìm thấy</div>`;
+        dd.style.display = "block";
+        return;
+      }
+      items.forEach(m => {
+        const div = document.createElement("div");
+        div.className = "member-dropdown-item" + (selectedAssignees.includes(m.name) ? " selected" : "");
+        div.textContent = (selectedAssignees.includes(m.name) ? "✔ " : "") + m.name;
+        div.onclick = () => toggleAssignee(m.name);
+        dd.appendChild(div);
+      });
+      dd.style.display = "block";
+    }
+
+    function toggleAssignee(name) {
+      if (selectedAssignees.includes(name)) {
+        selectedAssignees = selectedAssignees.filter(x => x !== name);
+      } else {
+        selectedAssignees.push(name);
+      }
+      document.getElementById("msInput").value = "";
+      renderPills();
+      filterDropdown();
+    }
+
+    // Đóng dropdown khi click ra ngoài
+    document.addEventListener("click", e => {
+      const wrap = document.getElementById("pillBox");
+      const dd = document.getElementById("msDropdown");
+      if (wrap && !wrap.contains(e.target) && !dd.contains(e.target)) {
+        dd.style.display = "none";
+        if (wrap) wrap.classList.remove("focused");
+      }
+    });
+
+    /* ──────────────────────────────────────────────────────────────────────────
+       MEMBERS – LOAD, RENDER, CRUD (NAME-BASED FROM COLUMN I)
+    ────────────────────────────────────────────────────────────────────────── */
+    // Tự động tải URL Task Pending từ R2 khi mở trang
+    async function autoDetectTaskUrl() {
+      const endpoint = getR2Endpoint();
+      try {
+        const res = await fetch(`${endpoint}${endpoint.includes("?") ? "&" : "?"}t=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        const sheetUrl = data["Task pending"] || data["Task Pending"] || data["task pending"] || data["task_pending"];
+        if (sheetUrl) {
+          const cleanUrl = sheetUrl.trim();
+          const localUrl = localStorage.getItem(WORKER_LS_KEY) || "";
+          if (cleanUrl && cleanUrl !== localUrl) {
+            // Đồng bộ local storage
+            localStorage.setItem(WORKER_LS_KEY, cleanUrl);
+            WORKER_API_URL = cleanUrl;
+            const workerUrlEl = document.getElementById("workerUrl");
+            if (workerUrlEl) workerUrlEl.value = cleanUrl;
+
+            console.log("[R2 Sync] Tự động tải URL Task Pending từ R2 và điền vào cấu hình:", cleanUrl);
+          }
+        }
+      } catch (err) {
+        console.warn("Lỗi auto-detect URL từ R2:", err);
+      }
+    }
+
+    async function loadMembers() {
+      try {
+        const res = await apiGet("action=read_members");
+        if (res.status === "success") {
+          allMembers = res.data || []; // m.name
+          populateMemberFilter();
+          renderMemberList();
+        }
+      } catch { /* silent */ }
+    }
+
+    function renderMemberList() {
+      const ul = document.getElementById("memberList");
+      ul.innerHTML = "";
+      if (!allMembers.length) {
+        ul.innerHTML = `<li style="text-align:center;color:var(--text-muted);padding:12px;">Chưa có thành viên nào.</li>`;
+        return;
+      }
+      allMembers.forEach(m => {
+        const li = document.createElement("li");
+        li.className = "member-list-item";
+        li.innerHTML = `
       <span class="member-name">${esc(m.name)}</span>
       <div class="member-actions">
         <button class="btn-danger btn-sm" onclick="deleteMember('${esc(m.name)}')">Xóa</button>
       </div>
     `;
-    ul.appendChild(li);
-  });
-}
-
-async function addMember() {
-  const input = document.getElementById("newMemberName");
-  const name = input.value.trim();
-  if (!name) { toast("Nhập tên thành viên!", "w"); return; }
-  try {
-    const res = await apiPost({ action: "add_member", name });
-    if (res.status === "success") {
-      toast(`Đã thêm "${name}"!`, "s");
-      input.value = "";
-      loadMembers();
-    } else { toast("Lỗi: " + (res.message || "không rõ"), "e"); }
-  } catch { toast("Lỗi kết nối!", "e"); }
-}
-
-async function deleteMember(name) {
-  if (!confirm(`Xóa thành viên "${name}"?\nThành viên sẽ bị xóa khỏi danh sách chọn nhưng task cũ vẫn giữ nguyên.`)) return;
-  try {
-    const res = await apiPost({ action: "delete_member", name });
-    if (res.status === "success") {
-      toast(`Đã xóa "${name}"!`, "s");
-      loadMembers();
-    } else { toast("Lỗi: " + (res.message || "không rõ"), "e"); }
-  } catch { toast("Lỗi kết nối!", "e"); }
-}
-
-function openMemberModal() {
-  document.getElementById("memberModal").classList.add("show");
-  loadMembers();
-}
-function closeMemberModal() {
-  document.getElementById("memberModal").classList.remove("show");
-  loadMembers(); // Refresh dữ liệu bộ lọc sau khi đóng
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   SYSTEM LINKS (Dropdown điều hướng hệ thống)
-────────────────────────────────────────────────────────────────────────── */
-// Mở/đóng dropdown khi click nút (hover cũng hoạt động nhờ CSS)
-function toggleSyslinks(e) {
-  e.stopPropagation();
-  const wrap = document.getElementById("syslinksWrap");
-  wrap.classList.toggle("open");
-}
-// Đóng khi click ra ngoài
-document.addEventListener("click", () => {
-  document.getElementById("syslinksWrap")?.classList.remove("open");
-});
-
-// Render danh sách link hệ thống từ mảng systemUrls
-function renderSyslinks(systemUrls) {
-  const container = document.getElementById("syslinksItems");
-  if (!systemUrls || systemUrls.length === 0) {
-    container.innerHTML = `<a href="#" style="color:var(--text-muted);pointer-events:none;">Chưa có hệ thống nào.</a>`;
-    return;
-  }
-  const icons = {
-    "solution": "🛠️", "calllog": "📞", "call": "📞",
-    "summary": "📊", "ticket": "🎫",
-    "văn mẫu": "📄", "van mau": "📄", "template": "📄",
-    "task": "📋", "pending": "📋"
-  };
-  const getIcon = (name) => {
-    const low = name.toLowerCase();
-    for (const [key, icon] of Object.entries(icons)) {
-      if (low.includes(key)) return icon;
+        ul.appendChild(li);
+      });
     }
-    return "🔗";
-  };
-  const currentUrl = window.location.href.split("?")[0];
-  container.innerHTML = systemUrls.map(s => {
-    if (!s.url && !s.name) return "";
-    const isActive = s.url && currentUrl === s.url.split("?")[0];
-    const href = s.url || "#";
-    return `<a href="${href}" target="_blank" class="${isActive ? "active-sys" : ""}">
+
+    async function addMember() {
+      const input = document.getElementById("newMemberName");
+      const name = input.value.trim();
+      if (!name) { toast("Nhập tên thành viên!", "w"); return; }
+      try {
+        const res = await apiPost({ action: "add_member", name });
+        if (res.status === "success") {
+          toast(`Đã thêm "${name}"!`, "s");
+          input.value = "";
+          loadMembers();
+        } else { toast("Lỗi: " + (res.message || "không rõ"), "e"); }
+      } catch { toast("Lỗi kết nối!", "e"); }
+    }
+
+    async function deleteMember(name) {
+      if (!confirm(`Xóa thành viên "${name}"?\nThành viên sẽ bị xóa khỏi danh sách chọn nhưng task cũ vẫn giữ nguyên.`)) return;
+      try {
+        const res = await apiPost({ action: "delete_member", name });
+        if (res.status === "success") {
+          toast(`Đã xóa "${name}"!`, "s");
+          loadMembers();
+        } else { toast("Lỗi: " + (res.message || "không rõ"), "e"); }
+      } catch { toast("Lỗi kết nối!", "e"); }
+    }
+
+    function openMemberModal() {
+      document.getElementById("memberModal").classList.add("show");
+      loadMembers();
+    }
+    function closeMemberModal() {
+      document.getElementById("memberModal").classList.remove("show");
+      loadMembers(); // Refresh dữ liệu bộ lọc sau khi đóng
+    }
+
+    /* ──────────────────────────────────────────────────────────────────────────
+       SYSTEM LINKS (Dropdown điều hướng hệ thống)
+    ────────────────────────────────────────────────────────────────────────── */
+    // Mở/đóng dropdown khi click nút (hover cũng hoạt động nhờ CSS)
+    function toggleSyslinks(e) {
+      e.stopPropagation();
+      const wrap = document.getElementById("syslinksWrap");
+      wrap.classList.toggle("open");
+    }
+    // Đóng khi click ra ngoài
+    document.addEventListener("click", () => {
+      document.getElementById("syslinksWrap")?.classList.remove("open");
+    });
+
+    // Render danh sách link hệ thống từ mảng systemUrls
+    function renderSyslinks(systemUrls) {
+      const container = document.getElementById("syslinksItems");
+      if (!systemUrls || systemUrls.length === 0) {
+        container.innerHTML = `<a href="#" style="color:var(--text-muted);pointer-events:none;">Chưa có hệ thống nào.</a>`;
+        return;
+      }
+      const icons = {
+        "solution": "🛠️", "calllog": "📞", "call": "📞",
+        "summary": "📊", "ticket": "🎫",
+        "văn mẫu": "📄", "van mau": "📄", "template": "📄",
+        "task": "📋", "pending": "📋"
+      };
+      const getIcon = (name) => {
+        const low = name.toLowerCase();
+        for (const [key, icon] of Object.entries(icons)) {
+          if (low.includes(key)) return icon;
+        }
+        return "🔗";
+      };
+      const currentUrl = window.location.href.split("?")[0];
+      container.innerHTML = systemUrls.map(s => {
+        if (!s.url && !s.name) return "";
+        const isActive = s.url && currentUrl === s.url.split("?")[0];
+        const href = s.url || "#";
+        return `<a href="${href}" target="_blank" class="${isActive ? "active-sys" : ""}">
       <span>${getIcon(s.name)}</span>
       <span>${esc(s.name || s.url)}</span>
     </a>`;
-  }).join("");
-}
-
-// Tải dữ liệu URLs từ Cloudflare R2 Worker API
-async function loadWorkerUrls() {
-  const container = document.getElementById("syslinksItems");
-  const endpoint = getR2Endpoint();
-  try {
-    const res = await fetch(`${endpoint}${endpoint.includes("?") ? "&" : "?"}t=${Date.now()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    
-    // Map từ format {"SystemName": "url"} sang định dạng mảng [{ name, url }]
-    const formattedUrls = Object.entries(data).map(([name, url]) => ({ name, url }));
-    allSystemUrls = formattedUrls;
-    renderSyslinks(formattedUrls);
-  } catch (err) {
-    console.error("Lỗi tải Worker URLs:", err);
-    if (container) container.innerHTML = `<a href="#" style="color:var(--text-muted);pointer-events:none;">Không lấy được danh sách hệ thống từ R2</a>`;
-  }
-}
-
-// Lưu URL lên Cloudflare R2 Worker API (chia sẻ cho tất cả người dùng)
-async function saveSystemUrlToWorker() {
-  const endpoint = getR2Endpoint();
-  const sysName = document.getElementById("saveSystemName").value;
-  const urlInput = document.getElementById("newTaskUrl");
-  const newUrl = urlInput ? urlInput.value.trim() : "";
-  if (!newUrl) {
-    toast("Nhập URL cần lưu!", "w");
-    return;
-  }
-  try {
-    const payload = JSON.stringify({ action: "save_url", name: sysName, url: newUrl });
-    const separator = endpoint.includes("?") ? "&" : "?";
-    const requestUrl = `${endpoint}${separator}data=${encodeURIComponent(payload)}&t=${Date.now()}`;
-    
-    const res = await fetch(requestUrl);
-    const rawText = await res.text();
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${rawText}`);
-    let result;
-    try { result = JSON.parse(rawText); } catch(e) { throw new Error("Response không phải JSON: " + rawText); }
-    
-    if (result.status === "success" || result.success) {
-      toast(`Đã lưu URL "${sysName}" lên R2!`, "s");
-      if (urlInput) urlInput.value = "";
-      loadWorkerUrls();
-    } else {
-      toast("Lỗi lưu URL: " + (result.message || "Không rõ"), "e");
+      }).join("");
     }
-  } catch (err) {
-    toast("Lỗi kết nối R2: " + err.message, "e");
-  }
-}
+
+    // Tải dữ liệu URLs từ Cloudflare R2 Worker API
+    async function loadWorkerUrls() {
+      const container = document.getElementById("syslinksItems");
+      const endpoint = getR2Endpoint();
+      try {
+        const res = await fetch(`${endpoint}${endpoint.includes("?") ? "&" : "?"}t=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        // Map từ format {"SystemName": "url"} sang định dạng mảng [{ name, url }]
+        const formattedUrls = Object.entries(data).map(([name, url]) => ({ name, url }));
+        allSystemUrls = formattedUrls;
+        renderSyslinks(formattedUrls);
+      } catch (err) {
+        console.error("Lỗi tải Worker URLs:", err);
+        if (container) container.innerHTML = `<a href="#" style="color:var(--text-muted);pointer-events:none;">Không lấy được danh sách hệ thống từ R2</a>`;
+      }
+    }
+
+    // Lưu URL lên Cloudflare R2 Worker API (chia sẻ cho tất cả người dùng)
+    async function saveSystemUrlToWorker() {
+      const endpoint = getR2Endpoint();
+      const sysName = document.getElementById("saveSystemName").value;
+      const urlInput = document.getElementById("newTaskUrl");
+      const newUrl = urlInput ? urlInput.value.trim() : "";
+      if (!newUrl) {
+        toast("Nhập URL cần lưu!", "w");
+        return;
+      }
+      try {
+        const payload = JSON.stringify({ action: "save_url", name: sysName, url: newUrl });
+        const separator = endpoint.includes("?") ? "&" : "?";
+        const requestUrl = `${endpoint}${separator}data=${encodeURIComponent(payload)}&t=${Date.now()}`;
+
+        const res = await fetch(requestUrl);
+        const rawText = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${rawText}`);
+        let result;
+        try { result = JSON.parse(rawText); } catch (e) { throw new Error("Response không phải JSON: " + rawText); }
+
+        if (result.status === "success" || result.success) {
+          toast(`Đã lưu URL "${sysName}" lên R2!`, "s");
+          if (urlInput) urlInput.value = "";
+          loadWorkerUrls();
+        } else {
+          toast("Lỗi lưu URL: " + (result.message || "Không rõ"), "e");
+        }
+      } catch (err) {
+        toast("Lỗi kết nối R2: " + err.message, "e");
+      }
+    }
 
 
 
-/* ──────────────────────────────────────────────────────────────────────────
-   INIT
-────────────────────────────────────────────────────────────────────────── */
-window.addEventListener("load", async () => {
-  await autoDetectTaskUrl();
-  loadAll();
-});
-</script>
+    /* ──────────────────────────────────────────────────────────────────────────
+       INIT
+    ────────────────────────────────────────────────────────────────────────── */
+    window.addEventListener("load", async () => {
+      await autoDetectTaskUrl();
+      loadAll();
+    });
+  </script>
 </body>
+
 </html>
