@@ -520,6 +520,11 @@
         const ts    = loadTimestamps();
         let updated = false;
 
+        const LS_READ_KEY = "task_alerts_read";
+        let readIds = [];
+        try { readIds = JSON.parse(localStorage.getItem(LS_READ_KEY) || "[]"); } catch(e) {}
+        let readUpdated = false;
+
         tasks.forEach(task => {
           if (task.status === "Done") return;
           const last = ts[task.id] || 0;
@@ -536,10 +541,22 @@
 
             ts[task.id] = nowMs;
             updated = true;
+
+            if (readIds.includes(task.id)) {
+              readIds = readIds.filter(id => id !== task.id);
+              readUpdated = true;
+            }
           }
         });
 
-        if (updated) saveTimestamps(ts);
+        if (updated) {
+          saveTimestamps(ts);
+          window.dispatchEvent(new Event("storage"));
+        }
+        if (readUpdated) {
+          try { localStorage.setItem(LS_READ_KEY, JSON.stringify(readIds)); } catch(e) {}
+          window.dispatchEvent(new Event("storage"));
+        }
       }
 
       document.addEventListener("DOMContentLoaded", async () => {
@@ -571,9 +588,15 @@
         try { localStorage.setItem(LS_READ_KEY, JSON.stringify(ids)); } catch(e) {}
       }
 
+      function loadTimestamps() {
+        try { return JSON.parse(localStorage.getItem(LS_NOTIFIED_KEY) || "{}"); }
+        catch(e) { return {}; }
+      }
+
       function getActiveAlerts() {
         const tasks = loadTasks();
-        return tasks.filter(t => t.status !== "Done" && ["P1","P2","P3"].includes(t.priority));
+        const notified = loadTimestamps();
+        return tasks.filter(t => t.status !== "Done" && ["P1","P2","P3"].includes(t.priority) && notified[t.id]);
       }
 
       function updateBellUI() {
