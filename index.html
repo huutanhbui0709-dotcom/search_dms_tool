@@ -498,6 +498,17 @@
           .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
       }
 
+      function formatDate(dateStr) {
+        if (!dateStr) return "";
+        dateStr = String(dateStr).trim();
+        if (dateStr.includes("/")) return dateStr;
+        if (dateStr.includes("-")) {
+          const parts = dateStr.split("-");
+          if (parts[0].length === 4) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        return dateStr;
+      }
+
       /* ── Core: check time window + alert_time gate ── */
       function shouldAlert(task, lastMs, nowMs) {
         const now = new Date(nowMs);
@@ -554,6 +565,12 @@
         }
 
         if (lastMs && lastMs >= windowStartMs) return false;
+
+        // If alert_time today has already passed by more than 15 minutes,
+        // do not trigger a late alert hours later (e.g. upon saving a task or refreshing)
+        if ((currentTotalMinutes - targetTotalMinutes) > 15) {
+          return false;
+        }
 
         return true;
       }
@@ -701,6 +718,7 @@
         listContainer.innerHTML = sortedAlerts.map(t => {
           const isUnread = !readIds.includes(Number(t.id));
           const classes = `bell-item ${isUnread ? 'unread' : ''}`;
+          const deadlineLabel = t.deadline ? formatDate(t.deadline) : "Không hạn";
           const freqText = formatTaskFreq(t);
           const timeText = t.alert_time || "09:00";
 
