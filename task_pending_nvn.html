@@ -53,13 +53,7 @@
       font-size: 13.5px;
       line-height: 1.5;
       min-height: 100vh;
-      box-sizing: border-box;
-      width: 100%;
-      transition: padding-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    body.sidebar-open {
-      padding-right: 360px;
+      overflow-x: hidden;
     }
 
     /* ── Layout ───────────────────────────────────────────────────────────── */
@@ -68,6 +62,11 @@
       box-sizing: border-box;
       margin: 0;
       padding: 24px 20px;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body.sidebar-open .page {
+      width: calc(100% - 360px);
     }
 
     /* ── Hero ─────────────────────────────────────────────────────────────── */
@@ -331,7 +330,7 @@
       color: #f8fafc;
       font-size: 12px;
       font-weight: 700;
-      padding: 12px 16px;
+      padding: 10px 12px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       white-space: nowrap;
@@ -346,7 +345,7 @@
     }
 
     td {
-      padding: 12px 16px;
+      padding: 10px 12px;
       border-bottom: 1px solid #f1f5f9;
       font-size: 13px;
       color: #334155;
@@ -362,45 +361,46 @@
     }
 
     .col-stt {
-      width: 50px;
+      width: 45px;
       text-align: center;
       font-weight: 700;
       color: var(--text-muted);
     }
 
     .col-priority {
-      width: 80px;
+      width: 75px;
       text-align: center;
     }
 
     .col-deadline {
-      width: 110px;
+      width: 95px;
       white-space: nowrap;
     }
 
     .col-issue {
-      min-width: 240px;
+      min-width: 180px;
       white-space: pre-wrap;
       word-break: break-word;
     }
 
     .col-note {
-      min-width: 150px;
+      min-width: 130px;
       color: var(--text-muted);
       white-space: pre-wrap;
       word-break: break-word;
     }
 
     .col-assignee {
-      min-width: 150px;
+      min-width: 110px;
     }
 
     .col-status {
-      width: 110px;
+      width: 95px;
+      text-align: center;
     }
 
     .col-actions {
-      width: 100px;
+      width: 80px;
       text-align: center;
     }
 
@@ -1584,89 +1584,7 @@
       return `Còn ${diffDays} ngày`;
     }
 
-    function updateDueSidebar() {
-      const todayStr = getTodayLocalDate();
-      const dueTasks = allTasks.filter(t => {
-        const taskDate = parseToIsoDate(t.deadline);
-        return taskDate === todayStr && t.status !== "Done";
-      });
 
-      const sidebar = document.getElementById("dueSidebar");
-      const trigger = document.getElementById("dueAlertTrigger");
-      const body = document.getElementById("dueSidebarBody");
-
-      if (dueTasks.length > 0) {
-        body.innerHTML = dueTasks.map(t => {
-          const daysLabel = getDaysRemaining(t.deadline);
-          const formattedDl = t.deadline ? formatDate(t.deadline) : "—";
-          return `
-            <div class="due-task-detail">
-              <div class="detail-section">
-                <div class="section-label">📅 Ngày đến hạn</div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-                  <span class="detail-date">${esc(formattedDl)}</span>
-                  <span class="countdown-badge">${esc(daysLabel)}</span>
-                </div>
-              </div>
-
-              <hr style="border:0; border-top:1px solid #e2e8f0; margin:16px 0;" />
-
-              <div class="detail-section">
-                <h4 style="font-size:13.5px; font-weight:700; margin-bottom:12px; color:#1e293b;">Thông tin task</h4>
-                
-                <div class="field-wrap">
-                  <div class="field-label">Issue</div>
-                  <div class="field-value issue-text">${esc(t.issue)}</div>
-                </div>
-
-                ${t.note ? `
-                <div class="field-wrap">
-                  <div class="field-label">Ghi chú</div>
-                  <div class="field-value note-box">${esc(t.note)}</div>
-                </div>` : ''}
-
-                <div class="field-wrap">
-                  <div class="field-label">Phụ trách</div>
-                  <div class="field-value" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
-                    ${(t.assignees || []).map(a => `<span class="badge badge-member">${esc(a)}</span>`).join(" ") || '<span style="color:#94a3b8">—</span>'}
-                  </div>
-                </div>
-
-                <div class="field-wrap" style="margin-bottom: 24px;">
-                  <div class="field-label">Trạng thái</div>
-                  <div class="field-value" style="margin-top:4px;">
-                    <span class="badge badge-pending">Pending</span>
-                  </div>
-                </div>
-              </div>
-
-              <div style="display:flex; flex-direction:column; gap:8px;">
-                <button class="btn-outline" onclick="openEditTask(${t.id})" style="width:100%; justify-content:center; height:38px; border-radius:10px; font-size:12.5px; font-weight:600; color:#4f46e5; border-color:#4f46e5; gap:6px;">
-                  <i class="fa-solid fa-up-right-from-square"></i> Mở chi tiết task
-                </button>
-                <button class="btn-outline-danger" onclick="deleteTask(${t.id}, '${esc(t.issue).substring(0, 40)}')" style="width:100%; justify-content:center; height:38px; border-radius:10px; font-size:12.5px; font-weight:600; padding:8px 14px; gap:6px;">
-                  <i class="fa-solid fa-trash-can"></i> Xóa task
-                </button>
-              </div>
-            </div>
-          `;
-        }).join("<hr style='border:0; border-top:2px dashed #e2e8f0; margin:24px 0;' />");
-
-        if (sidebar.classList.contains("show")) {
-          trigger.style.display = "none";
-          document.body.classList.add("sidebar-open");
-        } else {
-          sidebar.classList.add("show");
-          document.body.classList.add("sidebar-open");
-          trigger.style.display = "none";
-        }
-      } else {
-        body.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding: 20px 0;">Không có task nào đến hạn hôm nay cần xử lý.</div>`;
-        sidebar.classList.remove("show");
-        document.body.classList.remove("sidebar-open");
-        trigger.style.display = "none";
-      }
-    }
 
     function renderTasks() {
       const tbody = document.getElementById("taskTbody");
