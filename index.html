@@ -28,11 +28,16 @@
         border-bottom: 1px solid #e5e7eb;
         padding: 12px 20px;
       }
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
       .tabs {
         display: flex;
         gap: 8px;
-        max-width: 1100px;
-        margin: 0 auto;
       }
       .tab-button {
         background: #ffffff;
@@ -116,47 +121,208 @@
       @keyframes gFadeOut {
         to { opacity: 0; transform: translateX(-16px); }
       }
+
+      /* ── Notification Bell UI ── */
+      .bell-container {
+        position: relative;
+        display: inline-block;
+      }
+      .bell-btn {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 50%;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s;
+      }
+      .bell-btn:hover {
+        background-color: #f3f4f6;
+      }
+      .bell-badge {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        background-color: #ef4444;
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 700;
+        border-radius: 50%;
+        min-width: 16px;
+        height: 16px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+        border: 2px solid #ffffff;
+      }
+      .bell-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        width: 340px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        z-index: 10001;
+        overflow: hidden;
+      }
+      .bell-dropdown.show {
+        display: block;
+      }
+      .bell-hdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f3f4f6;
+        background: #f8fafc;
+      }
+      .bell-hdr h4 {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 700;
+        color: #1f2937;
+      }
+      .bell-mark-all {
+        background: none;
+        border: none;
+        color: #2563eb;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+      }
+      .bell-mark-all:hover {
+        text-decoration: underline;
+      }
+      .bell-list {
+        max-height: 280px;
+        overflow-y: auto;
+      }
+      .bell-item {
+        display: flex;
+        gap: 10px;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f3f4f6;
+        cursor: pointer;
+        transition: background-color 0.15s;
+        text-decoration: none;
+        color: inherit;
+      }
+      .bell-item:last-child {
+        border-bottom: none;
+      }
+      .bell-item:hover {
+        background-color: #f1f5f9;
+      }
+      .bell-item.unread {
+        background-color: #eff6ff;
+      }
+      .bell-item-icon {
+        font-size: 16px;
+        margin-top: 2px;
+      }
+      .bell-item-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .bell-item-title {
+        font-weight: 600;
+        font-size: 12.5px;
+        color: #1f2937;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .bell-item-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #6b7280;
+      }
+      .bell-item-p-badge {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-weight: 800;
+        font-size: 9.5px;
+      }
+      .bell-item-p-badge.p1 { background: #fee2e2; color: #b91c1c; }
+      .bell-item-p-badge.p2 { background: #fef3c7; color: #92400e; }
+      .bell-item-p-badge.p3 { background: #ede9fe; color: #4c1d95; }
+      .bell-empty {
+        padding: 24px;
+        text-align: center;
+        color: #9ca3af;
+        font-size: 12.5px;
+      }
     </style>
   </head>
   <body>
     <div class="shell">
       <div class="topbar">
-        <div class="tabs">
-          <button
-            class="tab-button"
-            type="button"
-            data-frame-target="nvnSolutionsFrame"
-          >
-            NVN Solutions
-          </button>
-          <button
-            class="tab-button"
-            type="button"
-            data-frame-target="callLogFrame"
-          >
-            Call Log
-          </button>
-          <button
-            class="tab-button"
-            type="button"
-            data-frame-target="sumaryticketFrame"
-          >
-            Sumary Ticket
-          </button>
-          <button
-            class="tab-button"
-            type="button"
-            data-frame-target="vanMauNVNFrame"
-          >
-            Văn mẫu NVN
-          </button>
-          <button
-            class="tab-button active"
-            type="button"
-            data-frame-target="taskPendingFrame"
-          >
-            Task Pending NVN
-          </button>
+        <div class="topbar-inner">
+          <div class="tabs">
+            <button
+              class="tab-button"
+              type="button"
+              data-frame-target="nvnSolutionsFrame"
+            >
+              NVN Solutions
+            </button>
+            <button
+              class="tab-button"
+              type="button"
+              data-frame-target="callLogFrame"
+            >
+              Call Log
+            </button>
+            <button
+              class="tab-button"
+              type="button"
+              data-frame-target="sumaryticketFrame"
+            >
+              Sumary Ticket
+            </button>
+            <button
+              class="tab-button"
+              type="button"
+              data-frame-target="vanMauNVNFrame"
+            >
+              Văn mẫu NVN
+            </button>
+            <button
+              class="tab-button active"
+              type="button"
+              data-frame-target="taskPendingFrame"
+            >
+              Task Pending NVN
+            </button>
+          </div>
+          <div class="bell-container" id="bellContainer">
+            <button class="bell-btn" id="bellBtn" title="Thông báo khẩn cấp">
+              🔔
+              <span class="bell-badge" id="bellBadge">0</span>
+            </button>
+            <div class="bell-dropdown" id="bellDropdown">
+              <div class="bell-hdr">
+                <h4>Thông báo khẩn cấp</h4>
+                <button class="bell-mark-all" id="bellMarkAllBtn">Đánh dấu tất cả đã đọc</button>
+              </div>
+              <div class="bell-list" id="bellList">
+                <!-- Dynamic Items -->
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -283,6 +449,167 @@
       document.addEventListener("DOMContentLoaded", () => {
         checkAndNotify();
         setInterval(checkAndNotify, CHECK_INTERVAL);
+      });
+    })();
+
+    /* ── Notification Bell Controller ── */
+    (function() {
+      const LS_TASKS_KEY    = "app_tasks_data";
+      const LS_READ_KEY     = "task_alerts_read";
+      const LS_NOTIFIED_KEY = "task_last_notified";
+
+      function loadTasks() {
+        try { return JSON.parse(localStorage.getItem(LS_TASKS_KEY) || "[]"); }
+        catch(e) { return []; }
+      }
+
+      function loadReadTaskIds() {
+        try { return JSON.parse(localStorage.getItem(LS_READ_KEY) || "[]"); }
+        catch(e) { return []; }
+      }
+
+      function saveReadTaskIds(ids) {
+        try { localStorage.setItem(LS_READ_KEY, JSON.stringify(ids)); } catch(e) {}
+      }
+
+      function getActiveAlerts() {
+        const tasks = loadTasks();
+        return tasks.filter(t => t.status !== "Done" && ["P1","P2","P3"].includes(t.priority));
+      }
+
+      function updateBellUI() {
+        const activeAlerts = getActiveAlerts();
+        const readIds = loadReadTaskIds();
+
+        const unreadAlerts = activeAlerts.filter(t => !readIds.includes(t.id));
+        
+        const badge = document.getElementById("bellBadge");
+        if (badge) {
+          badge.textContent = unreadAlerts.length;
+          badge.style.display = unreadAlerts.length > 0 ? "flex" : "none";
+        }
+
+        const sortedAlerts = [...activeAlerts].sort((a, b) => {
+          const pMap = { P1: 1, P2: 2, P3: 3 };
+          const ap = pMap[a.priority] || 3;
+          const bp = pMap[b.priority] || 3;
+          if (ap !== bp) return ap - bp;
+          return b.id - a.id;
+        });
+
+        const listContainer = document.getElementById("bellList");
+        if (!listContainer) return;
+
+        if (sortedAlerts.length === 0) {
+          listContainer.innerHTML = `<div class="bell-empty">Không có thông báo khẩn cấp nào.</div>`;
+          return;
+        }
+
+        const priorityIcons = { P1: "🔴", P2: "🟡", P3: "🟣" };
+        const priorityLabels = { P1: "P1 – Khẩn cấp", P2: "P2 – Cao", P3: "P3 – Thường" };
+
+        listContainer.innerHTML = sortedAlerts.map(t => {
+          const isUnread = !readIds.includes(t.id);
+          const classes = `bell-item ${isUnread ? 'unread' : ''}`;
+          const deadlineLabel = t.deadline ? formatDate(t.deadline) : "Không hạn";
+
+          return `
+            <div class="${classes}" data-task-id="${t.id}">
+              <div class="bell-item-icon">${priorityIcons[t.priority] || "📣"}</div>
+              <div class="bell-item-body">
+                <div class="bell-item-title">${escHtml(t.issue || "")}</div>
+                <div class="bell-item-meta">
+                  <span class="bell-item-p-badge ${String(t.priority).toLowerCase()}">${priorityLabels[t.priority] || t.priority}</span>
+                  <span>Hạn: ${escHtml(deadlineLabel)}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        const items = listContainer.querySelectorAll(".bell-item");
+        items.forEach(item => {
+          item.addEventListener("click", () => {
+            const taskId = Number(item.dataset.taskId);
+            markAsRead(taskId);
+            
+            const pendingBtn = document.querySelector('[data-frame-target="taskPendingFrame"]');
+            if (pendingBtn) {
+              pendingBtn.click();
+            }
+            
+            document.getElementById("bellDropdown").classList.remove("show");
+          });
+        });
+      }
+
+      function formatDate(dateStr) {
+        if (!dateStr) return "";
+        dateStr = String(dateStr).trim();
+        if (dateStr.includes("/")) return dateStr;
+        if (dateStr.includes("-")) {
+          const parts = dateStr.split("-");
+          if (parts[0].length === 4) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+          }
+        }
+        return dateStr;
+      }
+
+      function escHtml(s) {
+        return String(s || "")
+          .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      function markAsRead(taskId) {
+        const readIds = loadReadTaskIds();
+        if (!readIds.includes(taskId)) {
+          readIds.push(taskId);
+          saveReadTaskIds(readIds);
+          updateBellUI();
+        }
+      }
+
+      function markAllAsRead() {
+        const activeAlerts = getActiveAlerts();
+        const readIds = activeAlerts.map(t => t.id);
+        saveReadTaskIds(readIds);
+        updateBellUI();
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const bellBtn = document.getElementById("bellBtn");
+        const bellDropdown = document.getElementById("bellDropdown");
+        const markAllBtn = document.getElementById("bellMarkAllBtn");
+
+        if (bellBtn && bellDropdown) {
+          bellBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            bellDropdown.classList.toggle("show");
+          });
+
+          document.addEventListener("click", (e) => {
+            if (!bellBtn.contains(e.target) && !bellDropdown.contains(e.target)) {
+              bellDropdown.classList.remove("show");
+            }
+          });
+        }
+
+        if (markAllBtn) {
+          markAllBtn.addEventListener("click", () => {
+            markAllAsRead();
+          });
+        }
+
+        updateBellUI();
+
+        window.addEventListener("storage", (e) => {
+          if (e.key === LS_TASKS_KEY || e.key === LS_READ_KEY || e.key === LS_NOTIFIED_KEY) {
+            updateBellUI();
+          }
+        });
+
+        setInterval(updateBellUI, 5000);
       });
     })();
     </script>
