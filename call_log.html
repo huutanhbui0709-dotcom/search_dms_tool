@@ -224,7 +224,8 @@
         display: block;
       }
       select,
-      input[type="text"] {
+      input[type="text"],
+      input[type="date"] {
         width: 100%;
         padding: 9px 11px;
         border: 1px solid var(--border-strong);
@@ -237,7 +238,8 @@
           box-shadow 0.15s;
       }
       select:focus,
-      input[type="text"]:focus {
+      input[type="text"]:focus,
+      input[type="date"]:focus {
         outline: none;
         border-color: var(--accent);
         box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
@@ -663,27 +665,27 @@
             </div>
           </div>
           <div>
-            <label class="field-label" for="sheetSelect">
-              <svg
-                style="
-                  width: 12px;
-                  height: 12px;
-                  vertical-align: -1px;
-                  margin-right: 3px;
-                "
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <line x1="9" y1="3" x2="9" y2="21" />
-                <line x1="15" y1="3" x2="15" y2="21" />
-                <line x1="3" y1="9" x2="21" y2="9" />
-              </svg>
-              Chọn Sheet
+            <label class="field-label" for="dateRangeSelect">
+              <i class="fa-regular fa-calendar-days" style="color:var(--accent-dark);"></i> Lọc theo ngày
             </label>
-            <select id="sheetSelect"></select>
+            <select id="dateRangeSelect">
+              <option value="all">Tất cả thời gian</option>
+              <option value="today">Hôm nay</option>
+              <option value="this_week">Tuần này</option>
+              <option value="this_month">Tháng này</option>
+              <option value="custom">Tùy chỉnh (Từ A - B)</option>
+            </select>
+            <div id="customDateRangeBox" style="display:none; margin-top:8px; flex-direction:column; gap:6px;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:11.5px; font-weight:600; color:var(--text-secondary); width:28px;">Từ:</span>
+                <input type="date" id="startDateInput" style="flex:1; padding:5px 8px; font-size:12px;" />
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:11.5px; font-weight:600; color:var(--text-secondary); width:28px;">Đến:</span>
+                <input type="date" id="endDateInput" style="flex:1; padding:5px 8px; font-size:12px;" />
+              </div>
+            </div>
+            <select id="sheetSelect" style="display:none;"></select>
           </div>
         </div>
       </div>
@@ -739,6 +741,10 @@
       const loadJsonButton = document.getElementById("loadJsonButton");
       const controlPanel = document.getElementById("controlPanel");
       const sheetSelect = document.getElementById("sheetSelect");
+      const dateRangeSelect = document.getElementById("dateRangeSelect");
+      const customDateRangeBox = document.getElementById("customDateRangeBox");
+      const startDateInput = document.getElementById("startDateInput");
+      const endDateInput = document.getElementById("endDateInput");
       const nppInput = document.getElementById("nppSearchInput");
       const nvbhInput = document.getElementById("nvbhSearchInput");
       const hotlineInput = document.getElementById("hotlineSearchInput");
@@ -904,6 +910,26 @@
       filterInputs.forEach((inp) =>
         inp.addEventListener("input", scheduleRender),
       );
+
+      dateRangeSelect.addEventListener("change", () => {
+        const val = dateRangeSelect.value;
+        if (val === "custom") {
+          customDateRangeBox.style.display = "flex";
+          if (!startDateInput.value) {
+            const now = new Date();
+            startDateInput.value = getLocalDateIso(new Date(now.getFullYear(), now.getMonth(), 1));
+          }
+          if (!endDateInput.value) {
+            endDateInput.value = getLocalDateIso(new Date());
+          }
+        } else {
+          customDateRangeBox.style.display = "none";
+        }
+        renderTable();
+      });
+
+      startDateInput.addEventListener("change", renderTable);
+      endDateInput.addEventListener("change", renderTable);
 
       tableHead.addEventListener("click", (event) => {
         const dateHeader = event.target.closest("[data-date-filter]");
@@ -1222,9 +1248,59 @@
         return Number.isNaN(parsed) ? 0 : parsed;
       }
 
+      function getLocalDateIso(d) {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const date = String(d.getDate()).padStart(2, "0");
+        return `${year}-${month}-${date}`;
+      }
+
       function matchesDateFilter(row) {
-        if (!dateFilterValue || !dateColumn) return true;
-        return displayDateToInputValue(row[dateColumn]) === dateFilterValue;
+        if (!dateColumn) return true;
+        const rowDateIso = displayDateToInputValue(row[dateColumn]);
+        if (!rowDateIso) return false;
+
+        // Nếu người dùng đang dùng popover lọc một ngày cụ thể trên header
+        if (dateFilterValue && rowDateIso !== dateFilterValue) {
+          return false;
+        }
+
+        const mode = dateRangeSelect.value;
+        if (mode === "all") return true;
+
+        const now = new Date();
+        if (mode === "today") {
+          const todayIso = getLocalDateIso(now);
+          return rowDateIso === todayIso;
+        }
+
+        if (mode === "this_week") {
+          const day = now.getDay(); // 0 = Sun, 1 = Mon...
+          const diffToMon = now.getDate() - (day === 0 ? 6 : day - 1);
+          const mon = new Date(now.getFullYear(), now.getMonth(), diffToMon);
+          const sun = new Date(now.getFullYear(), now.getMonth(), diffToMon + 6);
+          const startIso = getLocalDateIso(mon);
+          const endIso = getLocalDateIso(sun);
+          return rowDateIso >= startIso && rowDateIso <= endIso;
+        }
+
+        if (mode === "this_month") {
+          const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+          const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+          const startIso = getLocalDateIso(firstDay);
+          const endIso = getLocalDateIso(lastDay);
+          return rowDateIso >= startIso && rowDateIso <= endIso;
+        }
+
+        if (mode === "custom") {
+          const s = startDateInput.value;
+          const e = endDateInput.value;
+          if (s && rowDateIso < s) return false;
+          if (e && rowDateIso > e) return false;
+          return true;
+        }
+
+        return true;
       }
 
       function displayDateToInputValue(value) {
