@@ -1,17 +1,18 @@
 /**
  * Google Apps Script Backend for DMS1 Report (CRUD for .xlsx file on Google Drive)
- *
- * Instructions:
- * 1. Open Google Drive -> create a new Google Apps Script project.
- * 2. Enable Advanced Google Service: Services (+) -> Drive API (v2 or v3).
- * 3. Set the FILE_ID below to your 00.DMS1-Report.xlsx Google Drive File ID.
- * 4. Deploy -> New deployment -> Select type: Web App.
- *    - Execute as: Me
- *    - Who has access: Anyone
- * 5. Copy Web App URL and paste into DMS1 Report frontend.
+ * 
+ * HƯỚNG DẪN CẤU HÌNH:
+ * 1. Bật Dịch vụ: Services (+) -> Drive API -> Version: v2 -> Identifier: Drive -> Save (như hình bạn vừa mở)
+ * 2. Thay FILE_ID bên dưới bằng ID file 00.DMS1-Report.xlsx trên Google Drive của bạn
+ * 3. Deploy (Triển khai):
+ *    - Chọn: Web App
+ *    - Execute as (Thực thi dưới dạng): Me (Tôi)
+ *    - Who has access (Ai có quyền truy cập): Anyone (Bất kỳ ai)
+ *    - Chọn "New version" mỗi khi chỉnh sửa code
  */
 
-const FILE_ID = "YOUR_EXCEL_FILE_ID_HERE"; // Thay thế bằng ID file 00.DMS1-Report.xlsx trên Google Drive
+const FILE_ID = "1MLI9GNQ-FDeWLwdIOPuPV40VAvzabd_6"; // ID File Excel trên Google Drive
+const SHEET_NAME_OR_INDEX = 0; // Tên sheet (ví dụ: "Sheet1") hoặc số thứ tự (0 là sheet đầu tiên)
 
 function doGet(e) {
   const params = (e && e.parameter) || {};
@@ -21,32 +22,38 @@ function doGet(e) {
     if (!FILE_ID || FILE_ID === "YOUR_EXCEL_FILE_ID_HERE") {
       return createJsonResponse({
         status: "error",
-        message: "Vui lòng cấu hình FILE_ID của file Excel trên Google Drive trong Apps Script!"
+        message: "Vui lòng điền đúng FILE_ID của file Excel trên Google Drive!"
       });
     }
 
-    // 1. Convert .xlsx file to temporary Google Spreadsheet
+    // 1. Lấy file Excel gốc và chuyển sang Google Sheet tạm
     const excelFile = DriveApp.getFileById(FILE_ID);
-    const blob = excelFile.getBlob();
-    
-    // Create temp Google Sheet using Drive API
-    const tempFileResource = {
-      title: "Temp_DMS1_Report_" + Date.now(),
-      mimeType: MimeType.GOOGLE_SHEETS
+    const excelName = excelFile.getName();
+    const excelBlob = excelFile.getBlob();
+
+    const tempResource = {
+      title: "Temp_DMS1_" + Date.now(),
+      mimeType: "application/vnd.google-apps.spreadsheet"
     };
-    
-    // Drive API v2
-    const tempFile = Drive.Files.insert(tempFileResource, blob, { convert: true });
+
+    // Tạo file Google Sheet tạm qua Drive API v2
+    const tempFile = Drive.Files.insert(tempResource, excelBlob, { convert: true });
     const tempSpreadsheet = SpreadsheetApp.openById(tempFile.id);
-    const sheet = tempSpreadsheet.getSheets()[0];
     
+    // Tìm sheet làm việc
+    let sheet;
+    if (typeof SHEET_NAME_OR_INDEX === "string") {
+      sheet = tempSpreadsheet.getSheetByName(SHEET_NAME_OR_INDEX) || tempSpreadsheet.getSheets()[0];
+    } else {
+      sheet = tempSpreadsheet.getSheets()[SHEET_NAME_OR_INDEX || 0];
+    }
+
     let isModified = false;
 
-    // 2. Perform requested CRUD operation
+    // 2. Thực hiện thao tác CRUD
     if (action === "add") {
-      // Calculate next STT / No if not given
       const lastRow = sheet.getLastRow();
-      const nextNo = params.colA || params.no || (lastRow >= 2 ? (lastRow) : 1);
+      const nextNo = params.colA || params.no || (lastRow >= 2 ? lastRow : 1);
       const colB = params.colB || params.nameVi || "";
       const colC = params.colC || params.nameEn || "";
       const colD = params.colD || params.path || "";
@@ -58,7 +65,7 @@ function doGet(e) {
     } else if (action === "edit") {
       const rowIndex = parseInt(params.rowIndex || params.row, 10);
       if (isNaN(rowIndex) || rowIndex < 2 || rowIndex > sheet.getLastRow()) {
-        throw new Error("rowIndex không hợp lệ: " + params.rowIndex);
+        throw new Error("Vị trí dòng (rowIndex=" + params.rowIndex + ") không hợp lệ!");
       }
 
       const colA = params.colA !== undefined ? params.colA : sheet.getRange(rowIndex, 1).getValue();
@@ -73,62 +80,68 @@ function doGet(e) {
     } else if (action === "delete") {
       const rowIndex = parseInt(params.rowIndex || params.row, 10);
       if (isNaN(rowIndex) || rowIndex < 2 || rowIndex > sheet.getLastRow()) {
-        throw new Error("rowIndex không hợp lệ: " + params.rowIndex);
+        throw new Error("Vị trí dòng (rowIndex=" + params.rowIndex + ") không hợp lệ!");
       }
 
       sheet.deleteRow(rowIndex);
       isModified = true;
     }
 
-    // 3. If modified, export back to .xlsx format and overwrite original file on Drive
+    // 3. Nếu có chỉnh sửa: Xuất lại XLSX và ghi đè file gốc
     if (isModified) {
       SpreadsheetApp.flush();
-      Utilities.sleep(500);
+      Utilities.sleep(600);
 
-      // Export temp spreadsheet as XLSX using OAuth Token
-      const url = "https://docs.google.com/spreadsheets/d/" + tempFile.id + "/export?format=xlsx";
-      const response = UrlFetchApp.fetch(url, {
+      // Xuất temp spreadsheet ra blob XLSX
+      const exportUrl = "https://docs.google.com/spreadsheets/d/" + tempFile.id + "/export?format=xlsx";
+      const exportResponse = UrlFetchApp.fetch(exportUrl, {
         headers: {
           Authorization: "Bearer " + ScriptApp.getOAuthToken()
         },
         muteHttpExceptions: true
       });
 
-      if (response.getResponseCode() !== 200) {
-        throw new Error("Xuất file XLSX thất bại: HTTP " + response.getResponseCode());
+      if (exportResponse.getResponseCode() !== 200) {
+        throw new Error("Không thể xuất XLSX từ Google Sheet tạm: HTTP " + exportResponse.getResponseCode());
       }
 
-      const updatedBlob = response.getBlob().setName(excelFile.getName());
+      const updatedBlob = exportResponse.getBlob();
+      updatedBlob.setName(excelName);
+      updatedBlob.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
-      // Overwrite original .xlsx file using Drive API v2
-      Drive.Files.update({ mimeType: MimeType.MICROSOFT_EXCEL }, FILE_ID, updatedBlob);
+      // Ghi đè file Excel gốc trên Google Drive
+      Drive.Files.update(
+        { title: excelName, mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+        FILE_ID,
+        updatedBlob
+      );
     }
 
-    // 4. Read all data rows from temporary spreadsheet to return updated JSON
-    const dataValues = sheet.getDataRange().getValues();
-    const headers = dataValues[0] || ["No", "Tên báo cáo (Tiếng Việt)", "Tên báo cáo (Tiếng Anh)", "Đường dẫn", "Ý nghĩa báo cáo"];
+    // 4. Đọc toàn bộ danh sách để trả về frontend
+    const lastRow = sheet.getLastRow();
     const rows = [];
+    if (lastRow >= 2) {
+      const dataValues = sheet.getRange(1, 1, lastRow, 5).getValues();
+      for (let i = 1; i < dataValues.length; i++) {
+        const row = dataValues[i];
+        if (row.every(cell => String(cell).trim() === "")) continue;
 
-    for (let i = 1; i < dataValues.length; i++) {
-      const row = dataValues[i];
-      // Skip completely empty rows
-      if (row.every(cell => String(cell).trim() === "")) continue;
-
-      rows.push({
-        rowIndex: i + 1, // 1-based index in sheet
-        "No": row[0],
-        "Tên báo cáo (Tiếng Việt)": row[1],
-        "Tên báo cáo (Tiếng Anh)": row[2],
-        "Đường dẫn": row[3],
-        "Ý nghĩa báo cáo": row[4]
-      });
+        rows.push({
+          rowIndex: i + 1,
+          "No": row[0],
+          "Tên báo cáo (Tiếng Việt)": row[1],
+          "Tên báo cáo (Tiếng Anh)": row[2],
+          "Đường dẫn": row[3],
+          "Ý nghĩa báo cáo": row[4]
+        });
+      }
     }
 
-    // 5. Clean up temporary Google Sheet
+    // 5. Xóa file tạm để giải phóng dung lượng Drive
     try {
       Drive.Files.remove(tempFile.id);
     } catch (cleanErr) {
-      console.warn("Lỗi khi xóa file tạm: " + cleanErr.message);
+      console.warn("Lỗi xóa file tạm: " + cleanErr.message);
     }
 
     return createJsonResponse({
@@ -139,7 +152,7 @@ function doGet(e) {
     });
 
   } catch (err) {
-    console.error("DMS1 Report Error:", err);
+    console.error("Lỗi DMS1 Report:", err);
     return createJsonResponse({
       status: "error",
       message: err.message || String(err)
