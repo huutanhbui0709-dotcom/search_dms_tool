@@ -571,6 +571,7 @@
       /* ── Config ── */
       // Frequency map: key → milliseconds
       const FREQ_MS = {
+        "once":    0,
         "1_day":   86400000,
         "3_days":  259200000,
         "1_week":  604800000,
@@ -598,10 +599,14 @@
       const DAY_LABELS = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6", sat: "Thứ 7" };
       function formatTaskFreq(task) {
         const freqMap = {
+          "once": "Một lần",
           "1_day": "Mỗi 1 ngày", "3_days": "Mỗi 3 ngày", "1_week": "Mỗi 1 tuần",
           "2_weeks": "Mỗi 2 tuần", "1_month": "Mỗi 1 tháng"
         };
         const base = freqMap[task.alert_frequency] || task.alert_frequency || "Mỗi 1 tuần";
+        if (task.alert_frequency === "once") {
+          return task.alert_specific_date ? `Một lần (${formatDate(task.alert_specific_date)})` : "Một lần";
+        }
         if ((task.alert_frequency === "1_week" || task.alert_frequency === "2_weeks") && task.alert_days && DAY_LABELS[task.alert_days]) {
           return `${base} (${DAY_LABELS[task.alert_days]})`;
         }
@@ -697,6 +702,26 @@
         return dateStr;
       }
 
+      function parseToIsoDate(dateStr) {
+        if (!dateStr) return "";
+        dateStr = String(dateStr).trim();
+        if (dateStr.includes("/")) {
+          const parts = dateStr.split("/");
+          if (parts.length === 3) {
+            const d = parts[0].padStart(2, '0');
+            const m = parts[1].padStart(2, '0');
+            const y = parts[2];
+            if (y.length === 4) return `${y}-${m}-${d}`;
+          }
+        }
+        if (dateStr.includes("-")) {
+          const parts = dateStr.split("-");
+          if (parts[0].length === 4) return dateStr;
+          if (parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        }
+        return dateStr;
+      }
+
       /* ── Core: check time window + alert_time gate ── */
       function shouldAlert(task, lastMs, nowMs) {
         const now = new Date(nowMs);
@@ -704,7 +729,7 @@
 
         // Mức P3 không cảnh báo theo độ ưu tiên mặc định;
         // chỉ cảnh báo nếu đã cài đặt tần suất cụ thể (alert_frequency)
-        if ((task.priority || "P3") === "P3" && !FREQ_MS[freq]) return false;
+        if ((task.priority || "P3") === "P3" && !FREQ_MS.hasOwnProperty(freq)) return false;
 
         // 1. Phân tích giờ cảnh báo (alert_time)
         const timeStr = (task.alert_time || "09:00").trim();
@@ -750,7 +775,23 @@
         }
 
         // 5. Kiểm tra theo TẦN SUẤT:
-        // Case A: Tần suất theo THỨ (1_week hoặc 2_weeks)
+        // Case A: Một lần (Ngày cụ thể)
+        if (freq === "once") {
+          // Single-Trigger Guard: Đã bắn 1 lần thì không bắn nữa
+          if (lastMs && Number(lastMs) > 0) return false;
+
+          const currentYear = now.getFullYear();
+          const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+          const currentDate = String(now.getDate()).padStart(2, '0');
+          const todayIsoStr = `${currentYear}-${currentMonth}-${currentDate}`;
+          const specificIso = parseToIsoDate(task.alert_specific_date);
+
+          if (specificIso !== todayIsoStr) return false;
+
+          return true;
+        }
+
+        // Case B: Tần suất theo THỨ (1_week hoặc 2_weeks)
         if (freq === "1_week" || freq === "2_weeks") {
           const dayIndex = now.getDay(); // 0 = Sunday, 1 = Mon, ..., 6 = Sat
           if (dayIndex === 0) return false; // Không cảnh báo Chủ Nhật
@@ -893,10 +934,14 @@
       const DAY_LABELS = { mon: "Thứ 2", tue: "Thứ 3", wed: "Thứ 4", thu: "Thứ 5", fri: "Thứ 6", sat: "Thứ 7" };
       function formatTaskFreq(task) {
         const freqMap = {
+          "once": "Một lần",
           "1_day": "Mỗi 1 ngày", "3_days": "Mỗi 3 ngày", "1_week": "Mỗi 1 tuần",
           "2_weeks": "Mỗi 2 tuần", "1_month": "Mỗi 1 tháng"
         };
         const base = freqMap[task.alert_frequency] || task.alert_frequency || "Mỗi 1 tuần";
+        if (task.alert_frequency === "once") {
+          return task.alert_specific_date ? `Một lần (${formatDate(task.alert_specific_date)})` : "Một lần";
+        }
         if ((task.alert_frequency === "1_week" || task.alert_frequency === "2_weeks") && task.alert_days && DAY_LABELS[task.alert_days]) {
           return `${base} (${DAY_LABELS[task.alert_days]})`;
         }
@@ -912,11 +957,11 @@
         const tasks = loadTasks();
         const notified = loadTimestamps();
         // P3 chỉ xuất hiện trong chuông nếu đã có tần suất cụ thể
-        const FREQ_MS_BELL = {"1_day":86400000,"3_days":259200000,"1_week":604800000,"2_weeks":1209600000,"1_month":2592000000};
+        const FREQ_MS_BELL = {"once": 0, "1_day":86400000,"3_days":259200000,"1_week":604800000,"2_weeks":1209600000,"1_month":2592000000};
         return tasks.filter(t => {
           if (t.status === "Done") return false;
           if (!notified[t.id] && !notified[String(t.id)]) return false;
-          if ((t.priority || "P3") === "P3" && !FREQ_MS_BELL[t.alert_frequency]) return false;
+          if ((t.priority || "P3") === "P3" && FREQ_MS_BELL[t.alert_frequency] === undefined) return false;
           return true;
         });
       }
@@ -1052,8 +1097,8 @@
         const freq = task.alert_frequency;
 
         // Mức P3: chỉ cảnh báo nếu có cài đặt alert_frequency
-        const FREQ_MS_UPCOMING = {"1_day":86400000,"3_days":259200000,"1_week":604800000,"2_weeks":1209600000,"1_month":2592000000};
-        if ((task.priority || "P3") === "P3" && !FREQ_MS_UPCOMING[freq]) return false;
+        const FREQ_MS_UPCOMING = {"once": 0, "1_day":86400000,"3_days":259200000,"1_week":604800000,"2_weeks":1209600000,"1_month":2592000000};
+        if ((task.priority || "P3") === "P3" && FREQ_MS_UPCOMING[freq] === undefined) return false;
 
         // 1. Phân tích giờ cảnh báo (alert_time)
         const timeStr = (task.alert_time || "09:00").trim();
@@ -1099,7 +1144,23 @@
         }
 
         // 5. Kiểm tra theo TẦN SUẤT:
-        // Case A: Tần suất theo THỨ (1_week hoặc 2_weeks)
+        // Case A: Một lần (Ngày cụ thể)
+        if (freq === "once") {
+          // Single-Trigger Guard: Nếu đã từng thông báo thì không còn trong sắp tới
+          if (lastMs && Number(lastMs) > 0) return false;
+
+          const currentYear = now.getFullYear();
+          const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+          const currentDate = String(now.getDate()).padStart(2, '0');
+          const todayIsoStr = `${currentYear}-${currentMonth}-${currentDate}`;
+          const specificIso = parseToIsoDate(task.alert_specific_date);
+
+          if (specificIso !== todayIsoStr) return false;
+
+          return true;
+        }
+
+        // Case B: Tần suất theo THỨ (1_week hoặc 2_weeks)
         if (freq === "1_week" || freq === "2_weeks") {
           const dayIndex = now.getDay(); // 0 = Sunday, 1 = Mon, ..., 6 = Sat
           if (dayIndex === 0) return false; // Không thông báo Chủ Nhật

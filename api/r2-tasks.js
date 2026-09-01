@@ -183,15 +183,16 @@ module.exports = async function handler(req, res) {
       const currentData = await getTasksData();
 
       if (action === "save_task") {
-        const { id, deadline, issue, note, assignees, status, priority, alert_time, alert_frequency, alert_days } = payload;
+        const { id, deadline, issue, note, assignees, status, priority, alert_time, alert_frequency, alert_days, alert_specific_date } = payload;
         const taskStatus = (String(status || "").trim().toLowerCase() === "done") ? "Done" : "Pending";
         const taskPriority = ["P1","P2","P3"].includes(priority) ? priority : "P3";
         const taskAlertTime = alert_time || "09:00";
-        const taskAlertFreq = ["1_day","3_days","1_week","2_weeks","1_month"].includes(alert_frequency)
+        const taskAlertFreq = ["once","1_day","3_days","1_week","2_weeks","1_month"].includes(alert_frequency)
           ? alert_frequency : "1_week";
         const validDays = ["mon","tue","wed","thu","fri","sat"];
         const taskAlertDays = (["1_week","2_weeks"].includes(taskAlertFreq) && validDays.includes(alert_days))
           ? alert_days : (["1_week","2_weeks"].includes(taskAlertFreq) ? "mon" : "");
+        const taskAlertSpecificDate = (taskAlertFreq === "once") ? (alert_specific_date || "") : "";
 
         if (id) {
           // Edit task
@@ -209,7 +210,8 @@ module.exports = async function handler(req, res) {
               priority: taskPriority,
               alert_time: taskAlertTime,
               alert_frequency: taskAlertFreq,
-              alert_days: taskAlertDays
+              alert_days: taskAlertDays,
+              alert_specific_date: taskAlertSpecificDate
             };
           } else {
             return res.status(404).json({ status: "error", message: "Không tìm thấy task cần chỉnh sửa" });
@@ -228,7 +230,8 @@ module.exports = async function handler(req, res) {
             priority: taskPriority,
             alert_time: taskAlertTime,
             alert_frequency: taskAlertFreq,
-            alert_days: taskAlertDays
+            alert_days: taskAlertDays,
+            alert_specific_date: taskAlertSpecificDate
           };
           currentData.tasks.push(newTask);
         }
