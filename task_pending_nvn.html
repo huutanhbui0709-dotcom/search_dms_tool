@@ -1370,7 +1370,7 @@
   <!-- Due Alert Sidebar -->
   <div class="due-sidebar" id="dueSidebar">
     <div class="due-sidebar-header">
-      <h3><i class="fa-solid fa-triangle-exclamation"></i> Task Đến Hạn Hôm Nay</h3>
+      <h3><i class="fa-solid fa-triangle-exclamation"></i> Task Quá Hạn &amp; Đến Hạn</h3>
       <button class="due-sidebar-close" id="dueSidebarCloseBtn" onclick="toggleDueSidebar(false)" title="Đóng"><i
           class="fa-solid fa-xmark"></i></button>
     </div>
@@ -1378,7 +1378,7 @@
   </div>
 
   <button class="due-alert-trigger" id="dueAlertTrigger" onclick="toggleDueSidebar(true)"
-    title="Có task đến hạn hôm nay!"><i class="fa-solid fa-triangle-exclamation"></i></button>
+    title="Có task quá hạn hoặc đến hạn hôm nay!"><i class="fa-solid fa-triangle-exclamation"></i></button>
 
   <!-- ════════════════════════════════════════════════════════════════════════ -->
   <!-- ── JAVASCRIPT ── -->
@@ -1734,7 +1734,11 @@
       const sidebar = document.getElementById("dueSidebar");
       const trigger = document.getElementById("dueAlertTrigger");
       const todayStr = getTodayLocalDate();
-      const hasDueTasks = allTasks.some(t => parseToIsoDate(t.deadline) === todayStr && t.status !== "Done");
+      const hasDueTasks = allTasks.some(t => {
+        if (t.status === "Done" || !t.deadline) return false;
+        const taskDate = parseToIsoDate(t.deadline);
+        return taskDate <= todayStr;
+      });
 
       if (show) {
         sidebar.classList.add("show");
@@ -1754,8 +1758,16 @@
     function updateDueSidebar() {
       const todayStr = getTodayLocalDate();
       const dueTasks = allTasks.filter(t => {
+        if (t.status === "Done" || !t.deadline) return false;
         const taskDate = parseToIsoDate(t.deadline);
-        return taskDate === todayStr && t.status !== "Done";
+        return taskDate <= todayStr;
+      });
+
+      // Sắp xếp: Quá hạn nhiều ngày nhất lên đầu, tiếp đến các task đến hạn hôm nay
+      dueTasks.sort((a, b) => {
+        const dateA = parseToIsoDate(a.deadline);
+        const dateB = parseToIsoDate(b.deadline);
+        return dateA.localeCompare(dateB);
       });
 
       const sidebar = document.getElementById("dueSidebar");
@@ -1763,16 +1775,27 @@
       const body = document.getElementById("dueSidebarBody");
 
       if (dueTasks.length > 0) {
-        body.innerHTML = dueTasks.map(t => `
-      <div class="due-alert-card">
-        <div class="due-alert-title">🚨 Task cần LƯU Ý</div>
-        <div class="due-alert-issue">${esc(t.issue)}</div>
-        ${t.note ? `<div class="due-alert-note"><b>Ghi chú:</b> ${esc(t.note)}</div>` : ''}
-        <div class="due-alert-assignees">
-          <b>Phụ trách:</b> ${(t.assignees || []).map(a => `<span class="badge badge-member">${esc(a)}</span>`).join(" ")}
+        body.innerHTML = dueTasks.map(t => {
+          const taskDate = parseToIsoDate(t.deadline);
+          const isOverdue = taskDate < todayStr;
+          const dlTag = isOverdue
+            ? `<span style="background:#fee2e2; color:#b91c1c; font-size:11px; font-weight:700; padding:2px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-circle-exclamation"></i> Quá hạn (${formatDate(t.deadline)})</span>`
+            : `<span style="background:#fef3c7; color:#92400e; font-size:11px; font-weight:700; padding:2px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-clock"></i> Đến hạn hôm nay</span>`;
+
+          return `
+      <div class="due-alert-card" style="${isOverdue ? 'border-left: 4px solid #ef4444;' : 'border-left: 4px solid #f59e0b;'}">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div class="due-alert-title" style="margin-bottom:0;">🚨 Task cần LƯU Ý</div>
+          ${dlTag}
+        </div>
+        <div class="due-alert-issue" style="font-weight:600; color:#1f2937;">${esc(t.issue)}</div>
+        ${t.note ? `<div class="due-alert-note" style="margin-top:4px;"><b>Ghi chú:</b> ${esc(t.note)}</div>` : ''}
+        <div class="due-alert-assignees" style="margin-top:6px;">
+          <b>Phụ trách:</b> ${(t.assignees || []).map(a => `<span class="badge badge-member">${esc(a)}</span>`).join(" ") || '<span style="color:var(--text-muted)">—</span>'}
         </div>
       </div>
-    `).join("");
+    `;
+        }).join("");
 
         if (sidebar.classList.contains("show")) {
           trigger.style.display = "none";
@@ -1783,7 +1806,7 @@
           trigger.style.display = "none";
         }
       } else {
-        body.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding: 20px 0;">Không có task nào đến hạn hôm nay cần xử lý.</div>`;
+        body.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding: 20px 0;">Không có task nào quá hạn hoặc đến hạn hôm nay.</div>`;
         sidebar.classList.remove("show");
         document.body.classList.remove("sidebar-open");
         trigger.style.display = "none";

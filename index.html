@@ -774,7 +774,20 @@
           }
         }
 
-        // 5. Kiểm tra theo TẦN SUẤT:
+        // 5. Kiểm tra trạng thái QUÁ HẠN:
+        // Nếu task Pending đã quá hạn (deadline < hôm nay), tự động cảnh báo mỗi ngày tại alert_time
+        const currentYear = now.getFullYear();
+        const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const currentDate = String(now.getDate()).padStart(2, '0');
+        const todayIsoStr = `${currentYear}-${currentMonth}-${currentDate}`;
+        const deadlineIso = parseToIsoDate(task.deadline);
+        const isOverdue = !!(deadlineIso && deadlineIso < todayIsoStr);
+
+        if (isOverdue) {
+          return true;
+        }
+
+        // 6. Kiểm tra theo TẦN SUẤT:
         // Case A: Một lần (Ngày cụ thể)
         if (freq === "once") {
           // Single-Trigger Guard: Đã bắn 1 lần thì không bắn nữa
@@ -956,12 +969,20 @@
       function getActiveAlerts() {
         const tasks = loadTasks();
         const notified = loadTimestamps();
-        // P3 chỉ xuất hiện trong chuông nếu đã có tần suất cụ thể
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const currentDate = String(now.getDate()).padStart(2, '0');
+        const todayIsoStr = `${currentYear}-${currentMonth}-${currentDate}`;
+
+        // P3 chỉ xuất hiện trong chuông nếu đã có tần suất cụ thể hoặc quá hạn
         const FREQ_MS_BELL = {"once": 0, "1_day":86400000,"3_days":259200000,"1_week":604800000,"2_weeks":1209600000,"1_month":2592000000};
         return tasks.filter(t => {
           if (t.status === "Done") return false;
+          const deadlineIso = parseToIsoDate(t.deadline);
+          const isOverdue = !!(deadlineIso && deadlineIso < todayIsoStr);
           if (!notified[t.id] && !notified[String(t.id)]) return false;
-          if ((t.priority || "P3") === "P3" && FREQ_MS_BELL[t.alert_frequency] === undefined) return false;
+          if ((t.priority || "P3") === "P3" && FREQ_MS_BELL[t.alert_frequency] === undefined && !isOverdue) return false;
           return true;
         });
       }
@@ -1143,7 +1164,20 @@
           }
         }
 
-        // 5. Kiểm tra theo TẦN SUẤT:
+        // 5. Kiểm tra trạng thái QUÁ HẠN:
+        // Nếu task Pending đã quá hạn (deadline < hôm nay), đưa vào danh sách sắp thông báo hôm nay
+        const currentYear = now.getFullYear();
+        const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const currentDate = String(now.getDate()).padStart(2, '0');
+        const todayIsoStr = `${currentYear}-${currentMonth}-${currentDate}`;
+        const deadlineIso = parseToIsoDate(task.deadline);
+        const isOverdue = !!(deadlineIso && deadlineIso < todayIsoStr);
+
+        if (isOverdue) {
+          return true;
+        }
+
+        // 6. Kiểm tra theo TẦN SUẤT:
         // Case A: Một lần (Ngày cụ thể)
         if (freq === "once") {
           // Single-Trigger Guard: Nếu đã từng thông báo thì không còn trong sắp tới
