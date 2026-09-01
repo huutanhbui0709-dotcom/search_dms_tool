@@ -670,7 +670,6 @@
             </label>
             <select id="dateRangeSelect">
               <option value="all">Tất cả thời gian</option>
-              <option value="today">Hôm nay</option>
               <option value="this_week">Tuần này</option>
               <option value="this_month">Tháng này</option>
               <option value="custom">Tùy chỉnh (Từ A - B)</option>
@@ -1269,11 +1268,6 @@
         if (mode === "all") return true;
 
         const now = new Date();
-        if (mode === "today") {
-          const todayIso = getLocalDateIso(now);
-          return rowDateIso === todayIso;
-        }
-
         if (mode === "this_week") {
           const day = now.getDay(); // 0 = Sun, 1 = Mon...
           const diffToMon = now.getDate() - (day === 0 ? 6 : day - 1);
