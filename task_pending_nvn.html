@@ -360,6 +360,14 @@
       background: #f8fafc;
     }
 
+    tr.row-p1-pending td {
+      background-color: #fff1f2;
+    }
+
+    tr.row-p1-pending:hover td {
+      background-color: #ffe4e6;
+    }
+
     .col-stt {
       width: 45px;
       text-align: center;
@@ -1623,6 +1631,9 @@
       const priorityClasses = { P1: "badge-p1", P2: "badge-p2", P3: "badge-p3" };
       filteredTasks.forEach((t, i) => {
         const tr = document.createElement("tr");
+        if (t.priority === "P1" && t.status !== "Done") {
+          tr.className = "row-p1-pending";
+        }
         const dlClass = deadlineClass(t.deadline);
         const dlLabel = t.deadline ? formatDate(t.deadline) : "—";
         const badgesHtml = (t.assignees || []).map(a =>
