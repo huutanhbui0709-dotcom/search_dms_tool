@@ -243,8 +243,8 @@
       }
       thead th {
         background: var(--header-bg) !important;
-        color: var(--header-text);
-        font-size: 12.5px;
+        color: #ffffff !important;
+        font-size: 13px;
         font-weight: 600;
         padding: 12px 16px;
         position: sticky;
@@ -253,40 +253,42 @@
         white-space: nowrap;
         letter-spacing: 0.3px;
       }
-      tbody td {
-        padding: 12px 16px;
-        border-bottom: 1px solid var(--border);
-        vertical-align: top;
-        font-size: 13.5px;
-      }
-      tbody tr:nth-child(even) td {
-        background: var(--row-alt);
-      }
-      tbody tr:hover td {
-        background: var(--accent-bg);
+      th.col-no,
+      th.col-vi,
+      th.col-en,
+      th.col-path,
+      th.col-desc {
+        color: #ffffff !important;
       }
 
       /* Column widths */
       .col-no {
         width: 60px;
         text-align: center;
-        font-weight: 700;
-        color: var(--accent-dark);
       }
       .col-vi {
         width: 25%;
-        font-weight: 600;
-        color: var(--text-primary);
       }
       .col-en {
         width: 25%;
-        color: #334155;
       }
       .col-path {
         width: 25%;
       }
       .col-desc {
         width: 25%;
+      }
+
+      tbody td.col-no {
+        font-weight: 700;
+        color: var(--accent-dark);
+      }
+      tbody td.col-vi {
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      tbody td.col-en {
+        color: #334155;
       }
 
       .path-badge {
@@ -900,10 +902,12 @@
           tr.appendChild(tdNo);
 
           // Helper make copyable cell
-          function makeCell(cls, text, isPath = false, hasDetail = false) {
+          function makeCell(cls, text, isPath = false, hasDetail = false, hasCopy = false) {
             const td = document.createElement("td");
-            td.className = `${cls} copyable-cell`;
-            td.title = "Click để copy";
+            td.className = `${cls} ${hasCopy ? "copyable-cell" : ""}`;
+            if (hasCopy) {
+              td.title = "Click để copy";
+            }
 
             if (!text || !text.trim()) {
               const emptySpan = document.createElement("span");
@@ -929,24 +933,28 @@
               td.appendChild(span);
             }
 
-            // Copy button
-            const copyBtn = document.createElement("button");
-            copyBtn.className = "copy-btn";
-            copyBtn.title = "Click để copy";
-            copyBtn.innerHTML = `<i class="fa-regular fa-copy"></i>`;
-            copyBtn.onclick = (e) => {
-              e.stopPropagation();
-              copyText(text, copyBtn);
-            };
+            // Copy button (only for Tên báo cáo columns)
+            if (hasCopy) {
+              const copyBtn = document.createElement("button");
+              copyBtn.className = "copy-btn";
+              copyBtn.title = "Click để copy";
+              copyBtn.innerHTML = `<i class="fa-regular fa-copy"></i>`;
+              copyBtn.onclick = (e) => {
+                e.stopPropagation();
+                copyText(text, copyBtn);
+              };
 
-            td.onclick = (e) => {
-              if (e.target.closest(".copy-btn") || e.target.closest(".btn-view-detail")) return;
-              copyText(text, copyBtn);
-            };
-            td.appendChild(copyBtn);
+              td.onclick = (e) => {
+                if (e.target.closest(".copy-btn") || e.target.closest(".btn-view-detail")) return;
+                copyText(text, copyBtn);
+              };
+              td.appendChild(copyBtn);
+            }
 
             // Detail button (eye)
             if (hasDetail) {
+              td.style.position = "relative";
+              td.style.paddingRight = "36px";
               const viewBtn = document.createElement("button");
               viewBtn.className = "btn-view-detail";
               viewBtn.title = "Xem chi tiết";
@@ -956,22 +964,24 @@
                 openDetailModal(item);
               };
               td.appendChild(viewBtn);
+              td.onmouseenter = () => { viewBtn.style.opacity = "1"; };
+              td.onmouseleave = () => { viewBtn.style.opacity = "0"; };
             }
 
             return td;
           }
 
-          // Tiếng Việt
-          tr.appendChild(makeCell("col-vi", item.nameVi));
+          // Tiếng Việt (có copy)
+          tr.appendChild(makeCell("col-vi", item.nameVi, false, false, true));
 
-          // Tiếng Anh
-          tr.appendChild(makeCell("col-en", item.nameEn));
+          // Tiếng Anh (có copy)
+          tr.appendChild(makeCell("col-en", item.nameEn, false, false, true));
 
-          // Đường dẫn
-          tr.appendChild(makeCell("col-path", item.path, true));
+          // Đường dẫn (không copy)
+          tr.appendChild(makeCell("col-path", item.path, true, false, false));
 
-          // Ý nghĩa báo cáo
-          tr.appendChild(makeCell("col-desc", item.meaning, false, true));
+          // Ý nghĩa báo cáo (không copy, có icon xem chi tiết)
+          tr.appendChild(makeCell("col-desc", item.meaning, false, true, false));
 
           tableBody.appendChild(tr);
         });
