@@ -304,25 +304,46 @@
     }
 
     .btn-edit {
-      background: #e0f2fe;
-      color: #0369a1;
-      padding: 4px 8px;
-      font-size: 12px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      padding: 6px;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      font-size: 13.5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
 
     .btn-edit:hover {
-      background: #bae6fd;
+      background: #e2e8f0;
+      border-color: #cbd5e1;
+      color: var(--accent-dark);
     }
 
     .btn-delete {
-      background: #fee2e2;
-      color: #b91c1c;
-      padding: 4px 8px;
-      font-size: 12px;
+      background: #fff5f5;
+      border: 1px solid #fee2e2;
+      color: #ef4444;
+      padding: 6px;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      font-size: 13.5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
     }
 
     .btn-delete:hover {
-      background: #fecaca;
+      background: #fee2e2;
+      border-color: #fca5a5;
     }
 
     /* ── Config URL Panel ── */
@@ -884,19 +905,24 @@
         const tdActions = document.createElement("td");
         tdActions.className = "col-actions";
         
+        const actionWrap = document.createElement("div");
+        actionWrap.style.cssText = "display:flex; justify-content:center; align-items:center; gap:6px;";
+
         const btnEdit = document.createElement("button");
         btnEdit.className = "btn-edit";
-        btnEdit.textContent = "Sửa";
+        btnEdit.title = "Sửa câu mẫu";
+        btnEdit.innerHTML = `<i class="fa-solid fa-pen-to-square"></i>`;
         btnEdit.onclick = () => openEditModal(item);
         
         const btnDel = document.createElement("button");
         btnDel.className = "btn-delete";
-        btnDel.textContent = "Xóa";
+        btnDel.title = "Xóa câu mẫu";
+        btnDel.innerHTML = `<i class="fa-solid fa-trash-can"></i>`;
         btnDel.onclick = () => handleDelete(item.id, item.english);
 
-        tdActions.appendChild(btnEdit);
-        tdActions.appendChild(document.createTextNode(" "));
-        tdActions.appendChild(btnDel);
+        actionWrap.appendChild(btnEdit);
+        actionWrap.appendChild(btnDel);
+        tdActions.appendChild(actionWrap);
         tr.appendChild(tdActions);
 
         tbody.appendChild(tr);
