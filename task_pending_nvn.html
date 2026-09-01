@@ -1818,8 +1818,8 @@
           const taskDate = parseToIsoDate(t.deadline);
           const isOverdue = taskDate < todayStr;
           const dlTag = isOverdue
-            ? `<span style="background:#fee2e2; color:#b91c1c; font-size:11px; font-weight:700; padding:2px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-circle-exclamation"></i> Quá hạn (${formatDate(t.deadline)})</span>`
-            : `<span style="background:#fef3c7; color:#92400e; font-size:11px; font-weight:700; padding:2px 6px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-clock"></i> Đến hạn hôm nay</span>`;
+            ? `<span style="background:#ef4444; color:#ffffff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-circle-exclamation"></i> Quá hạn (${formatDate(t.deadline)})</span>`
+            : `<span style="background:#fef3c7; color:#92400e; font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-clock"></i> Đến hạn hôm nay</span>`;
 
           return `
       <div class="due-alert-card" style="${isOverdue ? 'border-left: 4px solid #ef4444;' : 'border-left: 4px solid #f59e0b;'}">
