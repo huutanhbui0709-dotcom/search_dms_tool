@@ -1,0 +1,1251 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DMS1 Report</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* ── Tokens ── */
+      :root {
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --border: #e2e8f0;
+        --border-strong: #cbd5e1;
+        --text-primary: #0f172a;
+        --text-secondary: #0284c7;
+        --text-muted: #64748b;
+        --accent: #0284c7;
+        --accent-dark: #0369a1;
+        --accent-bg: #f0f9ff;
+        --accent-border: #bae6fd;
+        --header-bg: #0f172a;
+        --header-text: #f8fafc;
+        --mark-bg: #fef08a;
+        --row-alt: #f8fafc;
+        --radius-sm: 6px;
+        --radius-md: 10px;
+        --radius-lg: 14px;
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+        --shadow-md: 0 4px 12px rgba(2, 132, 199, 0.08);
+        --success: #10b981;
+        --danger: #ef4444;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text-primary);
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      /* ── Layout ── */
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px 20px;
+      }
+
+      /* ── Hero ── */
+      .hero {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .hero-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius-md);
+        background: var(--header-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 20px;
+        color: #38bdf8;
+      }
+      .hero h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 3px;
+        letter-spacing: -0.3px;
+      }
+      .hero p {
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      /* ── Card ── */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        margin-bottom: 16px;
+        padding: 16px 20px;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .section-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--accent-dark);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      /* ── Search Bar ── */
+      .search-wrapper {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .search-box {
+        position: relative;
+        flex: 1;
+        min-width: 280px;
+      }
+      .search-box input {
+        width: 100%;
+        padding: 10px 14px 10px 38px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        outline: none;
+        background: var(--surface);
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .search-box input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+      }
+      .search-icon {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 14px;
+        pointer-events: none;
+      }
+
+      .result-badge {
+        background: var(--accent-bg);
+        border: 1px solid var(--accent-border);
+        color: var(--accent-dark);
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 20px;
+        white-space: nowrap;
+      }
+
+      /* ── Upload Card / Drawer ── */
+      .upload-zone {
+        border: 2px dashed var(--border-strong);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+        position: relative;
+        background: #fafafa;
+      }
+      .upload-zone:hover {
+        border-color: var(--accent);
+        background: var(--accent-bg);
+      }
+      .upload-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+      }
+      .upload-zone strong {
+        display: block;
+        font-size: 14px;
+        color: var(--text-primary);
+        margin-bottom: 2px;
+      }
+      .upload-zone small {
+        color: var(--text-muted);
+        font-size: 12px;
+        display: block;
+        margin-bottom: 12px;
+      }
+
+      /* ── Buttons ── */
+      button {
+        border: 1px solid transparent;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 8px 14px;
+        white-space: nowrap;
+        transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn-primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #ffffff;
+      }
+      .btn-primary:hover {
+        background: var(--accent-dark);
+        border-color: var(--accent-dark);
+      }
+      .btn-outline {
+        background: var(--surface);
+        border-color: var(--border-strong);
+        color: var(--text-primary);
+      }
+      .btn-outline:hover {
+        background: var(--row-alt);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* ── Table ── */
+      .table-wrap {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+      }
+      .table-scroller {
+        overflow-x: auto;
+        max-height: calc(100vh - 250px);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+      }
+      thead th {
+        background: var(--header-bg) !important;
+        color: var(--header-text);
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 12px 16px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        white-space: nowrap;
+        letter-spacing: 0.3px;
+      }
+      tbody td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+        font-size: 13.5px;
+      }
+      tbody tr:nth-child(even) td {
+        background: var(--row-alt);
+      }
+      tbody tr:hover td {
+        background: var(--accent-bg);
+      }
+
+      /* Column widths */
+      .col-no {
+        width: 60px;
+        text-align: center;
+        font-weight: 700;
+        color: var(--accent-dark);
+      }
+      .col-vi {
+        width: 25%;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      .col-en {
+        width: 25%;
+        color: #334155;
+      }
+      .col-path {
+        width: 25%;
+      }
+      .col-desc {
+        width: 25%;
+      }
+
+      .path-badge {
+        display: inline-block;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-family: monospace;
+        font-size: 12px;
+        color: #0f766e;
+        line-height: 1.4;
+        word-break: break-word;
+      }
+
+      /* ── Truncated text with expand ── */
+      .cell-text {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: pre-wrap;
+        word-break: break-word;
+        line-height: 1.5;
+        max-height: 4.5em;
+      }
+
+      /* ── Copyable Cells ── */
+      td.copyable-cell {
+        position: relative;
+        cursor: pointer;
+        padding-right: 36px;
+      }
+      td.copyable-cell:hover {
+        color: var(--accent-dark);
+      }
+
+      .copy-btn {
+        position: absolute;
+        right: 6px;
+        top: 6px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: var(--text-secondary);
+        opacity: 0.65;
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
+        padding: 0;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      td.copyable-cell:hover .copy-btn {
+        opacity: 1;
+        background: var(--accent-bg);
+        border-color: var(--accent-border);
+        color: var(--accent-dark);
+      }
+      .copy-btn:hover {
+        background: var(--accent) !important;
+        color: #ffffff !important;
+        border-color: var(--accent) !important;
+        transform: scale(1.15);
+      }
+      .copy-btn.copied {
+        background: #dcfce7 !important;
+        color: #166534 !important;
+        border-color: #86efac !important;
+      }
+
+      /* ── View Detail (Eye) Button ── */
+      .btn-view-detail {
+        position: absolute;
+        right: 6px;
+        bottom: 6px;
+        background: #e0f2fe;
+        border: 1px solid #bae6fd;
+        color: var(--accent-dark);
+        opacity: 0;
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+        padding: 0;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+      }
+      td.copyable-cell:hover .btn-view-detail {
+        opacity: 1;
+      }
+      .btn-view-detail:hover {
+        background: var(--accent) !important;
+        color: #fff !important;
+        border-color: var(--accent) !important;
+        transform: scale(1.1);
+      }
+
+      .empty-placeholder {
+        font-style: italic;
+        color: #cbd5e1;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      mark {
+        background: var(--mark-bg);
+        color: inherit;
+        border-radius: 2px;
+        padding: 0 2px;
+      }
+
+      /* ── Modal / Popup ── */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        z-index: 1000;
+      }
+      .modal-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .modal-container {
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        width: 90%;
+        max-width: 680px;
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        transform: translateY(-20px);
+        transition: transform 0.25s ease;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .modal-overlay.show .modal-container {
+        transform: translateY(0);
+      }
+      .modal-header {
+        background: var(--header-bg);
+        color: var(--header-text);
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .modal-header h3 {
+        font-size: 16px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .modal-close {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 4px;
+        line-height: 1;
+      }
+      .modal-close:hover {
+        color: #ffffff;
+      }
+      .modal-body {
+        padding: 20px;
+        overflow-y: auto;
+      }
+      .modal-footer {
+        padding: 12px 20px;
+        background: var(--row-alt);
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .detail-section {
+        margin-bottom: 16px;
+      }
+      .detail-section-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--accent-dark);
+        margin-bottom: 6px;
+      }
+      .detail-section-content {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-primary);
+        background: var(--accent-bg);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-md);
+        padding: 12px 14px;
+        position: relative;
+        padding-right: 44px;
+      }
+      .detail-copy-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        color: var(--text-secondary);
+        border-radius: var(--radius-sm);
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+      }
+      .detail-copy-btn:hover {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+      .detail-copy-btn.copied {
+        background: #dcfce7;
+        color: #166534;
+        border-color: #86efac;
+      }
+
+      /* ── Toast ── */
+      .toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 1100;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .toast {
+        background: #0f172a;
+        color: #ffffff;
+        padding: 10px 16px;
+        border-radius: var(--radius-md);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: toastIn 0.3s forwards, toastOut 0.3s 2.5s forwards;
+      }
+      .toast.toast-success {
+        border-left: 4px solid var(--success);
+      }
+      .toast.toast-error {
+        border-left: 4px solid var(--danger);
+      }
+      @keyframes toastIn {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes toastOut {
+        to {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+      }
+
+      /* ── Loading Spinner ── */
+      .loading-box {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-muted);
+      }
+      .spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid var(--accent-border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 12px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-icon">
+          <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div style="flex:1">
+          <h1>DMS1 Report</h1>
+          <p>
+            Tra cứu danh mục, đường dẫn và ý nghĩa các báo cáo trên hệ thống DMS1.
+          </p>
+        </div>
+        <button
+          id="toggleUploadBtn"
+          type="button"
+          class="btn-outline"
+          style="font-size:12px; padding:6px 12px;"
+        >
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          Tải dữ liệu
+          <span id="toggleUploadArrow"><i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></span>
+        </button>
+      </div>
+
+      <!-- Upload / Config Drawer -->
+      <div class="card" id="uploadCard" style="display:none">
+        <div class="section-label">
+          <i class="fa-solid fa-gear"></i> Cấu hình nguồn dữ liệu DMS1 Report
+        </div>
+        <div class="upload-zone" id="uploadBox">
+          <i class="fa-solid fa-file-excel" style="font-size:32px; color:#10b981; margin-bottom:8px;"></i>
+          <strong>Chọn file Excel / CSV DMS1 Report</strong>
+          <small>Kéo thả hoặc chọn file .xlsx, .csv</small>
+          <input id="fileInput" type="file" accept=".xlsx,.csv" />
+          
+          <div style="display:flex; flex-direction:column; gap:8px; width:100%; margin-top:14px;">
+            <div style="display:flex; gap:8px; width:100%;">
+              <input
+                id="jsonUrlInput"
+                type="text"
+                placeholder="Dán URL JSON / Apps Script Web App..."
+                style="flex:1; padding:8px 12px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-size:13px; outline:none;"
+              />
+              <button class="btn-primary" id="loadJsonButton" type="button">
+                <i class="fa-solid fa-link"></i> Tải từ URL
+              </button>
+            </div>
+            <div style="display:flex; gap:8px; width:100%; align-items:center;">
+              <label style="font-size:11.5px; font-weight:600; color:var(--text-muted); white-space:nowrap;">Worker API URL:</label>
+              <input
+                id="workerUrlInput"
+                type="text"
+                placeholder="Dán Worker API URL tại đây để đồng bộ R2..."
+                style="flex:1; padding:7px 10px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-size:13px; outline:none;"
+              />
+              <button id="saveR2Button" type="button" class="btn-primary" style="padding: 7px 12px; font-size:13px;">
+                <i class="fa-solid fa-floppy-disk"></i> Lưu vào R2
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls & Search -->
+      <div class="card">
+        <div class="search-wrapper">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input
+              id="searchInput"
+              type="text"
+              placeholder="Tìm kiếm nhanh theo Tên báo cáo, Đường dẫn, hoặc Ý nghĩa..."
+              autocomplete="off"
+            />
+          </div>
+          <div class="result-badge" id="countBadge">0 báo cáo</div>
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="table-wrap">
+        <div class="table-scroller">
+          <table>
+            <thead>
+              <tr>
+                <th class="col-no">STT</th>
+                <th class="col-vi">Tên báo cáo (Tiếng Việt)</th>
+                <th class="col-en">Tên báo cáo (Tiếng Anh)</th>
+                <th class="col-path">Đường dẫn</th>
+                <th class="col-desc">Ý nghĩa báo cáo</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr>
+                <td colspan="5">
+                  <div class="loading-box">
+                    <div class="spinner"></div>
+                    <div>Đang tải dữ liệu DMS1 Report...</div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Xem chi tiết -->
+    <div class="modal-overlay" id="detailModal" onclick="closeDetailModal(event)">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3><i class="fa-regular fa-eye"></i> Chi tiết báo cáo DMS1</h3>
+          <button class="modal-close" onclick="closeDetailModal()" title="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" id="detailModalBody">
+          <!-- JS filled -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeDetailModal()"><i class="fa-solid fa-xmark"></i> Đóng</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+      const STORAGE_KEY_API = "NVN_DMS1_REPORT_API_URL";
+      const STORAGE_KEY_WORKER = "NVN_DMS1_REPORT_WORKER_URL";
+
+      let reportData = [];
+      let filteredData = [];
+
+      const searchInput = document.getElementById("searchInput");
+      const countBadge = document.getElementById("countBadge");
+      const tableBody = document.getElementById("tableBody");
+      const uploadCard = document.getElementById("uploadCard");
+      const toggleUploadBtn = document.getElementById("toggleUploadBtn");
+      const toggleUploadArrow = document.getElementById("toggleUploadArrow");
+      const jsonUrlInput = document.getElementById("jsonUrlInput");
+      const workerUrlInput = document.getElementById("workerUrlInput");
+      const loadJsonButton = document.getElementById("loadJsonButton");
+      const saveR2Button = document.getElementById("saveR2Button");
+      const fileInput = document.getElementById("fileInput");
+
+      // Load saved URLs from LocalStorage
+      jsonUrlInput.value = localStorage.getItem(STORAGE_KEY_API) || "";
+      workerUrlInput.value = localStorage.getItem(STORAGE_KEY_WORKER) || "";
+
+      // Toggle upload drawer
+      toggleUploadBtn.addEventListener("click", () => {
+        const isVisible = uploadCard.style.display !== "none";
+        uploadCard.style.display = isVisible ? "none" : "block";
+        toggleUploadArrow.innerHTML = isVisible
+          ? `<i class="fa-solid fa-chevron-down" style="font-size:10px;"></i>`
+          : `<i class="fa-solid fa-chevron-up" style="font-size:10px;"></i>`;
+      });
+
+      // Search input handler
+      searchInput.addEventListener("input", handleSearch);
+
+      function removeDiacritics(str) {
+        return (str || "")
+          .toString()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase();
+      }
+
+      function handleSearch() {
+        const query = removeDiacritics(searchInput.value.trim());
+        if (!query) {
+          filteredData = [...reportData];
+        } else {
+          const tokens = query.split(/\s+/).filter(Boolean);
+          filteredData = reportData.filter((item) => {
+            const combined = removeDiacritics(
+              `${item.no} ${item.nameVi} ${item.nameEn} ${item.path} ${item.meaning}`
+            );
+            return tokens.every((token) => combined.includes(token));
+          });
+        }
+        renderTable();
+      }
+
+      // Normalization of row items from JSON / Sheet
+      function normalizeRow(row, index) {
+        if (!row || typeof row !== "object") return null;
+
+        // Extract properties leniently
+        const keys = Object.keys(row);
+        function findVal(patterns) {
+          for (const p of patterns) {
+            const foundKey = keys.find((k) =>
+              removeDiacritics(k).replace(/[^a-z0-9]/g, "").includes(removeDiacritics(p).replace(/[^a-z0-9]/g, ""))
+            );
+            if (foundKey && row[foundKey] !== undefined && row[foundKey] !== null) {
+              return String(row[foundKey]).trim();
+            }
+          }
+          return "";
+        }
+
+        const no = findVal(["no", "stt", "id", "stt_"]) || String(index + 1);
+        const nameVi = findVal(["ten bao cao (tieng viet)", "ten bao cao tieng viet", "tieng viet", "ten tieng viet", "name_vi", "tenbaocao_vi", "báo cáo"]);
+        const nameEn = findVal(["ten bao cao (tieng anh)", "ten bao cao tieng anh", "tieng anh", "ten tieng anh", "name_en", "tenbaocao_en", "english"]);
+        const path = findVal(["duong dan", "duong dan bao cao", "path", "menu", "location"]);
+        const meaning = findVal(["y nghia bao cao", "y nghia", "meaning", "description", "mo ta", "ghi chu", "note"]);
+
+        // Fallback for array-based rows
+        if (!nameVi && !nameEn && Array.isArray(row)) {
+          return {
+            no: String(row[0] || index + 1),
+            nameVi: String(row[1] || ""),
+            nameEn: String(row[2] || ""),
+            path: String(row[3] || ""),
+            meaning: String(row[4] || "")
+          };
+        }
+
+        return { no, nameVi, nameEn, path, meaning };
+      }
+
+      function parseDataPayload(data) {
+        let rows = [];
+        if (Array.isArray(data)) {
+          rows = data;
+        } else if (data && Array.isArray(data.data)) {
+          rows = data.data;
+        } else if (data && typeof data === "object") {
+          // Check for any array property
+          for (const key of Object.keys(data)) {
+            if (Array.isArray(data[key])) {
+              rows = data[key];
+              break;
+            }
+          }
+        }
+
+        return rows.map((r, i) => normalizeRow(r, i)).filter(Boolean);
+      }
+
+      // Render table
+      function renderTable() {
+        countBadge.textContent = `${filteredData.length} báo cáo`;
+        tableBody.innerHTML = "";
+
+        if (filteredData.length === 0) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="5" class="empty-state">
+                <i class="fa-solid fa-magnifying-glass" style="font-size:24px; opacity:0.3; margin-bottom:8px; display:block;"></i>
+                Không tìm thấy báo cáo nào phù hợp.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        const query = removeDiacritics(searchInput.value.trim());
+        const tokens = query.split(/\s+/).filter(Boolean);
+
+        function highlightMatch(text) {
+          if (!text) return "";
+          if (!tokens.length) return escapeHTML(text);
+          let safe = escapeHTML(text);
+          // Token highlighting
+          tokens.forEach((tok) => {
+            if (!tok) return;
+            const regex = new RegExp(`(${tok})`, "gi");
+            safe = safe.replace(regex, "<mark>$1</mark>");
+          });
+          return safe;
+        }
+
+        filteredData.forEach((item, idx) => {
+          const tr = document.createElement("tr");
+
+          // STT
+          const tdNo = document.createElement("td");
+          tdNo.className = "col-no";
+          tdNo.textContent = item.no || (idx + 1);
+          tr.appendChild(tdNo);
+
+          // Helper make copyable cell
+          function makeCell(cls, text, isPath = false, hasDetail = false) {
+            const td = document.createElement("td");
+            td.className = `${cls} copyable-cell`;
+            td.title = "Click để copy";
+
+            if (!text || !text.trim()) {
+              const emptySpan = document.createElement("span");
+              emptySpan.className = "empty-placeholder";
+              emptySpan.textContent = "TRỐNG";
+              td.appendChild(emptySpan);
+              return td;
+            }
+
+            if (isPath) {
+              const badge = document.createElement("div");
+              badge.className = "path-badge";
+              badge.innerHTML = highlightMatch(text);
+              td.appendChild(badge);
+            } else if (hasDetail) {
+              const textDiv = document.createElement("div");
+              textDiv.className = "cell-text";
+              textDiv.innerHTML = highlightMatch(text);
+              td.appendChild(textDiv);
+            } else {
+              const span = document.createElement("span");
+              span.innerHTML = highlightMatch(text);
+              td.appendChild(span);
+            }
+
+            // Copy button
+            const copyBtn = document.createElement("button");
+            copyBtn.className = "copy-btn";
+            copyBtn.title = "Click để copy";
+            copyBtn.innerHTML = `<i class="fa-regular fa-copy"></i>`;
+            copyBtn.onclick = (e) => {
+              e.stopPropagation();
+              copyText(text, copyBtn);
+            };
+
+            td.onclick = (e) => {
+              if (e.target.closest(".copy-btn") || e.target.closest(".btn-view-detail")) return;
+              copyText(text, copyBtn);
+            };
+            td.appendChild(copyBtn);
+
+            // Detail button (eye)
+            if (hasDetail) {
+              const viewBtn = document.createElement("button");
+              viewBtn.className = "btn-view-detail";
+              viewBtn.title = "Xem chi tiết";
+              viewBtn.innerHTML = `<i class="fa-regular fa-eye"></i>`;
+              viewBtn.onclick = (e) => {
+                e.stopPropagation();
+                openDetailModal(item);
+              };
+              td.appendChild(viewBtn);
+            }
+
+            return td;
+          }
+
+          // Tiếng Việt
+          tr.appendChild(makeCell("col-vi", item.nameVi));
+
+          // Tiếng Anh
+          tr.appendChild(makeCell("col-en", item.nameEn));
+
+          // Đường dẫn
+          tr.appendChild(makeCell("col-path", item.path, true));
+
+          // Ý nghĩa báo cáo
+          tr.appendChild(makeCell("col-desc", item.meaning, false, true));
+
+          tableBody.appendChild(tr);
+        });
+      }
+
+      function escapeHTML(str) {
+        return (str || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      // Copy text to clipboard
+      function copyText(text, btnElement) {
+        if (!text) return;
+        const onCopied = () => {
+          showToast("Đã copy vào bộ nhớ tạm!", "success");
+          if (btnElement) {
+            btnElement.classList.add("copied");
+            btnElement.innerHTML = `<i class="fa-solid fa-check" style="color:#166534;"></i>`;
+            setTimeout(() => {
+              btnElement.classList.remove("copied");
+              btnElement.innerHTML = `<i class="fa-regular fa-copy"></i>`;
+            }, 1200);
+          }
+        };
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(onCopied).catch(() => fallbackCopy(text, onCopied));
+        } else {
+          fallbackCopy(text, onCopied);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand("copy");
+          cb();
+        } catch (e) {
+          showToast("Không thể copy!", "error");
+        }
+        document.body.removeChild(textarea);
+      }
+
+      // Detail Modal
+      function openDetailModal(item) {
+        const body = document.getElementById("detailModalBody");
+        function sectionHTML(label, text) {
+          if (!text) return "";
+          return `
+            <div class="detail-section">
+              <div class="detail-section-label">${label}</div>
+              <div class="detail-section-content">
+                <pre style="margin:0;font-family:inherit;white-space:pre-wrap;word-break:break-word;">${escapeHTML(text)}</pre>
+                <button class="detail-copy-btn" title="Copy" onclick="detailCopy(this, ${JSON.stringify(text)})">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+            </div>`;
+        }
+
+        body.innerHTML =
+          (item.no ? `<div style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Báo cáo số: <strong>#${escapeHTML(item.no)}</strong></div>` : "") +
+          sectionHTML("🇻🇳 Tên báo cáo (Tiếng Việt)", item.nameVi) +
+          sectionHTML("🇬🇧 Tên báo cáo (Tiếng Anh)", item.nameEn) +
+          sectionHTML("📍 Đường dẫn truy cập", item.path) +
+          sectionHTML("📝 Ý nghĩa & Mô tả báo cáo", item.meaning);
+
+        document.getElementById("detailModal").classList.add("show");
+      }
+
+      function detailCopy(btn, text) {
+        copyText(text, btn);
+      }
+
+      function closeDetailModal(e) {
+        if (e && e.target !== document.getElementById("detailModal")) return;
+        document.getElementById("detailModal").classList.remove("show");
+      }
+
+      // Toast notification
+      function showToast(message, type = "success") {
+        const container = document.getElementById("toastContainer");
+        const toast = document.createElement("div");
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+          <span>${type === "success" ? "✔️" : "❌"}</span>
+          <span>${message}</span>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 2800);
+      }
+
+      // Load Data from URL
+      async function loadDataFromUrl(url, sourceName = "API URL") {
+        if (!url) return;
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5">
+              <div class="loading-box">
+                <div class="spinner"></div>
+                <div>Đang tải dữ liệu từ ${escapeHTML(sourceName)}...</div>
+              </div>
+            </td>
+          </tr>
+        `;
+
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          reportData = parseDataPayload(json);
+          filteredData = [...reportData];
+          renderTable();
+          showToast(`Đã tải thành công ${reportData.length} báo cáo!`, "success");
+        } catch (err) {
+          console.error("Fetch error:", err);
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="5" class="empty-state" style="color:var(--danger)">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size:24px; margin-bottom:8px; display:block;"></i>
+                Không thể tải dữ liệu từ URL.<br>
+                <small style="color:var(--text-muted);">${escapeHTML(err.message)}</small>
+              </td>
+            </tr>
+          `;
+          showToast("Lỗi tải dữ liệu: " + err.message, "error");
+        }
+      }
+
+      // Load button click
+      loadJsonButton.addEventListener("click", () => {
+        const url = jsonUrlInput.value.trim();
+        if (!url) {
+          alert("Vui lòng dán URL JSON hoặc Web App URL của DMS1 Report.");
+          return;
+        }
+        localStorage.setItem(STORAGE_KEY_API, url);
+        loadDataFromUrl(url, "JSON URL");
+      });
+
+      // Save to R2
+      saveR2Button.addEventListener("click", async () => {
+        const workerVal = workerUrlInput.value.trim();
+        if (!workerVal) {
+          alert("Vui lòng dán URL Apps Script vào ô Worker API URL trước khi lưu.");
+          return;
+        }
+
+        localStorage.setItem(STORAGE_KEY_WORKER, workerVal);
+        localStorage.setItem(STORAGE_KEY_API, workerVal);
+        jsonUrlInput.value = workerVal;
+
+        showToast("Đang lưu cấu hình lên R2...", "success");
+
+        try {
+          const payload = JSON.stringify({
+            action: "save_url",
+            name: "DMS1 Report",
+            url: workerVal
+          });
+          const endpoint = "/api/r2-urls";
+          const separator = endpoint.includes("?") ? "&" : "?";
+          const requestUrl = `${endpoint}${separator}data=${encodeURIComponent(payload)}&t=${Date.now()}`;
+
+          const res = await fetch(requestUrl);
+          const rawText = await res.text();
+          if (!res.ok) throw new Error(`HTTP ${res.status}: ${rawText}`);
+
+          let result;
+          try {
+            result = JSON.parse(rawText);
+          } catch (e) {
+            throw new Error("Response không phải JSON: " + rawText);
+          }
+
+          if (result.status === "success" || result.success) {
+            showToast("✅ Đã đồng bộ URL DMS1 Report lên Cloudflare R2!", "success");
+            loadDataFromUrl(workerVal, "DMS1 Report R2 API");
+          } else {
+            const detail = [result.message, result.r2Body].filter(Boolean).join(" | ");
+            showToast("⚠️ Lưu R2 thất bại: " + (detail || "lỗi không rõ"), "error");
+          }
+        } catch (err) {
+          console.error("[R2 Save] Error:", err);
+          showToast("Lưu R2 thất bại: " + err.message, "error");
+        }
+      });
+
+      // File Input change
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="5">
+              <div class="loading-box">
+                <div class="spinner"></div>
+                <div>Đang đọc file ${escapeHTML(file.name)}...</div>
+              </div>
+            </td>
+          </tr>
+        `;
+
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          try {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, { type: "array" });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+            reportData = parseDataPayload(json);
+            filteredData = [...reportData];
+            renderTable();
+            showToast(`Đã đọc thành công ${reportData.length} báo cáo từ file!`, "success");
+          } catch (err) {
+            console.error("XLSX read error:", err);
+            showToast("Không thể đọc file Excel/CSV: " + err.message, "error");
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+
+      // Auto detect URL from R2
+      async function autoDetectUrl() {
+        try {
+          const res = await fetch("/api/r2-urls?t=" + Date.now());
+          if (!res.ok) return;
+          const data = await res.json();
+          const targetUrl =
+            data["DMS1 Report"] ||
+            data["DMS1-Report"] ||
+            data["dms1_report"] ||
+            data["dms1 report"] ||
+            data["dms1"];
+
+          if (targetUrl && targetUrl.trim()) {
+            const cleanUrl = targetUrl.trim();
+            const localUrl = localStorage.getItem(STORAGE_KEY_WORKER) || "";
+            if (cleanUrl !== localUrl) {
+              workerUrlInput.value = cleanUrl;
+              jsonUrlInput.value = cleanUrl;
+              localStorage.setItem(STORAGE_KEY_WORKER, cleanUrl);
+              localStorage.setItem(STORAGE_KEY_API, cleanUrl);
+            }
+            loadDataFromUrl(cleanUrl, "DMS1 Report R2 API");
+            return true;
+          }
+        } catch (err) {
+          console.warn("Auto-detect URL error:", err);
+        }
+        return false;
+      }
+
+      // Initialize
+      window.addEventListener("DOMContentLoaded", async () => {
+        const foundR2 = await autoDetectUrl();
+        if (!foundR2) {
+          const savedUrl = localStorage.getItem(STORAGE_KEY_API) || localStorage.getItem(STORAGE_KEY_WORKER);
+          if (savedUrl) {
+            loadDataFromUrl(savedUrl, "Cấu hình đã lưu");
+          } else {
+            tableBody.innerHTML = `
+              <tr>
+                <td colspan="5" class="empty-state">
+                  <i class="fa-solid fa-cloud-arrow-up" style="font-size:28px; opacity:0.3; margin-bottom:8px; display:block;"></i>
+                  Chưa có dữ liệu. Vui lòng bấm <strong>Tải dữ liệu</strong> ở góc trên để chọn file Excel hoặc cấu hình URL API.
+                </td>
+              </tr>
+            `;
+            countBadge.textContent = "0 báo cáo";
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
