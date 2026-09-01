@@ -30,7 +30,7 @@
         --accent-bg: #f0f9ff;
         --accent-border: #bae6fd;
         --header-bg: #0f172a;
-        --header-text: #f8fafc;
+        --header-text: #ffffff;
         --mark-bg: #fef08a;
         --row-alt: #f8fafc;
         --radius-sm: 6px;
@@ -53,7 +53,7 @@
 
       /* ── Layout ── */
       .page {
-        max-width: 1200px;
+        max-width: 1240px;
         margin: 0 auto;
         padding: 24px 20px;
       }
@@ -159,7 +159,6 @@
       }
 
       /* ── Upload Card / Drawer ── */
-      /* ── Upload Card / Drawer ── */
       .upload-zone {
         border: 2px dashed var(--border-strong);
         border-radius: var(--radius-md);
@@ -224,6 +223,48 @@
         color: var(--accent);
       }
 
+      /* Action buttons in rows */
+      .btn-action-edit {
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        color: #334155;
+        padding: 5px;
+        width: 28px;
+        height: 28px;
+        border-radius: 5px;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .btn-action-edit:hover {
+        background: #e2e8f0;
+        color: var(--accent-dark);
+        border-color: var(--accent);
+      }
+
+      .btn-action-delete {
+        background: #fff5f5;
+        border: 1px solid #fecaca;
+        color: #ef4444;
+        padding: 5px;
+        width: 28px;
+        height: 28px;
+        border-radius: 5px;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .btn-action-delete:hover {
+        background: #fee2e2;
+        border-color: #f87171;
+      }
+
       /* ── Table ── */
       .table-wrap {
         background: var(--surface);
@@ -231,6 +272,7 @@
         border-radius: var(--radius-lg);
         overflow: hidden;
         box-shadow: var(--shadow-sm);
+        position: relative;
       }
       .table-scroller {
         overflow-x: auto;
@@ -257,7 +299,8 @@
       th.col-vi,
       th.col-en,
       th.col-path,
-      th.col-desc {
+      th.col-desc,
+      th.col-actions {
         color: #ffffff !important;
       }
 
@@ -280,16 +323,20 @@
         text-align: center;
       }
       .col-vi {
-        width: 22%;
+        width: 21%;
       }
       .col-en {
-        width: 22%;
+        width: 21%;
       }
       .col-path {
-        width: 26%;
+        width: 24%;
       }
       .col-desc {
-        width: 30%;
+        width: 25%;
+      }
+      .col-actions {
+        width: 80px;
+        text-align: center;
       }
 
       tbody td.col-no {
@@ -302,6 +349,9 @@
       }
       tbody td.col-en {
         color: #334155;
+      }
+      tbody td.col-actions {
+        text-align: center;
       }
 
       .path-badge {
@@ -397,9 +447,6 @@
         justify-content: center;
         transition: all 0.2s;
       }
-      td.copyable-cell:hover .btn-view-detail {
-        opacity: 1;
-      }
       .btn-view-detail:hover {
         background: var(--accent) !important;
         color: #fff !important;
@@ -443,7 +490,7 @@
         background: var(--surface);
         border-radius: var(--radius-lg);
         width: 90%;
-        max-width: 680px;
+        max-width: 640px;
         box-shadow: var(--shadow-md);
         overflow: hidden;
         transform: translateY(-20px);
@@ -492,6 +539,36 @@
         border-top: 1px solid var(--border);
         display: flex;
         justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .form-group {
+        margin-bottom: 14px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text-primary);
+      }
+      .form-control {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-md);
+        font-size: 13.5px;
+        outline: none;
+        font-family: inherit;
+        background: var(--surface);
+      }
+      .form-control:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+      }
+      textarea.form-control {
+        resize: vertical;
+        min-height: 70px;
       }
 
       .detail-section {
@@ -546,12 +623,43 @@
         border-color: #86efac;
       }
 
+      /* ── Subtle Operation Loading Overlay ── */
+      .operation-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(2px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+      .operation-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .operation-box {
+        background: var(--surface);
+        padding: 20px 28px;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 14px;
+      }
+
       /* ── Toast ── */
       .toast-container {
         position: fixed;
         bottom: 24px;
         right: 24px;
-        z-index: 1100;
+        z-index: 2100;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -597,13 +705,19 @@
         color: var(--text-muted);
       }
       .spinner {
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         border: 3px solid var(--accent-border);
         border-top-color: var(--accent);
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
         margin: 0 auto 12px;
+      }
+      .spinner-sm {
+        width: 20px;
+        height: 20px;
+        border-width: 2.5px;
+        margin: 0;
       }
       @keyframes spin {
         to {
@@ -631,16 +745,26 @@
             Tra cứu danh mục, đường dẫn và ý nghĩa các báo cáo trên hệ thống DMS1.
           </p>
         </div>
-        <button
-          id="toggleUploadBtn"
-          type="button"
-          class="btn-outline"
-          style="font-size:12px; padding:6px 12px;"
-        >
-          <i class="fa-solid fa-cloud-arrow-up"></i>
-          Tải dữ liệu
-          <span id="toggleUploadArrow"><i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></span>
-        </button>
+        <div style="display:flex; gap:8px;">
+          <button
+            id="openAddModalBtn"
+            type="button"
+            class="btn-primary"
+            style="font-size:13px;"
+          >
+            <i class="fa-solid fa-plus"></i> Thêm mới báo cáo
+          </button>
+          <button
+            id="toggleUploadBtn"
+            type="button"
+            class="btn-outline"
+            style="font-size:12px; padding:6px 12px;"
+          >
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            Tải dữ liệu
+            <span id="toggleUploadArrow"><i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></span>
+          </button>
+        </div>
       </div>
 
       <!-- Upload / Config Drawer -->
@@ -712,11 +836,12 @@
                 <th class="col-en">Tên báo cáo (Tiếng Anh)</th>
                 <th class="col-path">Đường dẫn</th>
                 <th class="col-desc">Ý nghĩa báo cáo</th>
+                <th class="col-actions">Thao tác</th>
               </tr>
             </thead>
             <tbody id="tableBody">
               <tr>
-                <td colspan="5">
+                <td colspan="6">
                   <div class="loading-box">
                     <div class="spinner"></div>
                     <div>Đang tải dữ liệu DMS1 Report...</div>
@@ -726,6 +851,47 @@
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <!-- Modal Thêm / Sửa Báo cáo -->
+    <div class="modal-overlay" id="formModal">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3 id="formModalTitle"><i class="fa-solid fa-file-pen"></i> Thêm mới báo cáo DMS1</h3>
+          <button class="modal-close" onclick="closeFormModal()" title="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="reportForm" onsubmit="handleFormSubmit(event)">
+          <input type="hidden" id="editRowIndex" />
+          <div class="modal-body">
+            <div style="display:flex; gap:12px;">
+              <div class="form-group" style="width: 100px;">
+                <label for="formNo">STT / No</label>
+                <input type="text" class="form-control" id="formNo" placeholder="Tự động" />
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label for="formNameVi">Tên báo cáo (Tiếng Việt) <span style="color:var(--danger)">*</span></label>
+                <input type="text" class="form-control" id="formNameVi" placeholder="Ví dụ: Báo cáo thực hiện chỉ tiêu doanh số..." required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="formNameEn">Tên báo cáo (Tiếng Anh)</label>
+              <input type="text" class="form-control" id="formNameEn" placeholder="Ví dụ: Distributor KPI Report by Product Hierarchy..." />
+            </div>
+            <div class="form-group">
+              <label for="formPath">Đường dẫn menu (Menu Path)</label>
+              <input type="text" class="form-control" id="formPath" placeholder="Ví dụ: Báo cáo > PERFORMANCE > Distributor KPI..." />
+            </div>
+            <div class="form-group">
+              <label for="formMeaning">Ý nghĩa &amp; Mô tả báo cáo</label>
+              <textarea class="form-control" id="formMeaning" rows="3" placeholder="Mô tả tóm tắt mục đích và nội dung số liệu của báo cáo..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-outline" onclick="closeFormModal()"><i class="fa-solid fa-xmark"></i> Hủy bỏ</button>
+            <button type="submit" class="btn-primary" id="btnSubmitForm"><i class="fa-solid fa-floppy-disk"></i> Lưu báo cáo</button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -742,6 +908,14 @@
         <div class="modal-footer">
           <button type="button" class="btn-outline" onclick="closeDetailModal()"><i class="fa-solid fa-xmark"></i> Đóng</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Subtle Operation Overlay -->
+    <div class="operation-overlay" id="opOverlay">
+      <div class="operation-box">
+        <div class="spinner spinner-sm"></div>
+        <span id="opOverlayText">Đang lưu thay đổi vào file Excel trên Google Drive...</span>
       </div>
     </div>
 
@@ -765,6 +939,10 @@
       const loadJsonButton = document.getElementById("loadJsonButton");
       const saveR2Button = document.getElementById("saveR2Button");
       const fileInput = document.getElementById("fileInput");
+      const openAddModalBtn = document.getElementById("openAddModalBtn");
+      const formModal = document.getElementById("formModal");
+      const opOverlay = document.getElementById("opOverlay");
+      const opOverlayText = document.getElementById("opOverlayText");
 
       // Load saved URLs from LocalStorage
       jsonUrlInput.value = localStorage.getItem(STORAGE_KEY_API) || "";
@@ -838,10 +1016,12 @@
         const nameEn = findVal(["Tên báo cáo (Tiếng Anh)", "Tên báo cáo (Tiếng Anh )", "Tên báo cáo Tiếng Anh", "ten bao cao (tieng anh)", "ten bao cao tieng anh", "tieng anh", "ten tieng anh", "name_en", "tenbaocao_en", "english"]);
         const path = findVal(["Đường dẫn", "Đường dẫn báo cáo", "Đường Dẫn", "duong dan", "duong dan bao cao", "path", "menu", "location"]);
         const meaning = findVal(["Ý nghĩa báo cáo", "Ý nghĩa", "y nghia bao cao", "y nghia", "meaning", "description", "mo ta", "ghi chu", "note"]);
+        const rowIndex = row.rowIndex || (index + 2); // default sheet row index (header is 1)
 
         // Fallback for array-based rows
         if (!nameVi && !nameEn && Array.isArray(row)) {
           return {
+            rowIndex: index + 2,
             no: String(row[0] || index + 1),
             nameVi: String(row[1] || ""),
             nameEn: String(row[2] || ""),
@@ -850,7 +1030,7 @@
           };
         }
 
-        return { no, nameVi, nameEn, path, meaning };
+        return { rowIndex, no, nameVi, nameEn, path, meaning };
       }
 
       function parseDataPayload(data) {
@@ -860,7 +1040,6 @@
         } else if (data && Array.isArray(data.data)) {
           rows = data.data;
         } else if (data && typeof data === "object") {
-          // Check for any array property
           for (const key of Object.keys(data)) {
             if (Array.isArray(data[key])) {
               rows = data[key];
@@ -880,7 +1059,7 @@
         if (filteredData.length === 0) {
           tableBody.innerHTML = `
             <tr>
-              <td colspan="5" class="empty-state">
+              <td colspan="6" class="empty-state">
                 <i class="fa-solid fa-magnifying-glass" style="font-size:24px; opacity:0.3; margin-bottom:8px; display:block;"></i>
                 Không tìm thấy báo cáo nào phù hợp.
               </td>
@@ -896,7 +1075,6 @@
           if (!text) return "";
           if (!tokens.length) return escapeHTML(text);
           let safe = escapeHTML(text);
-          // Token highlighting
           tokens.forEach((tok) => {
             if (!tok) return;
             const regex = new RegExp(`(${tok})`, "gi");
@@ -914,7 +1092,7 @@
           tdNo.textContent = item.no || (idx + 1);
           tr.appendChild(tdNo);
 
-          // Helper make copyable cell
+          // Helper make cell
           function makeCell(cls, text, isPath = false, hasDetail = false, hasCopy = false) {
             const td = document.createElement("td");
             td.className = `${cls} ${hasCopy ? "copyable-cell" : ""}`;
@@ -946,7 +1124,7 @@
               td.appendChild(span);
             }
 
-            // Copy button (only for Tên báo cáo columns)
+            // Copy button
             if (hasCopy) {
               const copyBtn = document.createElement("button");
               copyBtn.className = "copy-btn";
@@ -995,6 +1173,29 @@
 
           // Ý nghĩa báo cáo (không copy, có icon xem chi tiết)
           tr.appendChild(makeCell("col-desc", item.meaning, false, true, false));
+
+          // Thao tác (Edit / Delete)
+          const tdActions = document.createElement("td");
+          tdActions.className = "col-actions";
+          const actionBox = document.createElement("div");
+          actionBox.style.cssText = "display:flex; align-items:center; justify-content:center; gap:6px;";
+
+          const btnEdit = document.createElement("button");
+          btnEdit.className = "btn-action-edit";
+          btnEdit.title = "Chỉnh sửa báo cáo";
+          btnEdit.innerHTML = `<i class="fa-solid fa-pen-to-square"></i>`;
+          btnEdit.onclick = () => openEditModal(item);
+
+          const btnDel = document.createElement("button");
+          btnDel.className = "btn-action-delete";
+          btnDel.title = "Xóa báo cáo";
+          btnDel.innerHTML = `<i class="fa-solid fa-trash-can"></i>`;
+          btnDel.onclick = () => handleDelete(item);
+
+          actionBox.appendChild(btnEdit);
+          actionBox.appendChild(btnDel);
+          tdActions.appendChild(actionBox);
+          tr.appendChild(tdActions);
 
           tableBody.appendChild(tr);
         });
@@ -1080,6 +1281,150 @@
         document.getElementById("detailModal").classList.remove("show");
       }
 
+      // ── Form Modal (Add / Edit) ──
+      openAddModalBtn.addEventListener("click", () => {
+        document.getElementById("formModalTitle").innerHTML = `<i class="fa-solid fa-plus"></i> Thêm mới báo cáo DMS1`;
+        document.getElementById("editRowIndex").value = "";
+        document.getElementById("formNo").value = reportData.length ? (reportData.length + 1) : "1";
+        document.getElementById("formNameVi").value = "";
+        document.getElementById("formNameEn").value = "";
+        document.getElementById("formPath").value = "";
+        document.getElementById("formMeaning").value = "";
+        formModal.classList.add("show");
+      });
+
+      function openEditModal(item) {
+        document.getElementById("formModalTitle").innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa báo cáo #${escapeHTML(item.no)}`;
+        document.getElementById("editRowIndex").value = item.rowIndex || "";
+        document.getElementById("formNo").value = item.no || "";
+        document.getElementById("formNameVi").value = item.nameVi || "";
+        document.getElementById("formNameEn").value = item.nameEn || "";
+        document.getElementById("formPath").value = item.path || "";
+        document.getElementById("formMeaning").value = item.meaning || "";
+        formModal.classList.add("show");
+      }
+
+      function closeFormModal() {
+        formModal.classList.remove("show");
+      }
+
+      function showOpLoading(msg) {
+        opOverlayText.textContent = msg || "Đang xử lý...";
+        opOverlay.classList.add("show");
+      }
+
+      function hideOpLoading() {
+        opOverlay.classList.remove("show");
+      }
+
+      // Handle Form Submit (Add / Edit)
+      async function handleFormSubmit(e) {
+        e.preventDefault();
+        const apiUrl = jsonUrlInput.value.trim() || localStorage.getItem(STORAGE_KEY_API) || localStorage.getItem(STORAGE_KEY_WORKER);
+        if (!apiUrl) {
+          alert("Vui lòng cấu hình URL Google Apps Script Web App trong mục 'Tải dữ liệu' trước khi lưu.");
+          return;
+        }
+
+        const editRowIndex = document.getElementById("editRowIndex").value.trim();
+        const isEdit = Boolean(editRowIndex);
+        const colA = document.getElementById("formNo").value.trim() || (reportData.length + 1);
+        const colB = document.getElementById("formNameVi").value.trim();
+        const colC = document.getElementById("formNameEn").value.trim();
+        const colD = document.getElementById("formPath").value.trim();
+        const colE = document.getElementById("formMeaning").value.trim();
+
+        const action = isEdit ? "edit" : "add";
+        const queryParams = new URLSearchParams({
+          action: action,
+          colA: colA,
+          colB: colB,
+          colC: colC,
+          colD: colD,
+          colE: colE,
+          t: Date.now()
+        });
+
+        if (isEdit) {
+          queryParams.append("rowIndex", editRowIndex);
+        }
+
+        closeFormModal();
+        showOpLoading(isEdit ? "Đang cập nhật báo cáo vào file Excel trên Drive..." : "Đang thêm mới báo cáo vào file Excel trên Drive...");
+
+        try {
+          const sep = apiUrl.includes("?") ? "&" : "?";
+          const reqUrl = `${apiUrl}${sep}${queryParams.toString()}`;
+          const res = await fetch(reqUrl);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+
+          if (json.status === "success") {
+            showToast(isEdit ? "Đã cập nhật báo cáo thành công!" : "Đã thêm mới báo cáo thành công!", "success");
+            if (json.data && Array.isArray(json.data)) {
+              reportData = parseDataPayload(json.data);
+              filteredData = [...reportData];
+              renderTable();
+            } else {
+              loadDataFromUrl(apiUrl, "Cập nhật dữ liệu");
+            }
+          } else {
+            showToast("Lỗi: " + (json.message || "Không rõ nguyên nhân"), "error");
+          }
+        } catch (err) {
+          console.error("CRUD Submit error:", err);
+          showToast("Thao tác thất bại: " + err.message, "error");
+        } finally {
+          hideOpLoading();
+        }
+      }
+
+      // Handle Delete Row
+      async function handleDelete(item) {
+        const apiUrl = jsonUrlInput.value.trim() || localStorage.getItem(STORAGE_KEY_API) || localStorage.getItem(STORAGE_KEY_WORKER);
+        if (!apiUrl) {
+          alert("Vui lòng cấu hình URL Google Apps Script Web App trong mục 'Tải dữ liệu' trước khi xóa.");
+          return;
+        }
+
+        const confirmText = `Bạn có chắc chắn muốn xóa báo cáo này khỏi file Excel?\n"${item.nameVi || item.nameEn || ('STT ' + item.no)}"`;
+        if (!confirm(confirmText)) return;
+
+        showOpLoading("Đang xóa dòng khỏi file Excel trên Google Drive...");
+
+        try {
+          const queryParams = new URLSearchParams({
+            action: "delete",
+            rowIndex: item.rowIndex || "",
+            t: Date.now()
+          });
+
+          const sep = apiUrl.includes("?") ? "&" : "?";
+          const reqUrl = `${apiUrl}${sep}${queryParams.toString()}`;
+          const res = await fetch(reqUrl);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+
+          if (json.status === "success") {
+            showToast("Đã xóa báo cáo thành công!", "success");
+            if (json.data && Array.isArray(json.data)) {
+              reportData = parseDataPayload(json.data);
+              filteredData = [...reportData];
+              renderTable();
+            } else {
+              loadDataFromUrl(apiUrl, "Cập nhật dữ liệu");
+            }
+          } else {
+            showToast("Xóa thất bại: " + (json.message || "Không rõ"), "error");
+          }
+        } catch (err) {
+          console.error("Delete error:", err);
+          showToast("Lỗi khi xóa: " + err.message, "error");
+        } finally {
+          hideOpLoading();
+        }
+      }
+
       // Toast notification
       function showToast(message, type = "success") {
         const container = document.getElementById("toastContainer");
@@ -1093,12 +1438,12 @@
         setTimeout(() => toast.remove(), 2800);
       }
 
-      // Load Data from URL
+      // Load Data from URL (Read action)
       async function loadDataFromUrl(url, sourceName = "API URL") {
         if (!url) return;
         tableBody.innerHTML = `
           <tr>
-            <td colspan="5">
+            <td colspan="6">
               <div class="loading-box">
                 <div class="spinner"></div>
                 <div>Đang tải dữ liệu từ ${escapeHTML(sourceName)}...</div>
@@ -1108,18 +1453,19 @@
         `;
 
         try {
-          const res = await fetch(url);
+          const sep = url.includes("?") ? "&" : "?";
+          const reqUrl = url.includes("action=") ? url : `${url}${sep}action=read&t=${Date.now()}`;
+          const res = await fetch(reqUrl);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const json = await res.json();
           reportData = parseDataPayload(json);
           filteredData = [...reportData];
           renderTable();
-          showToast(`Đã tải thành công ${reportData.length} báo cáo!`, "success");
         } catch (err) {
           console.error("Fetch error:", err);
           tableBody.innerHTML = `
             <tr>
-              <td colspan="5" class="empty-state" style="color:var(--danger)">
+              <td colspan="6" class="empty-state" style="color:var(--danger)">
                 <i class="fa-solid fa-triangle-exclamation" style="font-size:24px; margin-bottom:8px; display:block;"></i>
                 Không thể tải dữ liệu từ URL.<br>
                 <small style="color:var(--text-muted);">${escapeHTML(err.message)}</small>
@@ -1196,7 +1542,7 @@
 
         tableBody.innerHTML = `
           <tr>
-            <td colspan="5">
+            <td colspan="6">
               <div class="loading-box">
                 <div class="spinner"></div>
                 <div>Đang đọc file ${escapeHTML(file.name)}...</div>
@@ -1267,7 +1613,7 @@
           } else {
             tableBody.innerHTML = `
               <tr>
-                <td colspan="5" class="empty-state">
+                <td colspan="6" class="empty-state">
                   <i class="fa-solid fa-cloud-arrow-up" style="font-size:28px; opacity:0.3; margin-bottom:8px; display:block;"></i>
                   Chưa có dữ liệu. Vui lòng bấm <strong>Tải dữ liệu</strong> ở góc trên để chọn file Excel hoặc cấu hình URL API.
                 </td>
