@@ -563,6 +563,113 @@
       color: var(--text-muted);
       font-size: 14px;
     }
+
+    /* ── Text truncation in table ── */
+    .cell-text {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.55;
+      max-height: 4.65em; /* 3 lines */
+    }
+
+    /* ── View detail button (small eye icon) ── */
+    .btn-view-detail {
+      position: absolute;
+      right: 6px;
+      bottom: 6px;
+      background: #e0e7ff;
+      border: 1px solid #c7d2fe;
+      color: var(--accent-dark);
+      opacity: 0;
+      width: 24px;
+      height: 24px;
+      font-size: 11px;
+      padding: 0;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .copyable-cell:hover .btn-view-detail {
+      opacity: 1;
+    }
+
+    .btn-view-detail:hover {
+      background: var(--accent) !important;
+      color: #fff !important;
+      border-color: var(--accent) !important;
+      transform: scale(1.1);
+    }
+
+    /* ── Detail Popup Modal ── */
+    #detailModal .modal-container {
+      max-width: 680px;
+    }
+
+    .detail-section {
+      margin-bottom: 18px;
+    }
+
+    .detail-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--accent-dark);
+      margin-bottom: 6px;
+    }
+
+    .detail-section-content {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--text-primary);
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      position: relative;
+    }
+
+    .detail-copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      width: 28px;
+      height: 28px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .detail-copy-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .detail-copy-btn.copied {
+      background: #dcfce7;
+      color: #166534;
+      border-color: #86efac;
+    }
   </style>
 </head>
 
@@ -664,6 +771,22 @@
           <button type="submit" class="btn-primary" id="btnSubmit"><i class="fa-solid fa-floppy-disk"></i> Lưu lại</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal Xem chi tiết -->
+  <div class="modal-overlay" id="detailModal" onclick="closeDetailModal(event)">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3><i class="fa-regular fa-eye" style="margin-right:8px;"></i>Xem chi tiết câu văn mẫu</h3>
+        <button class="modal-close" onclick="closeDetailModal()" title="Đóng"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="detailModalBody">
+        <!-- filled by JS -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-outline" onclick="closeDetailModal()"><i class="fa-solid fa-xmark"></i> Đóng</button>
+      </div>
     </div>
   </div>
 
@@ -847,52 +970,43 @@
         tdStt.textContent = index + 1;
         tr.appendChild(tdStt);
 
-        // Cell Tiếng Anh
-        const tdEn = document.createElement("td");
-        tdEn.className = "col-en copyable-cell";
-        tdEn.title = "Click để copy";
-        
-        const enSpan = document.createElement("span");
-        enSpan.textContent = item.english;
-        tdEn.appendChild(enSpan);
+        // Helper: build a copyable cell with truncation + copy btn + view-detail btn
+        function makeCopyCell(cls, text) {
+          const td = document.createElement("td");
+          td.className = cls + " copyable-cell";
+          td.title = "Click để copy";
+          td.style.position = "relative";
 
-        const copyBtnEn = document.createElement("button");
-        copyBtnEn.className = "copy-btn";
-        copyBtnEn.title = "Click để copy";
-        copyBtnEn.innerHTML = `<i class="fa-regular fa-copy"></i>`;
-        copyBtnEn.onclick = (e) => {
-          e.stopPropagation();
-          copyText(item.english, copyBtnEn);
-        };
-        tdEn.onclick = (e) => {
-          if (e.target.closest('.copy-btn')) return;
-          copyText(item.english, copyBtnEn);
-        };
-        tdEn.appendChild(copyBtnEn);
+          const textEl = document.createElement("div");
+          textEl.className = "cell-text";
+          textEl.textContent = text;
+          td.appendChild(textEl);
+
+          const copyBtn = document.createElement("button");
+          copyBtn.className = "copy-btn";
+          copyBtn.title = "Click để copy";
+          copyBtn.innerHTML = `<i class="fa-regular fa-copy"></i>`;
+          copyBtn.onclick = (e) => { e.stopPropagation(); copyText(text, copyBtn); };
+          td.onclick = (e) => { if (e.target.closest('.copy-btn') || e.target.closest('.btn-view-detail')) return; copyText(text, copyBtn); };
+          td.appendChild(copyBtn);
+
+          // View detail button (eye icon, bottom-right)
+          const viewBtn = document.createElement("button");
+          viewBtn.className = "btn-view-detail";
+          viewBtn.title = "Xem chi tiết";
+          viewBtn.innerHTML = `<i class="fa-regular fa-eye"></i>`;
+          viewBtn.onclick = (e) => { e.stopPropagation(); openDetailModal(item); };
+          td.appendChild(viewBtn);
+
+          return { td, copyBtn };
+        }
+
+        // Cell Tiếng Anh
+        const { td: tdEn } = makeCopyCell("col-en", item.english);
         tr.appendChild(tdEn);
 
         // Cell Tiếng Việt
-        const tdVi = document.createElement("td");
-        tdVi.className = "col-vi copyable-cell";
-        tdVi.title = "Click để copy";
-
-        const viSpan = document.createElement("span");
-        viSpan.textContent = item.vietnamese;
-        tdVi.appendChild(viSpan);
-
-        const copyBtnVi = document.createElement("button");
-        copyBtnVi.className = "copy-btn";
-        copyBtnVi.title = "Click để copy";
-        copyBtnVi.innerHTML = `<i class="fa-regular fa-copy"></i>`;
-        copyBtnVi.onclick = (e) => {
-          e.stopPropagation();
-          copyText(item.vietnamese, copyBtnVi);
-        };
-        tdVi.onclick = (e) => {
-          if (e.target.closest('.copy-btn')) return;
-          copyText(item.vietnamese, copyBtnVi);
-        };
-        tdVi.appendChild(copyBtnVi);
+        const { td: tdVi } = makeCopyCell("col-vi", item.vietnamese);
         tr.appendChild(tdVi);
 
         // Cell Note
@@ -976,6 +1090,47 @@
       setTimeout(() => {
         toast.remove();
       }, 3000);
+    }
+
+    // Mở popup xem chi tiết
+    function openDetailModal(item) {
+      const body = document.getElementById("detailModalBody");
+      function sectionHTML(label, text) {
+        if (!text) return "";
+        const safe = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return `
+          <div class="detail-section">
+            <div class="detail-section-label">${label}</div>
+            <div class="detail-section-content" style="padding-right:44px;">
+              <pre style="margin:0;font-family:inherit;white-space:pre-wrap;word-break:break-word;">${safe}</pre>
+              <button class="detail-copy-btn" title="Copy" onclick="detailCopy(this, ${JSON.stringify(text)})">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+            </div>
+          </div>`;
+      }
+      body.innerHTML =
+        sectionHTML("🇬🇧 Tiếng Anh", item.english) +
+        sectionHTML("🇻🇳 Tiếng Việt", item.vietnamese) +
+        (item.note ? `<div class="detail-section"><div class="detail-section-label">📝 Note</div><div class="detail-section-content">${item.note.replace(/</g,"&lt;")}</div></div>` : "");
+      document.getElementById("detailModal").classList.add("show");
+    }
+
+    function detailCopy(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        btn.innerHTML = `<i class="fa-solid fa-check"></i>`;
+        btn.classList.add("copied");
+        showToast("Đã copy vào bộ nhớ tạm!", "success");
+        setTimeout(() => {
+          btn.innerHTML = `<i class="fa-regular fa-copy"></i>`;
+          btn.classList.remove("copied");
+        }, 1500);
+      }).catch(() => showToast("Không thể copy!", "error"));
+    }
+
+    function closeDetailModal(e) {
+      if (e && e.target !== document.getElementById("detailModal")) return;
+      document.getElementById("detailModal").classList.remove("show");
     }
 
     // Xử lý Tìm kiếm
