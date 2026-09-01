@@ -353,6 +353,88 @@
         font-size: 12px;
         font-variant-numeric: tabular-nums;
       }
+
+      /* ── Copy Block ── */
+      .copyable-cell {
+        position: relative;
+        cursor: pointer;
+        padding-right: 42px !important;
+        white-space: pre-wrap;
+        word-break: break-word;
+        transition: background-color 0.15s;
+      }
+      .copyable-cell:hover {
+        color: var(--accent-dark);
+      }
+      .copy-btn {
+        position: absolute;
+        right: 8px;
+        top: 8px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: var(--text-secondary);
+        opacity: 0.75;
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+        padding: 0;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .copyable-cell:hover .copy-btn {
+        opacity: 1;
+        background: var(--accent-bg);
+        border-color: var(--accent-border);
+        color: var(--accent-dark);
+      }
+      .copy-btn:hover {
+        background: var(--accent) !important;
+        color: #ffffff !important;
+        border-color: var(--accent) !important;
+        transform: scale(1.18);
+      }
+      .copy-btn.copied {
+        background: var(--green-bg) !important;
+        color: var(--green) !important;
+        border-color: var(--green-border) !important;
+      }
+
+      /* ── Toast ── */
+      .toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 9999;
+        pointer-events: none;
+      }
+      .toast {
+        background: #1e293b;
+        color: #ffffff;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        box-shadow: var(--shadow-md);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: toastIn 0.25s ease-out;
+        pointer-events: auto;
+      }
+      .toast-success {
+        border-left: 4px solid var(--green);
+      }
+      @keyframes toastIn {
+        from { transform: translateY(16px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
       th.col-date {
         cursor: pointer;
         user-select: none;
@@ -1228,7 +1310,7 @@
         if (n === "date") return "col-date";
         if (n === "dist code" || n.includes("dist code")) return "col-dist";
         if (n === "call details" || n.includes("call details"))
-          return "col-details";
+          return "col-details copyable-cell";
         return "";
       }
 
@@ -1245,7 +1327,9 @@
           return highlight(value, [hotlineInput.value.trim()].filter(Boolean));
         }
         if (n === "call details" || n.includes("call details")) {
-          return highlightCallDetails(value, row);
+          const content = highlightCallDetails(value, row);
+          const rawEscaped = escapeHTML(value);
+          return `<span class="details-content">${content}</span><button type="button" class="copy-btn" title="Click để copy" data-copy="${rawEscaped}" onclick="copyCallDetailText(event, this)"><i class="fa-regular fa-copy"></i></button>`;
         }
         return escapeHTML(value);
       }
@@ -1459,6 +1543,75 @@
           .replaceAll('"', "&quot;")
           .replaceAll("'", "&#039;");
       }
+
+      /* ─── Copy & Toast Helpers ─── */
+      function copyCallDetailText(e, btnElement) {
+        if (e) e.stopPropagation();
+        const text = btnElement ? btnElement.getAttribute("data-copy") : "";
+        if (!text) return;
+
+        // Decode HTML entities if needed
+        const txtarea = document.createElement("textarea");
+        txtarea.innerHTML = text;
+        const plainText = txtarea.value;
+
+        const onCopied = () => {
+          showToast("Đã copy Call Details vào bộ nhớ tạm!");
+          if (btnElement) {
+            btnElement.classList.add("copied");
+            btnElement.innerHTML = `<i class="fa-solid fa-check" style="color:var(--green);"></i>`;
+            setTimeout(() => {
+              btnElement.classList.remove("copied");
+              btnElement.innerHTML = `<i class="fa-regular fa-copy"></i>`;
+            }, 1200);
+          }
+        };
+
+        navigator.clipboard.writeText(plainText).then(() => {
+          onCopied();
+        }).catch(err => {
+          console.error("Lỗi copy:", err);
+          const tempTextarea = document.createElement("textarea");
+          tempTextarea.value = plainText;
+          document.body.appendChild(tempTextarea);
+          tempTextarea.select();
+          try {
+            document.execCommand("copy");
+            onCopied();
+          } catch (e) {
+            showToast("Không thể copy!");
+          }
+          document.body.removeChild(tempTextarea);
+        });
+      }
+
+      function showToast(message) {
+        let container = document.getElementById("toastContainer");
+        if (!container) {
+          container = document.createElement("div");
+          container.id = "toastContainer";
+          container.className = "toast-container";
+          document.body.appendChild(container);
+        }
+        const toast = document.createElement("div");
+        toast.className = "toast toast-success";
+        toast.innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--green);"></i> <span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.remove();
+        }, 2500);
+      }
+
+      // Hỗ trợ click vào bất cứ vị trí nào trong ô Call Details để copy
+      document.addEventListener("click", (e) => {
+        const cell = e.target.closest(".col-details.copyable-cell");
+        if (!cell) return;
+        if (e.target.closest(".copy-btn")) return;
+        const btn = cell.querySelector(".copy-btn");
+        if (btn) {
+          copyCallDetailText(e, btn);
+        }
+      });
 
       /* ─── XLSX parsing (same core logic, bug fixes applied) ─── */
       async function loadXLSXWorkbook(file) {
