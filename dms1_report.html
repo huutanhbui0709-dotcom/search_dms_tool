@@ -772,6 +772,7 @@
           .toString()
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[đĐ]/g, "d")
           .toLowerCase();
       }
 
@@ -795,13 +796,21 @@
       function normalizeRow(row, index) {
         if (!row || typeof row !== "object") return null;
 
-        // Extract properties leniently
         const keys = Object.keys(row);
         function findVal(patterns) {
+          // 1. Direct exact key lookup
           for (const p of patterns) {
-            const foundKey = keys.find((k) =>
-              removeDiacritics(k).replace(/[^a-z0-9]/g, "").includes(removeDiacritics(p).replace(/[^a-z0-9]/g, ""))
-            );
+            if (row[p] !== undefined && row[p] !== null && String(row[p]).trim() !== "") {
+              return String(row[p]).trim();
+            }
+          }
+          // 2. Normalized key lookup
+          for (const p of patterns) {
+            const targetNorm = removeDiacritics(p).replace(/[^a-z0-9]/g, "");
+            const foundKey = keys.find((k) => {
+              const keyNorm = removeDiacritics(k).replace(/[^a-z0-9]/g, "");
+              return keyNorm === targetNorm || keyNorm.includes(targetNorm) || targetNorm.includes(keyNorm);
+            });
             if (foundKey && row[foundKey] !== undefined && row[foundKey] !== null) {
               return String(row[foundKey]).trim();
             }
@@ -809,11 +818,11 @@
           return "";
         }
 
-        const no = findVal(["no", "stt", "id", "stt_"]) || String(index + 1);
-        const nameVi = findVal(["ten bao cao (tieng viet)", "ten bao cao tieng viet", "tieng viet", "ten tieng viet", "name_vi", "tenbaocao_vi", "báo cáo"]);
-        const nameEn = findVal(["ten bao cao (tieng anh)", "ten bao cao tieng anh", "tieng anh", "ten tieng anh", "name_en", "tenbaocao_en", "english"]);
-        const path = findVal(["duong dan", "duong dan bao cao", "path", "menu", "location"]);
-        const meaning = findVal(["y nghia bao cao", "y nghia", "meaning", "description", "mo ta", "ghi chu", "note"]);
+        const no = findVal(["No", "STT", "no", "stt", "id", "stt_"]) || String(index + 1);
+        const nameVi = findVal(["Tên báo cáo (Tiếng Việt)", "Tên báo cáo (Tiếng Việt )", "Tên báo cáo Tiếng Việt", "Tên báo cáo", "ten bao cao (tieng viet)", "ten bao cao tieng viet", "tieng viet", "ten tieng viet", "name_vi", "tenbaocao_vi", "báo cáo"]);
+        const nameEn = findVal(["Tên báo cáo (Tiếng Anh)", "Tên báo cáo (Tiếng Anh )", "Tên báo cáo Tiếng Anh", "ten bao cao (tieng anh)", "ten bao cao tieng anh", "tieng anh", "ten tieng anh", "name_en", "tenbaocao_en", "english"]);
+        const path = findVal(["Đường dẫn", "Đường dẫn báo cáo", "Đường Dẫn", "duong dan", "duong dan bao cao", "path", "menu", "location"]);
+        const meaning = findVal(["Ý nghĩa báo cáo", "Ý nghĩa", "y nghia bao cao", "y nghia", "meaning", "description", "mo ta", "ghi chu", "note"]);
 
         // Fallback for array-based rows
         if (!nameVi && !nameEn && Array.isArray(row)) {
