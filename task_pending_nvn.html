@@ -1545,6 +1545,7 @@
             const alertDays = validDays.includes(t.alert_days || "") ? (t.alert_days || "") : "";
             return {
               id: t.id,
+              created_at: t.created_at || (Number(t.id) > 1000000000000 ? Number(t.id) : Date.now()),
               deadline: dl,
               issue: t.issue || "",
               note: t.note || "",

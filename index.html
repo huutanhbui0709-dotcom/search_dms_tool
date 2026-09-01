@@ -521,63 +521,100 @@
         // chỉ cảnh báo nếu đã cài đặt tần suất cụ thể (alert_frequency)
         if ((task.priority || "P3") === "P3" && !FREQ_MS[freq]) return false;
 
-        const intv = FREQ_MS[freq] || PRIORITY_INTERVALS[task.priority || "P3"] || PRIORITY_INTERVALS.P3;
+        // 1. Phân tích giờ cảnh báo (alert_time)
+        const timeStr = (task.alert_time || "09:00").trim();
+        const parts = timeStr.split(":");
+        const ah = parseInt(parts[0], 10) || 9;
+        const am = parseInt(parts[1] || "0", 10) || 0;
 
-        // ── Day Matching: If alert_frequency is 1_week or 2_weeks ──
-        if (freq === "1_week" || freq === "2_weeks") {
-          const dayIndex = now.getDay(); // 0 = Sunday, 1 = Mon, ..., 6 = Sat
-          if (dayIndex === 0) return false; // Exclude Sunday
-          const dayMap = { 1: "mon", 2: "tue", 3: "wed", 4: "thu", 5: "fri", 6: "sat" };
-          const currentDayCode = dayMap[dayIndex];
-          const taskDay = task.alert_days || "mon";
-          if (taskDay && taskDay !== currentDayCode) {
+        const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
+        const targetTotalMinutes  = ah * 60 + am;
+
+        // Chưa đến giờ cảnh báo trong ngày hôm nay -> Chưa thông báo
+        if (currentTotalMinutes < targetTotalMinutes) return false;
+
+        // 2. Không thông báo lặp lại nếu hôm nay đã thông báo rồi
+        if (lastMs) {
+          const lastDate = new Date(lastMs);
+          if (lastDate.getFullYear() === now.getFullYear() &&
+              lastDate.getMonth() === now.getMonth() &&
+              lastDate.getDate() === now.getDate()) {
             return false;
           }
         }
 
-        // ── Branch A: no alert_time set → simple elapsed-time check ──
-        const timeStr = (task.alert_time || "").trim();
-        if (!timeStr) {
-          if (lastMs && (nowMs - lastMs) < intv) return false;
+        // 3. Xác định ngày tạo task (created_at hoặc task.id timestamp)
+        let createdMs = task.created_at;
+        if (!createdMs && Number(task.id) > 1000000000000) {
+          createdMs = Number(task.id);
+        }
+        if (!createdMs) createdMs = nowMs;
+
+        const createdDate = new Date(createdMs);
+        const createdDayStart = new Date(createdDate.getFullYear(), createdDate.getMonth(), createdDate.getDate()).getTime();
+        const todayDayStart   = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const daysSinceCreation = Math.max(0, Math.round((todayDayStart - createdDayStart) / 86400000));
+
+        // 4. Nếu task tạo HÔM NAY:
+        // Nếu lúc tạo task đã qua giờ alert_time của hôm nay -> KHÔNG thông báo hôm nay!
+        if (daysSinceCreation === 0) {
+          const createdMinutes = createdDate.getHours() * 60 + createdDate.getMinutes();
+          if (createdMinutes >= targetTotalMinutes) {
+            return false;
+          }
+        }
+
+        // 5. Kiểm tra theo TẦN SUẤT:
+        // Case A: Tần suất theo THỨ (1_week hoặc 2_weeks)
+        if (freq === "1_week" || freq === "2_weeks") {
+          const dayIndex = now.getDay(); // 0 = Sunday, 1 = Mon, ..., 6 = Sat
+          if (dayIndex === 0) return false; // Không cảnh báo Chủ Nhật
+
+          const dayMap = { 1: "mon", 2: "tue", 3: "wed", 4: "thu", 5: "fri", 6: "sat" };
+          const currentDayCode = dayMap[dayIndex];
+          const taskDay = task.alert_days || "mon";
+
+          if (taskDay !== currentDayCode) return false;
+
+          if (lastMs) {
+            const minDays = (freq === "2_weeks") ? 13 : 6;
+            const lastDayStart = new Date(new Date(lastMs).setHours(0,0,0,0)).getTime();
+            const daysSinceLast = Math.round((todayDayStart - lastDayStart) / 86400000);
+            if (daysSinceLast < minDays) return false;
+          }
           return true;
         }
 
-        // ── Branch B: alert_time is set ──
-        const parts = timeStr.split(":");
-        const ah = parseInt(parts[0], 10);
-        const am = parseInt(parts[1] || "0", 10);
-        if (isNaN(ah) || isNaN(am)) {
-          // Unparseable: fall back to elapsed check
-          if (lastMs && (nowMs - lastMs) < intv) return false;
-          return true;
-        }
-
-        // Time gate: current wall-clock time must have reached alert_time
-        const currentTotalMinutes = now.getHours() * 60 + now.getMinutes();
-        const targetTotalMinutes  = ah * 60 + am;
-        if (currentTotalMinutes < targetTotalMinutes) return false;
-
-        // Window-based de-duplication so changing alert_time within the day still triggers
-        // todayAlertStart = today's date at alert_time (we know current time >= alert_time)
-        const todayAlertStartMs = new Date(
-          now.getFullYear(), now.getMonth(), now.getDate(), ah, am, 0, 0
-        ).getTime();
-
-        let windowStartMs;
-        if (intv <= 86400000) {
-          // Daily or shorter: at most once per calendar-day at alert_time
-          windowStartMs = todayAlertStartMs;
+        // Case B: Tần suất theo NGÀY (1_day, 3_days, 1_month, fallback priority)
+        // Yêu cầu: Tính từ ngày tạo task.
+        // VD: Tạo 01/09 tần suất 3 ngày -> 03/09 thông báo (cách 2 ngày kể từ ngày tạo: 01, 02, 03)
+        let requiredDaysInterval = 1;
+        if (freq === "3_days") {
+          requiredDaysInterval = 2; // Ngày 1 (tạo) -> Ngày 3 (thông báo)
+        } else if (freq === "1_month") {
+          requiredDaysInterval = 30;
+        } else if (freq === "1_day") {
+          requiredDaysInterval = (daysSinceCreation === 0) ? 0 : 1;
         } else {
-          // Multi-day: at most once per intv, anchored to today's alert_time
-          windowStartMs = todayAlertStartMs - intv;
+          // Fallback theo độ ưu tiên
+          if (task.priority === "P1") requiredDaysInterval = (daysSinceCreation === 0) ? 0 : 1;
+          else if (task.priority === "P2") requiredDaysInterval = 2;
+          else requiredDaysInterval = 3;
         }
 
-        if (lastMs && lastMs >= windowStartMs) return false;
-
-        // If alert_time today has already passed by more than 15 minutes,
-        // do not trigger a late alert hours later (e.g. upon saving a task or refreshing)
-        if ((currentTotalMinutes - targetTotalMinutes) > 15) {
-          return false;
+        if (!lastMs) {
+          // Chưa từng thông báo: kiểm tra số ngày từ ngày tạo
+          if (daysSinceCreation < requiredDaysInterval) {
+            return false;
+          }
+        } else {
+          // Đã từng thông báo: kiểm tra số ngày từ lần thông báo trước
+          const lastDate = new Date(lastMs);
+          const lastDayStart = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate()).getTime();
+          const daysSinceLast = Math.round((todayDayStart - lastDayStart) / 86400000);
+          if (daysSinceLast < requiredDaysInterval) {
+            return false;
+          }
         }
 
         return true;

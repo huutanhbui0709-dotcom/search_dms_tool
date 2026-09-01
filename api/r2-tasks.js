@@ -197,8 +197,10 @@ module.exports = async function handler(req, res) {
           // Edit task
           const taskIndex = currentData.tasks.findIndex(t => Number(t.id) === Number(id));
           if (taskIndex !== -1) {
+            const existingTask = currentData.tasks[taskIndex];
             currentData.tasks[taskIndex] = {
               id: Number(id),
+              created_at: existingTask.created_at || existingTask.id || Date.now(),
               deadline: deadline || "",
               issue: issue || "",
               note: note || "",
@@ -214,8 +216,10 @@ module.exports = async function handler(req, res) {
           }
         } else {
           // Add task new
+          const nowTs = Date.now();
           const newTask = {
-            id: Date.now(), // ID dựa trên timestamp
+            id: nowTs, // ID dựa trên timestamp
+            created_at: nowTs,
             deadline: deadline || "",
             issue: issue || "",
             note: note || "",
