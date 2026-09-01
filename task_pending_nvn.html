@@ -1621,6 +1621,34 @@
 
 
 
+    const MEMBER_COLOR_PALETTES = [
+      { bg: "#eff6ff", color: "#1d4ed8", border: "#bfdbfe" }, // Blue
+      { bg: "#fdf2f8", color: "#be185d", border: "#fbcfe8" }, // Pink
+      { bg: "#ecfdf5", color: "#047857", border: "#a7f3d0" }, // Emerald
+      { bg: "#fff7ed", color: "#c2410c", border: "#fed7aa" }, // Orange
+      { bg: "#f5f3ff", color: "#6d28d9", border: "#ddd6fe" }, // Violet
+      { bg: "#ecfeff", color: "#0e7490", border: "#a5f3fc" }, // Cyan
+      { bg: "#fefce8", color: "#a16207", border: "#fef08a" }, // Gold/Yellow
+      { bg: "#fdf4ff", color: "#a21caf", border: "#f5d0fe" }, // Fuchsia
+      { bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" }, // Green
+      { bg: "#eef2ff", color: "#4338ca", border: "#c7d2fe" }, // Indigo
+      { bg: "#fff1f2", color: "#be123c", border: "#fecdd3" }, // Rose
+      { bg: "#f1f5f9", color: "#334155", border: "#cbd5e1" }, // Slate
+    ];
+
+    function getMemberStyle(name) {
+      if (!name) return "";
+      let hash = 0;
+      const str = String(name).trim();
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+      }
+      const index = Math.abs(hash) % MEMBER_COLOR_PALETTES.length;
+      const p = MEMBER_COLOR_PALETTES[index];
+      return `background-color:${p.bg}; color:${p.color}; border:1px solid ${p.border}; font-weight:700;`;
+    }
+
     function renderTasks() {
       const tbody = document.getElementById("taskTbody");
       tbody.innerHTML = "";
@@ -1637,7 +1665,7 @@
         const dlClass = deadlineClass(t.deadline);
         const dlLabel = t.deadline ? formatDate(t.deadline) : "—";
         const badgesHtml = (t.assignees || []).map(a =>
-          `<span class="badge badge-member">${esc(a)}</span>`
+          `<span class="badge badge-member" style="${getMemberStyle(a)}">${esc(a)}</span>`
         ).join("");
         const statusBadge = t.status === "Done"
           ? `<span class="badge badge-done">✔ Done</span>`
@@ -1802,7 +1830,7 @@
         <div class="due-alert-issue" style="font-weight:600; color:#1f2937;">${esc(t.issue)}</div>
         ${t.note ? `<div class="due-alert-note" style="margin-top:4px;"><b>Ghi chú:</b> ${esc(t.note)}</div>` : ''}
         <div class="due-alert-assignees" style="margin-top:6px;">
-          <b>Phụ trách:</b> ${(t.assignees || []).map(a => `<span class="badge badge-member">${esc(a)}</span>`).join(" ") || '<span style="color:var(--text-muted)">—</span>'}
+          <b>Phụ trách:</b> ${(t.assignees || []).map(a => `<span class="badge badge-member" style="${getMemberStyle(a)}">${esc(a)}</span>`).join(" ") || '<span style="color:var(--text-muted)">—</span>'}
         </div>
       </div>
     `;
@@ -1992,6 +2020,7 @@
       selectedAssignees.forEach(name => {
         const pill = document.createElement("span");
         pill.className = "pill";
+        pill.style.cssText = getMemberStyle(name);
         pill.innerHTML = `${esc(name)}<button type="button" class="pill-x" data-name="${esc(name)}">&times;</button>`;
         pill.querySelector(".pill-x").addEventListener("click", () => {
           selectedAssignees = selectedAssignees.filter(x => x !== name);
