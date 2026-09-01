@@ -159,14 +159,13 @@
       }
 
       /* ── Upload Card / Drawer ── */
+      /* ── Upload Card / Drawer ── */
       .upload-zone {
         border: 2px dashed var(--border-strong);
         border-radius: var(--radius-md);
         padding: 20px;
         text-align: center;
-        cursor: pointer;
         transition: border-color 0.15s, background 0.15s;
-        position: relative;
         background: #fafafa;
       }
       .upload-zone:hover {
@@ -174,12 +173,9 @@
         background: var(--accent-bg);
       }
       .upload-zone input[type="file"] {
-        position: absolute;
-        inset: 0;
-        opacity: 0;
+        margin-top: 8px;
+        font-size: 13px;
         cursor: pointer;
-        width: 100%;
-        height: 100%;
       }
       .upload-zone strong {
         display: block;
@@ -191,7 +187,7 @@
         color: var(--text-muted);
         font-size: 12px;
         display: block;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
       }
 
       /* ── Buttons ── */
@@ -637,36 +633,39 @@
         <div class="section-label">
           <i class="fa-solid fa-gear"></i> Cấu hình nguồn dữ liệu DMS1 Report
         </div>
+        
+        <!-- File Upload Box -->
         <div class="upload-zone" id="uploadBox">
-          <i class="fa-solid fa-file-excel" style="font-size:32px; color:#10b981; margin-bottom:8px;"></i>
+          <i class="fa-solid fa-file-excel" style="font-size:32px; color:#10b981; margin-bottom:8px; display:block;"></i>
           <strong>Chọn file Excel / CSV DMS1 Report</strong>
-          <small>Kéo thả hoặc chọn file .xlsx, .csv</small>
+          <small>Hỗ trợ file .xlsx, .csv</small>
           <input id="fileInput" type="file" accept=".xlsx,.csv" />
-          
-          <div style="display:flex; flex-direction:column; gap:8px; width:100%; margin-top:14px;">
-            <div style="display:flex; gap:8px; width:100%;">
-              <input
-                id="jsonUrlInput"
-                type="text"
-                placeholder="Dán URL JSON / Apps Script Web App..."
-                style="flex:1; padding:8px 12px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-size:13px; outline:none;"
-              />
-              <button class="btn-primary" id="loadJsonButton" type="button">
-                <i class="fa-solid fa-link"></i> Tải từ URL
-              </button>
-            </div>
-            <div style="display:flex; gap:8px; width:100%; align-items:center;">
-              <label style="font-size:11.5px; font-weight:600; color:var(--text-muted); white-space:nowrap;">Worker API URL:</label>
-              <input
-                id="workerUrlInput"
-                type="text"
-                placeholder="Dán Worker API URL tại đây để đồng bộ R2..."
-                style="flex:1; padding:7px 10px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-size:13px; outline:none;"
-              />
-              <button id="saveR2Button" type="button" class="btn-primary" style="padding: 7px 12px; font-size:13px;">
-                <i class="fa-solid fa-floppy-disk"></i> Lưu vào R2
-              </button>
-            </div>
+        </div>
+
+        <!-- URL & R2 Sync Box -->
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
+          <div style="display:flex; gap:8px; width:100%;">
+            <input
+              id="jsonUrlInput"
+              type="text"
+              placeholder="Dán URL JSON / Apps Script Web App..."
+              style="flex:1; padding:8px 12px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-size:13px; outline:none;"
+            />
+            <button class="btn-primary" id="loadJsonButton" type="button">
+              <i class="fa-solid fa-link"></i> Tải từ URL
+            </button>
+          </div>
+          <div style="display:flex; gap:8px; width:100%; align-items:center;">
+            <label style="font-size:11.5px; font-weight:600; color:var(--text-muted); white-space:nowrap;">Worker API URL:</label>
+            <input
+              id="workerUrlInput"
+              type="text"
+              placeholder="Dán Worker API URL tại đây để đồng bộ R2..."
+              style="flex:1; padding:7px 10px; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-size:13px; outline:none;"
+            />
+            <button id="saveR2Button" type="button" class="btn-primary" style="padding: 7px 12px; font-size:13px;">
+              <i class="fa-solid fa-floppy-disk"></i> Lưu vào R2
+            </button>
           </div>
         </div>
       </div>
