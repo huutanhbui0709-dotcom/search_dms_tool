@@ -215,9 +215,10 @@
     .copyable-cell {
       position: relative;
       cursor: pointer;
-      padding-right: 28px;
+      padding-right: 36px;
       white-space: pre-wrap;
       word-break: break-word;
+      transition: background-color 0.15s;
     }
 
     .copyable-cell:hover {
@@ -226,33 +227,42 @@
 
     .copy-btn {
       position: absolute;
-      right: 4px;
-      top: 2px;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      opacity: 0.5;
-      padding: 2px;
+      right: 6px;
+      top: 6px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      color: var(--text-secondary);
+      opacity: 0.75;
+      width: 28px;
+      height: 28px;
+      font-size: 15px; /* Kích thước icon tăng 1.2x */
+      padding: 0;
       border-radius: var(--radius-sm);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.2s, color 0.2s, background-color 0.2s;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .copyable-cell:hover .copy-btn {
       opacity: 1;
-    }
-
-    .copy-btn:hover {
-      background-color: var(--accent-border);
+      background: var(--accent-bg);
+      border-color: var(--accent-border);
       color: var(--accent-dark);
     }
 
-    .copy-btn svg {
-      width: 15px;
-      height: 15px;
+    .copy-btn:hover {
+      background: var(--accent) !important;
+      color: #ffffff !important;
+      border-color: var(--accent) !important;
+      transform: scale(1.18);
+    }
+
+    .copy-btn.copied {
+      background: #dcfce7 !important;
+      color: #166534 !important;
+      border-color: #86efac !important;
     }
 
     /* ── Buttons ── */
@@ -819,10 +829,7 @@
         // Cell Tiếng Anh
         const tdEn = document.createElement("td");
         tdEn.className = "col-en copyable-cell";
-        tdEn.onclick = (e) => {
-          if (e.target.closest('.copy-btn')) return;
-          copyText(item.english);
-        };
+        tdEn.title = "Click để copy";
         
         const enSpan = document.createElement("span");
         enSpan.textContent = item.english;
@@ -830,15 +837,15 @@
 
         const copyBtnEn = document.createElement("button");
         copyBtnEn.className = "copy-btn";
-        copyBtnEn.title = "Bấm để copy nhanh";
-        copyBtnEn.innerHTML = `
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-          </svg>
-        `;
+        copyBtnEn.title = "Click để copy";
+        copyBtnEn.innerHTML = `<i class="fa-regular fa-copy"></i>`;
         copyBtnEn.onclick = (e) => {
           e.stopPropagation();
-          copyText(item.english);
+          copyText(item.english, copyBtnEn);
+        };
+        tdEn.onclick = (e) => {
+          if (e.target.closest('.copy-btn')) return;
+          copyText(item.english, copyBtnEn);
         };
         tdEn.appendChild(copyBtnEn);
         tr.appendChild(tdEn);
@@ -846,10 +853,7 @@
         // Cell Tiếng Việt
         const tdVi = document.createElement("td");
         tdVi.className = "col-vi copyable-cell";
-        tdVi.onclick = (e) => {
-          if (e.target.closest('.copy-btn')) return;
-          copyText(item.vietnamese);
-        };
+        tdVi.title = "Click để copy";
 
         const viSpan = document.createElement("span");
         viSpan.textContent = item.vietnamese;
@@ -857,15 +861,15 @@
 
         const copyBtnVi = document.createElement("button");
         copyBtnVi.className = "copy-btn";
-        copyBtnVi.title = "Bấm để copy nhanh";
-        copyBtnVi.innerHTML = `
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-          </svg>
-        `;
+        copyBtnVi.title = "Click để copy";
+        copyBtnVi.innerHTML = `<i class="fa-regular fa-copy"></i>`;
         copyBtnVi.onclick = (e) => {
           e.stopPropagation();
-          copyText(item.vietnamese);
+          copyText(item.vietnamese, copyBtnVi);
+        };
+        tdVi.onclick = (e) => {
+          if (e.target.closest('.copy-btn')) return;
+          copyText(item.vietnamese, copyBtnVi);
         };
         tdVi.appendChild(copyBtnVi);
         tr.appendChild(tdVi);
@@ -900,10 +904,22 @@
     }
 
     // Sao chép văn bản vào Clipboard
-    function copyText(text) {
+    function copyText(text, btnElement) {
       if (!text) return;
+      const onCopied = () => {
+        showToast("Đã copy vào bộ nhớ tạm!", "success");
+        if (btnElement) {
+          btnElement.classList.add("copied");
+          btnElement.innerHTML = `<i class="fa-solid fa-check" style="color:#166534;"></i>`;
+          setTimeout(() => {
+            btnElement.classList.remove("copied");
+            btnElement.innerHTML = `<i class="fa-regular fa-copy"></i>`;
+          }, 1200);
+        }
+      };
+
       navigator.clipboard.writeText(text).then(() => {
-        showToast("Đã copy thành công!", "success");
+        onCopied();
       }).catch(err => {
         console.error("Lỗi copy:", err);
         const textarea = document.createElement("textarea");
@@ -912,7 +928,7 @@
         textarea.select();
         try {
           document.execCommand("copy");
-          showToast("Đã copy thành công (fallback)!", "success");
+          onCopied();
         } catch (e) {
           showToast("Không thể copy!", "error");
         }
