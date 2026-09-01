@@ -304,7 +304,7 @@
       }
 
       th {
-        background: var(--header-bg);
+        background: var(--header-bg) !important;
         color: var(--header-text);
         font-weight: 600;
         font-size: 12px;
@@ -313,7 +313,7 @@
         text-align: left;
         position: sticky;
         top: 0;
-        z-index: 2;
+        z-index: 10;
         white-space: nowrap;
       }
       th:first-child {
@@ -355,7 +355,7 @@
       }
 
       /* ── Copy Block ── */
-      .copyable-cell {
+      td.copyable-cell {
         position: relative;
         cursor: pointer;
         padding-right: 42px !important;
@@ -363,7 +363,7 @@
         word-break: break-word;
         transition: background-color 0.15s;
       }
-      .copyable-cell:hover {
+      td.copyable-cell:hover {
         color: var(--accent-dark);
       }
       .copy-btn {
@@ -1287,7 +1287,8 @@
                 displayColumns
                   .map((col, i) => {
                     const cls = getColumnClass(col, i);
-                    return `<td class="${cls}">${highlightCell(row, col)}</td>`;
+                    const isDetails = cls === "col-details";
+                    return `<td class="${cls}${isDetails ? ' copyable-cell' : ''}">${highlightCell(row, col)}</td>`;
                   })
                   .join("") +
                 "</tr>"
@@ -1310,7 +1311,7 @@
         if (n === "date") return "col-date";
         if (n === "dist code" || n.includes("dist code")) return "col-dist";
         if (n === "call details" || n.includes("call details"))
-          return "col-details copyable-cell";
+          return "col-details";
         return "";
       }
 
