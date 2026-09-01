@@ -966,6 +966,26 @@
         catch(e) { return {}; }
       }
 
+      function parseToIsoDate(dateStr) {
+        if (!dateStr) return "";
+        dateStr = String(dateStr).trim();
+        if (dateStr.includes("/")) {
+          const parts = dateStr.split("/");
+          if (parts.length === 3) {
+            const d = parts[0].padStart(2, '0');
+            const m = parts[1].padStart(2, '0');
+            const y = parts[2];
+            if (y.length === 4) return `${y}-${m}-${d}`;
+          }
+        }
+        if (dateStr.includes("-")) {
+          const parts = dateStr.split("-");
+          if (parts[0].length === 4) return dateStr;
+          if (parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        }
+        return dateStr;
+      }
+
       function getActiveAlerts() {
         const tasks = loadTasks();
         const notified = loadTimestamps();
