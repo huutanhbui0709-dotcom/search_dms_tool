@@ -973,9 +973,21 @@
         // Helper: build a copyable cell with truncation + copy btn + view-detail btn
         function makeCopyCell(cls, text) {
           const td = document.createElement("td");
+          td.style.position = "relative";
+
+          const isEmpty = !text || !text.trim();
+
+          if (isEmpty) {
+            td.className = cls;
+            const placeholder = document.createElement("span");
+            placeholder.textContent = "TRỐNG";
+            placeholder.style.cssText = "font-style:italic; color:#cbd5e1; font-size:12px; font-weight:500; letter-spacing:0.3px;";
+            td.appendChild(placeholder);
+            return { td, copyBtn: null };
+          }
+
           td.className = cls + " copyable-cell";
           td.title = "Click để copy";
-          td.style.position = "relative";
 
           const textEl = document.createElement("div");
           textEl.className = "cell-text";
@@ -1012,7 +1024,14 @@
         // Cell Note
         const tdNote = document.createElement("td");
         tdNote.className = "col-note";
-        tdNote.textContent = item.note || "";
+        if (item.note && item.note.trim()) {
+          tdNote.textContent = item.note;
+        } else {
+          const placeholder = document.createElement("span");
+          placeholder.textContent = "TRỐNG";
+          placeholder.style.cssText = "font-style:italic; color:#cbd5e1; font-size:12px; font-weight:500; letter-spacing:0.3px;";
+          tdNote.appendChild(placeholder);
+        }
         tr.appendChild(tdNote);
 
         // Cell Actions
