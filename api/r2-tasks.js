@@ -184,7 +184,15 @@ module.exports = async function handler(req, res) {
 
       if (action === "save_task") {
         const { id, deadline, issue, note, assignees, status, priority, alert_time, alert_frequency, alert_days, alert_specific_date } = payload;
-        const taskStatus = (String(status || "").trim().toLowerCase() === "done") ? "Done" : "Pending";
+        let taskStatus = "Pending";
+        const rawStatus = String(status || "").trim();
+        if (rawStatus.toLowerCase() === "done") {
+          taskStatus = "Done";
+        } else if (rawStatus === "Cố định" || rawStatus.toLowerCase() === "cố định" || rawStatus.toLowerCase() === "fixed") {
+          taskStatus = "Cố định";
+        } else {
+          taskStatus = "Pending";
+        }
         const taskPriority = ["P1","P2","P3"].includes(priority) ? priority : "P3";
         const taskAlertTime = alert_time || "09:00";
         const taskAlertFreq = ["once","1_day","3_days","1_week","2_weeks","1_month"].includes(alert_frequency)

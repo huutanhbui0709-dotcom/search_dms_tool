@@ -560,6 +560,12 @@
       border: 1px solid #a7f3d0;
     }
 
+    .badge-fixed {
+      background: #f5f3ff;
+      color: #6d28d9;
+      border: 1px solid #ddd6fe;
+    }
+
     /* ── Deadline indicator ───────────────────────────────────────────────── */
     .deadline-overdue {
       color: var(--danger);
@@ -604,9 +610,15 @@
     /* ── Summary Cards ───────────────────────────────────────────────────── */
     .stats-bar {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
       margin-bottom: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     .stat-chip {
@@ -641,9 +653,87 @@
       color: #ef4444;
     }
 
+    .stat-chip.fixed .stat-icon {
+      background: #f5f3ff;
+      color: #7c3aed;
+    }
+
     .stat-chip.done .stat-icon {
       background: #ecfdf5;
       color: #10b981;
+    }
+
+    /* ── Task Tabs Navigation ─────────────────────────────────────────────── */
+    .task-tabs-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 2px;
+    }
+
+    .task-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: var(--r-md) var(--r-md) 0 0;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .task-tab-btn:hover {
+      color: var(--accent);
+      background: var(--accent-bg);
+    }
+
+    .task-tab-btn.active {
+      color: var(--accent);
+      font-weight: 700;
+      background: #ffffff;
+      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .task-tab-btn.active::after {
+      content: "";
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 3px 3px 0 0;
+    }
+
+    .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--border);
+      color: var(--text-2);
+    }
+
+    .task-tab-btn.active .tab-badge {
+      background: var(--accent-bg);
+      color: var(--accent);
+      border: 1px solid var(--accent-bdr);
+    }
+
+    .task-tab-btn.active .tab-badge.badge-pin {
+      background: #ede9fe;
+      color: #6d28d9;
+      border: 1px solid #ddd6fe;
     }
 
     .stat-chip .stat-info {
@@ -1282,6 +1372,16 @@
           <span class="stat-desc">Đang chờ xử lý</span>
         </div>
       </div>
+      <div class="stat-chip fixed">
+        <div class="stat-icon">📌</div>
+        <div class="stat-info">
+          <div style="display:flex; align-items:baseline; gap:8px;">
+            <b id="stFixed">0</b>
+            <span class="stat-label">Cố định</span>
+          </div>
+          <span class="stat-desc">Công việc cố định</span>
+        </div>
+      </div>
       <div class="stat-chip done">
         <div class="stat-icon">✅</div>
         <div class="stat-info">
@@ -1292,6 +1392,18 @@
           <span class="stat-desc">Đã hoàn thành</span>
         </div>
       </div>
+    </div>
+
+    <!-- ── Task Tabs Navigation ── -->
+    <div class="task-tabs-nav">
+      <button class="task-tab-btn active" id="tabBtnRegular" onclick="switchTaskTab('regular')">
+        <i class="fa-solid fa-list-check"></i> Công việc thường
+        <span class="tab-badge" id="tabCountRegular">0</span>
+      </button>
+      <button class="task-tab-btn" id="tabBtnFixed" onclick="switchTaskTab('fixed')">
+        <i class="fa-solid fa-thumbtack"></i> Task cố định
+        <span class="tab-badge badge-pin" id="tabCountFixed">0</span>
+      </button>
     </div>
 
     <!-- ── Filter + Add Row ── -->
@@ -1376,6 +1488,7 @@
               <select class="fc" id="tStatus" required>
                 <option value="Pending">🔴 Pending</option>
                 <option value="Done">🟢 Done</option>
+                <option value="Cố định">📌 Cố định</option>
               </select>
             </div>
             <div class="fg">
@@ -1521,6 +1634,31 @@
     let isReorderMode = false;
     let backupBeforeReorder = [];
     let sortableInstance = null;
+    let currentTaskTab = "regular"; // "regular" | "fixed"
+
+    /* ──────────────────────────────────────────────────────────────────────────
+       TABS NAVIGATION
+    ────────────────────────────────────────────────────────────────────────── */
+    function switchTaskTab(tab) {
+      if (isReorderMode) {
+        toast("Vui lòng Lưu hoặc Hủy sắp xếp trước khi chuyển tab!", "w");
+        return;
+      }
+      currentTaskTab = tab;
+      const btnReg = document.getElementById("tabBtnRegular");
+      const btnFix = document.getElementById("tabBtnFixed");
+      if (btnReg) btnReg.classList.toggle("active", tab === "regular");
+      if (btnFix) btnFix.classList.toggle("active", tab === "fixed");
+
+      // Với tab Cố định thì ẩn filter trạng thái vì tất cả đều là Cố định
+      const statusFilterWrap = document.getElementById("filterStatus");
+      if (statusFilterWrap) {
+        statusFilterWrap.style.display = (tab === "fixed") ? "none" : "inline-block";
+        statusFilterWrap.value = "";
+      }
+
+      applyFilters();
+    }
 
     /* ──────────────────────────────────────────────────────────────────────────
        UTILS
@@ -1648,9 +1786,26 @@
     ────────────────────────────────────────────────────────────────────────── */
     function updateStats(tasks) {
       // Stats bar is always visible (grid layout)
-      document.getElementById("stTotal").textContent = tasks.length;
-      document.getElementById("stPending").textContent = tasks.filter(t => t.status === "Pending").length;
-      document.getElementById("stDone").textContent = tasks.filter(t => t.status === "Done").length;
+      const totalCount = tasks.length;
+      const pendingCount = tasks.filter(t => t.status === "Pending").length;
+      const fixedCount = tasks.filter(t => t.status === "Cố định").length;
+      const doneCount = tasks.filter(t => t.status === "Done").length;
+
+      const elTotal = document.getElementById("stTotal");
+      const elPending = document.getElementById("stPending");
+      const elFixed = document.getElementById("stFixed");
+      const elDone = document.getElementById("stDone");
+
+      if (elTotal) elTotal.textContent = totalCount;
+      if (elPending) elPending.textContent = pendingCount;
+      if (elFixed) elFixed.textContent = fixedCount;
+      if (elDone) elDone.textContent = doneCount;
+
+      const regularCount = tasks.filter(t => t.status !== "Cố định").length;
+      const elTabReg = document.getElementById("tabCountRegular");
+      const elTabFix = document.getElementById("tabCountFixed");
+      if (elTabReg) elTabReg.textContent = regularCount;
+      if (elTabFix) elTabFix.textContent = fixedCount;
     }
 
     /* ──────────────────────────────────────────────────────────────────────────
@@ -1670,8 +1825,15 @@
           const newTasks = rawTasks.map(t => {
             let dl = t.deadline || t.dueDate || "";
             if (dl && dl.includes("T")) dl = dl.split("T")[0];
-            let statusVal = String(t.status || "").trim().toLowerCase();
-            statusVal = (statusVal === "done") ? "Done" : "Pending";
+            const rawStatus = String(t.status || "").trim();
+            let statusVal = "Pending";
+            if (rawStatus.toLowerCase() === "done") {
+              statusVal = "Done";
+            } else if (rawStatus === "Cố định" || rawStatus.toLowerCase() === "cố định" || rawStatus.toLowerCase() === "fixed") {
+              statusVal = "Cố định";
+            } else {
+              statusVal = "Pending";
+            }
             const priority = ["P1", "P2", "P3"].includes(t.priority) ? t.priority : "P3";
             const validDays = ["mon","tue","wed","thu","fri","sat",""];
             const alertDays = validDays.includes(t.alert_days || "") ? (t.alert_days || "") : "";
@@ -1770,7 +1932,10 @@
       const tbody = document.getElementById("taskTbody");
       tbody.innerHTML = "";
       if (!filteredTasks.length) {
-        tbody.innerHTML = `<tr><td colspan="8"><div class="state-box">Không có task nào phù hợp.</div></td></tr>`;
+        const emptyMsg = currentTaskTab === "fixed"
+          ? "Chưa có task cố định nào. Bấm \"Thêm task mới\" để tạo."
+          : "Không có task nào phù hợp.";
+        tbody.innerHTML = `<tr><td colspan="8"><div class="state-box">${emptyMsg}</div></td></tr>`;
         return;
       }
       const priorityClasses = { P1: "badge-p1", P2: "badge-p2", P3: "badge-p3" };
@@ -1785,9 +1950,16 @@
         const badgesHtml = (t.assignees || []).map(a =>
           `<span class="badge badge-member" style="${getMemberStyle(a)}">${esc(a)}</span>`
         ).join("");
-        const statusBadge = t.status === "Done"
-          ? `<span class="badge badge-done">✔ Done</span>`
-          : `<span class="badge badge-pending">● Pending</span>`;
+        
+        let statusBadge = "";
+        if (t.status === "Done") {
+          statusBadge = `<span class="badge badge-done">✔ Done</span>`;
+        } else if (t.status === "Cố định") {
+          statusBadge = `<span class="badge badge-fixed">📌 Cố định</span>`;
+        } else {
+          statusBadge = `<span class="badge badge-pending">● Pending</span>`;
+        }
+        
         const pClass = priorityClasses[t.priority] || "badge-p3";
         const priorityBadge = `<span class="badge ${pClass}">${t.priority || "P3"}</span>`;
 
@@ -1845,10 +2017,19 @@
       }
       const fs = document.getElementById("filterStatus").value;
       const fm = document.getElementById("filterMember").value;
+      
       filteredTasks = allTasks.filter(t => {
-        const matchStatus = !fs || t.status === fs;
+        // 1. Phân loại theo Tab (Công việc thường vs Task cố định)
+        if (currentTaskTab === "fixed") {
+          if (t.status !== "Cố định") return false;
+        } else {
+          if (t.status === "Cố định") return false;
+          if (fs && t.status !== fs) return false;
+        }
+
+        // 2. Phân loại theo thành viên phụ trách
         const matchMember = !fm || (t.assignees || []).includes(fm);
-        return matchStatus && matchMember;
+        return matchMember;
       });
 
       // Nếu các task có position tùy chỉnh (> 0), sắp xếp theo position
@@ -1857,8 +2038,8 @@
         filteredTasks.sort((a, b) => (a.position || 999999) - (b.position || 999999));
       } else {
         // Sắp xếp mặc định:
-        // 1. Task "Pending" lên trên, "Done" xuống dưới cùng
-        // 2. Trong nhóm "Pending": Task CÓ due date (hạn chót) lên trước task KHÔNG CÓ due date
+        // 1. Task "Pending" lên trên, "Done" xuống dưới cùng (với Cố định thì cùng nhóm)
+        // 2. Task CÓ due date (hạn chót) lên trước task KHÔNG CÓ due date
         // 3. Trong nhóm có due date: Sắp theo ngày gần nhất -> xa nhất (nếu trùng ngày: P1 > P2 > P3)
         // 4. Trong nhóm không có due date: Sắp theo độ ưu tiên (P1 > P2 > P3)
         const pWeight = { P1: 1, P2: 2, P3: 3 };
@@ -2131,7 +2312,7 @@
       document.getElementById("tDeadline").value = "";
       document.getElementById("tIssue").value = "";
       document.getElementById("tNote").value = "";
-      document.getElementById("tStatus").value = "Pending";
+      document.getElementById("tStatus").value = (currentTaskTab === "fixed") ? "Cố định" : "Pending";
       document.getElementById("tPriority").value = "P3";
       document.getElementById("tAlertTime").value = "09:00";
       document.getElementById("tAlertFrequency").value = "1_week";
