@@ -199,6 +199,30 @@ const server = http.createServer(function(req, res) {
     return res.end("Method Not Allowed");
   }
 
+  if (pathname === "/api/r2-tasks") {
+    let body = "";
+    req.on("data", function(chunk) { body += chunk; });
+    req.on("end", async function() {
+      try {
+        if (body) {
+          try { req.body = JSON.parse(body); } catch(_) { req.body = body; }
+        }
+        res.status = function(code) { res.statusCode = code; return this; };
+        res.json = function(data) {
+          res.setHeader("Content-Type", "application/json; charset=utf-8");
+          res.end(JSON.stringify(data));
+          return this;
+        };
+        const handler = require("./api/r2-tasks.js");
+        await handler(req, res);
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ status: "error", message: err.message }));
+      }
+    });
+    return;
+  }
+
   const safeSuffix = path.normalize(pathname).replace(/^(\.\.[\\/])+/, "");
   let filePath = path.join(PUBLIC_DIR, safeSuffix);
 

@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Task Pending – NVN Team</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
   <style>
     /* ── Reset & Tokens ───────────────────────────────────────────────────── */
     *,
@@ -368,11 +369,109 @@
       background-color: #ffe4e6;
     }
 
+    /* ── Drag & Drop Reorder Styles ── */
+    .btn-reorder {
+      background: #f1f5f9;
+      color: var(--text-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      height: 38px;
+      padding: 8px 14px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-reorder:hover {
+      background: #e2e8f0;
+      color: var(--text);
+    }
+    .reorder-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-save-order {
+      background: #10b981;
+      color: #fff;
+      border: 1px solid #059669;
+      border-radius: 10px;
+      height: 38px;
+      padding: 8px 14px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-save-order:hover {
+      background: #059669;
+    }
+    .btn-cancel-order {
+      background: #ffffff;
+      color: #ef4444;
+      border: 1px solid #fca5a5;
+      border-radius: 10px;
+      height: 38px;
+      padding: 8px 14px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-cancel-order:hover {
+      background: #fef2f2;
+    }
+    table.is-reordering {
+      outline: 2px dashed #4f46e5;
+      outline-offset: -2px;
+    }
     .col-stt {
-      width: 45px;
+      width: 65px;
       text-align: center;
       font-weight: 700;
       color: var(--text-muted);
+      user-select: none;
+    }
+    .drag-handle {
+      display: none;
+      cursor: grab;
+      color: #64748b;
+      font-size: 13px;
+      margin-right: 4px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+    .drag-handle:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+    .drag-handle:active {
+      cursor: grabbing !important;
+    }
+    table.is-reordering .drag-handle {
+      display: inline-block;
+    }
+    table.is-reordering tbody tr {
+      cursor: grab;
+    }
+    .sortable-ghost {
+      opacity: 0.35;
+      background-color: #eff6ff !important;
+      border: 2px dashed #4f46e5 !important;
+    }
+    .sortable-chosen {
+      background-color: #f8fafc !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .col-priority {
@@ -1206,16 +1305,28 @@
         <select class="filter-sel" id="filterMember" onchange="applyFilters()">
           <option value="">👤 Tất cả thành viên</option>
         </select>
+      <div class="toolbar-right" style="display:flex; align-items:center; gap:8px;">
+        <button id="btnStartReorder" type="button" class="btn-reorder" onclick="toggleReorderMode(true)">
+          <i class="fa-solid fa-arrow-down-up-across-line"></i> ✏️ Sắp xếp thứ tự
+        </button>
+        <div id="reorderActionGroup" class="reorder-actions" style="display:none;">
+          <button type="button" class="btn-cancel-order" onclick="cancelReorder()">
+            <i class="fa-solid fa-xmark"></i> Hủy
+          </button>
+          <button type="button" class="btn-save-order" onclick="saveNewOrder()">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi
+          </button>
+        </div>
+        <button class="btn-primary" onclick="openTaskModal()">
+          <i class="fa-solid fa-plus"></i> Thêm task mới
+        </button>
       </div>
-      <button class="btn-primary" onclick="openTaskModal()">
-        <i class="fa-solid fa-plus"></i> Thêm task mới
-      </button>
     </div>
 
     <!-- ── Table ── -->
     <div class="card">
       <div class="table-wrap">
-        <table>
+        <table id="taskTable">
           <thead>
             <tr>
               <th class="col-stt">STT</th>
@@ -1406,6 +1517,9 @@
     let allMembers = [];
     let allSystemUrls = [];
     let selectedAssignees = [];
+    let isReorderMode = false;
+    let backupBeforeReorder = [];
+    let sortableInstance = null;
 
     /* ──────────────────────────────────────────────────────────────────────────
        UTILS
@@ -1543,6 +1657,7 @@
     ────────────────────────────────────────────────────────────────────────── */
     // silent=true → called from auto-sync polling; skips spinner & aborts if data unchanged
     async function loadTasks(silent = false) {
+      if (isReorderMode) return;
       const tbody = document.getElementById("taskTbody");
       if (!silent) {
         tbody.innerHTML = `<tr><td colspan="8"><div class="state-box"><div class="spinner"></div><div>Đang tải task...</div></div></td></tr>`;
@@ -1562,6 +1677,7 @@
             return {
               id: t.id,
               created_at: t.created_at || (Number(t.id) > 1000000000000 ? Number(t.id) : Date.now()),
+              position: t.position !== undefined ? Number(t.position) : (t.order !== undefined ? Number(t.order) : 0),
               deadline: dl,
               issue: t.issue || "",
               note: t.note || "",
@@ -1659,6 +1775,7 @@
       const priorityClasses = { P1: "badge-p1", P2: "badge-p2", P3: "badge-p3" };
       filteredTasks.forEach((t, i) => {
         const tr = document.createElement("tr");
+        tr.setAttribute("data-id", t.id);
         if (t.priority === "P1" && t.status !== "Done") {
           tr.className = "row-p1-pending";
         }
@@ -1674,7 +1791,10 @@
         const priorityBadge = `<span class="badge ${pClass}">${t.priority || "P3"}</span>`;
 
         tr.innerHTML = `
-      <td class="col-stt">${i + 1}</td>
+      <td class="col-stt">
+        <span class="drag-handle" title="Kéo để đổi vị trí"><i class="fa-solid fa-bars"></i></span>
+        <span class="stt-num">${i + 1}</span>
+      </td>
       <td class="col-priority">${priorityBadge}</td>
       <td class="col-deadline"><span class="${dlClass}">${esc(dlLabel)}</span></td>
       <td class="col-issue">${esc(t.issue)}</td>
@@ -1683,8 +1803,8 @@
       <td class="col-status">${statusBadge}</td>
       <td class="col-actions">
         <div style="display: flex; justify-content: center; align-items: center; gap: 6px;">
-          <button class="btn-action-edit" onclick="openEditTask(${t.id})" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></button>
-          <button class="btn-action-delete" onclick="deleteTask(${t.id},'${esc(t.issue).substring(0, 40)}')" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
+          <button class="btn-action-edit" ${isReorderMode ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} onclick="openEditTask(${t.id})" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></button>
+          <button class="btn-action-delete" ${isReorderMode ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} onclick="deleteTask(${t.id},'${esc(t.issue).substring(0, 40)}')" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
         </div>
       </td>
     `;
@@ -1718,6 +1838,10 @@
        FILTERS
     ────────────────────────────────────────────────────────────────────────── */
     function applyFilters() {
+      if (isReorderMode) {
+        toast("Vui lòng Lưu hoặc Hủy sắp xếp trước khi đổi bộ lọc!", "w");
+        return;
+      }
       const fs = document.getElementById("filterStatus").value;
       const fm = document.getElementById("filterMember").value;
       filteredTasks = allTasks.filter(t => {
@@ -1726,39 +1850,172 @@
         return matchStatus && matchMember;
       });
 
-      // Sắp xếp danh sách:
-      // 1. Task "Pending" lên trên, "Done" xuống dưới cùng
-      // 2. Trong nhóm "Pending": Task CÓ due date (hạn chót) lên trước task KHÔNG CÓ due date
-      // 3. Trong nhóm có due date: Sắp theo ngày gần nhất -> xa nhất (nếu trùng ngày: P1 > P2 > P3)
-      // 4. Trong nhóm không có due date: Sắp theo độ ưu tiên (P1 > P2 > P3)
-      const pWeight = { P1: 1, P2: 2, P3: 3 };
-      filteredTasks.sort((a, b) => {
-        const aDone = (a.status === "Done");
-        const bDone = (b.status === "Done");
-        if (aDone !== bDone) return aDone ? 1 : -1;
+      // Nếu các task có position tùy chỉnh (> 0), sắp xếp theo position
+      const hasCustomPositions = filteredTasks.some(t => t.position && t.position > 0);
+      if (hasCustomPositions) {
+        filteredTasks.sort((a, b) => (a.position || 999999) - (b.position || 999999));
+      } else {
+        // Sắp xếp mặc định:
+        // 1. Task "Pending" lên trên, "Done" xuống dưới cùng
+        // 2. Trong nhóm "Pending": Task CÓ due date (hạn chót) lên trước task KHÔNG CÓ due date
+        // 3. Trong nhóm có due date: Sắp theo ngày gần nhất -> xa nhất (nếu trùng ngày: P1 > P2 > P3)
+        // 4. Trong nhóm không có due date: Sắp theo độ ưu tiên (P1 > P2 > P3)
+        const pWeight = { P1: 1, P2: 2, P3: 3 };
+        filteredTasks.sort((a, b) => {
+          const aDone = (a.status === "Done");
+          const bDone = (b.status === "Done");
+          if (aDone !== bDone) return aDone ? 1 : -1;
 
-        if (!aDone && !bDone) {
-          const aHasDate = !!(a.deadline && String(a.deadline).trim());
-          const bHasDate = !!(b.deadline && String(b.deadline).trim());
-          if (aHasDate !== bHasDate) return aHasDate ? -1 : 1;
+          if (!aDone && !bDone) {
+            const aHasDate = !!(a.deadline && String(a.deadline).trim());
+            const bHasDate = !!(b.deadline && String(b.deadline).trim());
+            if (aHasDate !== bHasDate) return aHasDate ? -1 : 1;
 
-          if (aHasDate && bHasDate) {
-            const aIso = parseToIsoDate(a.deadline);
-            const bIso = parseToIsoDate(b.deadline);
-            if (aIso && bIso && aIso !== bIso) return aIso.localeCompare(bIso);
+            if (aHasDate && bHasDate) {
+              const aIso = parseToIsoDate(a.deadline);
+              const bIso = parseToIsoDate(b.deadline);
+              if (aIso && bIso && aIso !== bIso) return aIso.localeCompare(bIso);
+            }
+
+            const aP = pWeight[a.priority] || 3;
+            const bP = pWeight[b.priority] || 3;
+            if (aP !== bP) return aP - bP;
           }
 
-          const aP = pWeight[a.priority] || 3;
-          const bP = pWeight[b.priority] || 3;
-          if (aP !== bP) return aP - bP;
-        }
-
-        return 0;
-      });
+          return 0;
+        });
+      }
 
       updateStats(allTasks);
       renderTasks();
       updateDueSidebar();
+    }
+
+    /* ──────────────────────────────────────────────────────────────────────────
+       DRAG & DROP REORDER (SORTABLEJS)
+    ────────────────────────────────────────────────────────────────────────── */
+    function updateRowNumbers() {
+      const rows = document.querySelectorAll("#taskTbody tr[data-id]");
+      rows.forEach((row, idx) => {
+        const stt = row.querySelector(".stt-num");
+        if (stt) stt.textContent = idx + 1;
+      });
+    }
+
+    function toggleReorderMode(enable) {
+      isReorderMode = enable;
+      const table = document.getElementById("taskTable");
+      const btnStart = document.getElementById("btnStartReorder");
+      const actionGroup = document.getElementById("reorderActionGroup");
+      const filterInputs = document.querySelectorAll(".filter-sel");
+
+      if (enable) {
+        // Lưu snapshot để Hủy nếu cần
+        backupBeforeReorder = JSON.parse(JSON.stringify(filteredTasks));
+
+        // Khóa các ô lọc
+        filterInputs.forEach(el => el.disabled = true);
+        if (btnStart) btnStart.style.display = "none";
+        if (actionGroup) actionGroup.style.display = "inline-flex";
+        if (table) table.classList.add("is-reordering");
+
+        // Khởi tạo SortableJS
+        const tbody = document.getElementById("taskTbody");
+        if (typeof Sortable !== "undefined" && tbody) {
+          sortableInstance = new Sortable(tbody, {
+            handle: ".drag-handle",
+            animation: 180,
+            ghostClass: "sortable-ghost",
+            chosenClass: "sortable-chosen",
+            onEnd: function () {
+              updateRowNumbers();
+            }
+          });
+        }
+      } else {
+        // Mở lại ô lọc
+        filterInputs.forEach(el => el.disabled = false);
+        if (btnStart) btnStart.style.display = "inline-flex";
+        if (actionGroup) actionGroup.style.display = "none";
+        if (table) table.classList.remove("is-reordering");
+
+        if (sortableInstance) {
+          sortableInstance.destroy();
+          sortableInstance = null;
+        }
+      }
+      renderTasks();
+    }
+
+    function cancelReorder() {
+      if (backupBeforeReorder && backupBeforeReorder.length) {
+        filteredTasks = JSON.parse(JSON.stringify(backupBeforeReorder));
+        backupBeforeReorder = [];
+      }
+      toggleReorderMode(false);
+      toast("Đã hoàn tác thứ tự ban đầu.", "w");
+    }
+
+    async function saveNewOrder() {
+      const rows = Array.from(document.querySelectorAll("#taskTbody tr[data-id]"));
+      const orderedIds = rows.map(r => r.getAttribute("data-id"));
+
+      if (!orderedIds.length) {
+        toggleReorderMode(false);
+        return;
+      }
+
+      // Map vị trí mới vào allTasks (chuẩn xác kể cả khi đang Filter)
+      const taskMap = new Map(allTasks.map(t => [String(t.id), t]));
+      const visibleIndices = [];
+      allTasks.forEach((t, i) => {
+        if (orderedIds.includes(String(t.id))) visibleIndices.push(i);
+      });
+
+      orderedIds.forEach((id, i) => {
+        if (visibleIndices[i] !== undefined && taskMap.has(id)) {
+          allTasks[visibleIndices[i]] = taskMap.get(id);
+        }
+      });
+
+      // Cập nhật lại thuộc tính position cho allTasks
+      allTasks.forEach((t, idx) => {
+        t.position = idx + 1;
+        t.order = idx + 1;
+      });
+
+      // Cập nhật filteredTasks theo thứ tự mới
+      filteredTasks = orderedIds.map(id => taskMap.get(id)).filter(Boolean);
+
+      const btnSave = document.querySelector(".btn-save-order");
+      const oldText = btnSave ? btnSave.innerHTML : "";
+      if (btnSave) {
+        btnSave.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...`;
+        btnSave.disabled = true;
+      }
+
+      try {
+        const res = await apiPost({
+          action: "reorder_tasks",
+          orderedIds
+        });
+
+        if (res && (res.status === "success" || res.success)) {
+          toast("✅ Đã lưu thứ tự task thành công!", "s");
+          try { localStorage.setItem("app_tasks_data", JSON.stringify(allTasks)); } catch (e) { }
+          toggleReorderMode(false);
+        } else {
+          throw new Error(res.message || "Lỗi lưu thứ tự");
+        }
+      } catch (err) {
+        console.error("Lỗi saveNewOrder:", err);
+        toast(`Lưu thứ tự thất bại: ${err.message}`, "e");
+      } finally {
+        if (btnSave) {
+          btnSave.innerHTML = oldText;
+          btnSave.disabled = false;
+        }
+      }
     }
 
     function getTodayLocalDate() {

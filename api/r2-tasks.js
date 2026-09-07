@@ -247,6 +247,31 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ status: "success" });
       }
 
+      if (action === "reorder_tasks") {
+        const { orderedIds } = payload;
+        if (Array.isArray(orderedIds)) {
+          const idMap = new Map(currentData.tasks.map(t => [String(t.id), t]));
+          const matchingIndices = [];
+          currentData.tasks.forEach((t, idx) => {
+            if (orderedIds.includes(String(t.id))) {
+              matchingIndices.push(idx);
+            }
+          });
+          orderedIds.forEach((id, i) => {
+            if (matchingIndices[i] !== undefined && idMap.has(String(id))) {
+              currentData.tasks[matchingIndices[i]] = idMap.get(String(id));
+            }
+          });
+          currentData.tasks.forEach((t, idx) => {
+            t.position = idx + 1;
+            t.order = idx + 1;
+          });
+          await saveTasksData(currentData);
+          return res.status(200).json({ status: "success", tasks: currentData.tasks });
+        }
+        return res.status(400).json({ status: "error", message: "orderedIds không hợp lệ" });
+      }
+
       if (action === "add_member") {
         const name = (payload.name || "").trim();
         if (!name) return res.status(400).json({ status: "error", message: "Tên không được để trống" });
