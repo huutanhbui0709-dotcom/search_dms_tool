@@ -502,8 +502,10 @@
     }
 
     .col-status {
-      width: 95px;
+      width: 115px;
+      min-width: 115px;
       text-align: center;
+      white-space: nowrap;
     }
 
     .col-actions {
@@ -535,11 +537,15 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 3px 10px;
+      gap: 5px;
+      padding: 4px 10px;
       border-radius: 20px;
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 700;
+      line-height: 1.2;
       margin: 2px 2px 2px 0;
+      white-space: nowrap;
+      box-sizing: border-box;
     }
 
     .badge-member {
@@ -564,6 +570,7 @@
       background: #f5f3ff;
       color: #6d28d9;
       border: 1px solid #ddd6fe;
+      box-shadow: 0 1px 2px rgba(109, 40, 217, 0.05);
     }
 
     /* ── Deadline indicator ───────────────────────────────────────────────── */
@@ -1953,11 +1960,11 @@
         
         let statusBadge = "";
         if (t.status === "Done") {
-          statusBadge = `<span class="badge badge-done">✔ Done</span>`;
+          statusBadge = `<span class="badge badge-done"><i class="fa-solid fa-check"></i> Done</span>`;
         } else if (t.status === "Cố định") {
-          statusBadge = `<span class="badge badge-fixed">📌 Cố định</span>`;
+          statusBadge = `<span class="badge badge-fixed"><i class="fa-solid fa-thumbtack" style="font-size:10px;"></i> Cố định</span>`;
         } else {
-          statusBadge = `<span class="badge badge-pending">● Pending</span>`;
+          statusBadge = `<span class="badge badge-pending"><i class="fa-solid fa-circle" style="font-size:6px;"></i> Pending</span>`;
         }
         
         const pClass = priorityClasses[t.priority] || "badge-p3";
