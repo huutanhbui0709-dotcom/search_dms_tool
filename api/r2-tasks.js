@@ -95,13 +95,14 @@ async function getTasksData() {
       const data = JSON.parse(getR.body);
       return {
         tasks: data.tasks || [],
-        members: data.members || []
+        members: data.members || [],
+        projects: data.projects || []
       };
     } catch (e) {
-      return { tasks: [], members: [] };
+      return { tasks: [], members: [], projects: [] };
     }
   }
-  return { tasks: [], members: [] };
+  return { tasks: [], members: [], projects: [] };
 }
 
 // Lưu dữ liệu vào R2
@@ -150,7 +151,7 @@ module.exports = async function handler(req, res) {
         if (lm) res.setHeader("Last-Modified", lm);
       }
 
-      let data = { tasks: [], members: [] };
+      let data = { tasks: [], members: [], projects: [] };
       if (r2Res.statusCode === 200) {
         try { data = JSON.parse(r2Res.body); } catch (e) {}
       }
@@ -164,14 +165,20 @@ module.exports = async function handler(req, res) {
       } else if (action === "read_members") {
         return res.status(200).json({
           status: "success",
-          data: data.members
+          data: data.members || []
+        });
+      } else if (action === "read_projects") {
+        return res.status(200).json({
+          status: "success",
+          data: data.projects || []
         });
       } else {
         // Trả về toàn bộ dữ liệu mặc định
         return res.status(200).json({
           status: "success",
-          tasks: data.tasks,
-          members: data.members
+          tasks: data.tasks || [],
+          members: data.members || [],
+          projects: data.projects || []
         });
       }
     }
@@ -183,7 +190,7 @@ module.exports = async function handler(req, res) {
       const currentData = await getTasksData();
 
       if (action === "save_task") {
-        const { id, deadline, issue, note, assignees, status, priority, alert_time, alert_frequency, alert_days, alert_specific_date } = payload;
+        const { id, project, deadline, issue, note, assignees, status, priority, alert_time, alert_frequency, alert_days, alert_specific_date } = payload;
         let taskStatus = "Pending";
         const rawStatus = String(status || "").trim();
         if (rawStatus.toLowerCase() === "done") {
@@ -210,6 +217,7 @@ module.exports = async function handler(req, res) {
             currentData.tasks[taskIndex] = {
               id: Number(id),
               created_at: existingTask.created_at || existingTask.id || Date.now(),
+              project: (project || "").trim(),
               deadline: deadline || "",
               issue: issue || "",
               note: note || "",
@@ -230,6 +238,7 @@ module.exports = async function handler(req, res) {
           const newTask = {
             id: nowTs, // ID dựa trên timestamp
             created_at: nowTs,
+            project: (project || "").trim(),
             deadline: deadline || "",
             issue: issue || "",
             note: note || "",
@@ -301,6 +310,35 @@ module.exports = async function handler(req, res) {
         
         if (currentData.members.length === initialLen) {
           return res.status(404).json({ status: "error", message: "Không tìm thấy thành viên: " + name });
+        }
+        
+        await saveTasksData(currentData);
+        return res.status(200).json({ status: "success" });
+      }
+
+      if (action === "add_project") {
+        const name = (payload.name || "").trim();
+        if (!name) return res.status(400).json({ status: "error", message: "Tên dự án không được để trống" });
+        if (!currentData.projects) currentData.projects = [];
+        
+        const exists = currentData.projects.some(p => p.name.toLowerCase() === name.toLowerCase());
+        if (exists) return res.status(400).json({ status: "error", message: "Dự án đã tồn tại" });
+        
+        currentData.projects.push({ name });
+        await saveTasksData(currentData);
+        return res.status(200).json({ status: "success" });
+      }
+
+      if (action === "delete_project") {
+        const name = (payload.name || "").trim();
+        if (!name) return res.status(400).json({ status: "error", message: "Tên dự án không được để trống" });
+        if (!currentData.projects) currentData.projects = [];
+        
+        const initialLen = currentData.projects.length;
+        currentData.projects = currentData.projects.filter(p => p.name.toLowerCase() !== name.toLowerCase());
+        
+        if (currentData.projects.length === initialLen) {
+          return res.status(404).json({ status: "error", message: "Không tìm thấy dự án: " + name });
         }
         
         await saveTasksData(currentData);

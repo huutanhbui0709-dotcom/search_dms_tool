@@ -474,6 +474,11 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
+    .col-project {
+      width: 120px;
+      min-width: 100px;
+    }
+
     .col-priority {
       width: 75px;
       text-align: center;
@@ -1353,8 +1358,12 @@
           <p>Quản lý công việc đang chờ xử lý, phân công và theo dõi tiến độ cho cả nhóm.</p>
         </div>
       </div>
-      <button class="btn-outline" onclick="openMemberModal()" style="gap: 6px;"><i class="fa-solid fa-users"></i> Quản
-        lý thành viên</button>
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <button class="btn-outline" onclick="openProjectModal()" style="gap: 6px;"><i class="fa-solid fa-diagram-project"></i> Quản
+          lý dự án</button>
+        <button class="btn-outline" onclick="openMemberModal()" style="gap: 6px;"><i class="fa-solid fa-users"></i> Quản
+          lý thành viên</button>
+      </div>
     </div>
 
     <!-- ── Summary Cards ── -->
@@ -1421,6 +1430,9 @@
           <option value="Pending">🔴 Pending</option>
           <option value="Done">🟢 Done</option>
         </select>
+        <select class="filter-sel" id="filterProject" onchange="applyFilters()">
+          <option value="">📁 Tất cả dự án</option>
+        </select>
         <select class="filter-sel" id="filterMember" onchange="applyFilters()">
           <option value="">👤 Tất cả thành viên</option>
         </select>
@@ -1450,6 +1462,7 @@
           <thead>
             <tr>
               <th class="col-stt">STT</th>
+              <th class="col-project">Dự án</th>
               <th class="col-priority">Độ ưu tiên</th>
               <th class="col-deadline">Hạn cuối</th>
               <th class="col-issue">Issue</th>
@@ -1461,7 +1474,7 @@
           </thead>
           <tbody id="taskTbody">
             <tr>
-              <td colspan="8">
+              <td colspan="9">
                 <div class="state-box">
                   <div>Đang tải task...</div>
                 </div>
@@ -1485,17 +1498,11 @@
       <form id="taskForm" onsubmit="submitTask(event)">
         <input type="hidden" id="editId" />
         <div class="modal-body">
-          <div class="form-row triple">
+          <div class="form-row" style="grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="fg">
-              <label>Hạn cuối</label>
-              <input type="date" class="fc" id="tDeadline" />
-            </div>
-            <div class="fg">
-              <label>Trạng thái <span class="req">*</span></label>
-              <select class="fc" id="tStatus" required>
-                <option value="Pending">🔴 Pending</option>
-                <option value="Done">🟢 Done</option>
-                <option value="Cố định">📌 Cố định</option>
+              <label>Dự án <span class="req">*</span></label>
+              <select class="fc" id="tProject" required>
+                <option value="">-- Chọn dự án (Bắt buộc) --</option>
               </select>
             </div>
             <div class="fg">
@@ -1505,6 +1512,20 @@
                 <option value="P2">🟡 P2 – Cao (3h)</option>
                 <option value="P3" selected>🟣 P3 – Bình thường (24h)</option>
               </select>
+            </div>
+          </div>
+          <div class="form-row" style="grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px;">
+            <div class="fg">
+              <label>Trạng thái <span class="req">*</span></label>
+              <select class="fc" id="tStatus" required>
+                <option value="Pending">🔴 Pending</option>
+                <option value="Done">🟢 Done</option>
+                <option value="Cố định">📌 Cố định</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Hạn cuối</label>
+              <input type="date" class="fc" id="tDeadline" />
             </div>
           </div>
           <div class="fg form-row single">
@@ -1580,6 +1601,32 @@
   </div>
 
   <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- ── MODAL: Quản lý Dự án ── -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="modal-bg" id="projectModal">
+    <div class="modal" style="max-width:460px;">
+      <div class="modal-hdr">
+        <h3><i class="fa-solid fa-diagram-project"></i> Quản lý Dự án</h3>
+        <button onclick="closeProjectModal()" title="Đóng"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+          <input type="text" class="fc" id="newProjectName" placeholder="Nhập tên dự án mới..." style="flex:1;"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addProject();}" />
+          <button class="btn-primary" onclick="addProject()" style="padding:8px 14px; white-space:nowrap;"><i
+              class="fa-solid fa-folder-plus"></i> Thêm</button>
+        </div>
+        <ul class="member-list" id="projectList">
+          <li style="text-align:center; color:var(--text-muted); padding:12px;">Đang tải danh sách...</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="closeProjectModal()"><i class="fa-solid fa-xmark"></i> Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
   <!-- ── MODAL: Quản lý Thành viên ── -->
   <!-- ════════════════════════════════════════════════════════════════════════ -->
   <div class="modal-bg" id="memberModal">
@@ -1636,6 +1683,7 @@
     let allTasks = [];
     let filteredTasks = [];
     let allMembers = [];
+    let allProjects = [];
     let allSystemUrls = [];
     let selectedAssignees = [];
     let isReorderMode = false;
@@ -1784,6 +1832,7 @@
 
 
     function loadAll() {
+      loadProjects();
       loadMembers();
       loadTasks();
     }
@@ -1823,7 +1872,7 @@
       if (isReorderMode) return;
       const tbody = document.getElementById("taskTbody");
       if (!silent) {
-        tbody.innerHTML = `<tr><td colspan="8"><div class="state-box"><div class="spinner"></div><div>Đang tải task...</div></div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9"><div class="state-box"><div class="spinner"></div><div>Đang tải task...</div></div></td></tr>`;
       }
       try {
         const res = await apiGet("action=read_tasks");
@@ -1848,6 +1897,7 @@
               id: t.id,
               created_at: t.created_at || (Number(t.id) > 1000000000000 ? Number(t.id) : Date.now()),
               position: t.position !== undefined ? Number(t.position) : (t.order !== undefined ? Number(t.order) : 0),
+              project: (t.project || "").trim(),
               deadline: dl,
               issue: t.issue || "",
               note: t.note || "",
@@ -1873,13 +1923,13 @@
           applyFilters();
         } else {
           if (!silent) {
-            tbody.innerHTML = `<tr><td colspan="8"><div class="state-box">Lỗi: ${res.message || 'không rõ'}</div></td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9"><div class="state-box">Lỗi: ${res.message || 'không rõ'}</div></td></tr>`;
           }
         }
       } catch (err) {
         console.error("Lỗi load task:", err);
         if (!silent) {
-          tbody.innerHTML = `<tr><td colspan="8"><div class="state-box" style="color:var(--danger);">Lỗi kết nối API: ${err.message}</div></td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="9"><div class="state-box" style="color:var(--danger);">Lỗi kết nối API: ${err.message}</div></td></tr>`;
         }
       }
     }
@@ -1904,8 +1954,6 @@
       if (diffDays < 0) return `Trễ ${Math.abs(diffDays)} ngày`;
       return `Còn ${diffDays} ngày`;
     }
-
-
 
     const MEMBER_COLOR_PALETTES = [
       { bg: "#eff6ff", color: "#1d4ed8", border: "#bfdbfe" }, // Blue
@@ -1935,6 +1983,32 @@
       return `background-color:${p.bg}; color:${p.color}; border:1px solid ${p.border}; font-weight:700;`;
     }
 
+    const PROJECT_COLOR_PALETTES = [
+      { bg: "#e0f2fe", color: "#0369a1", border: "#bae6fd" }, // Sky
+      { bg: "#fef3c7", color: "#b45309", border: "#fde68a" }, // Amber
+      { bg: "#f3e8ff", color: "#7e22ce", border: "#e9d5ff" }, // Purple
+      { bg: "#dcfce7", color: "#15803d", border: "#bbf7d0" }, // Green
+      { bg: "#ffedd5", color: "#c2410c", border: "#fed7aa" }, // Orange
+      { bg: "#fce7f3", color: "#be185d", border: "#fbcfe8" }, // Pink
+      { bg: "#ccfbf1", color: "#0f766e", border: "#99f6e4" }, // Teal
+      { bg: "#e0e7ff", color: "#4338ca", border: "#c7d2fe" }, // Indigo
+      { bg: "#fee2e2", color: "#b91c1c", border: "#fecaca" }, // Red
+      { bg: "#f1f5f9", color: "#334155", border: "#cbd5e1" }, // Slate
+    ];
+
+    function getProjectStyle(name) {
+      if (!name) return "";
+      let hash = 0;
+      const str = String(name).trim();
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+      }
+      const index = Math.abs(hash) % PROJECT_COLOR_PALETTES.length;
+      const p = PROJECT_COLOR_PALETTES[index];
+      return `background-color:${p.bg}; color:${p.color}; border:1px solid ${p.border}; font-weight:700;`;
+    }
+
     function renderTasks() {
       const tbody = document.getElementById("taskTbody");
       tbody.innerHTML = "";
@@ -1942,7 +2016,7 @@
         const emptyMsg = currentTaskTab === "fixed"
           ? "Chưa có task cố định nào. Bấm \"Thêm task mới\" để tạo."
           : "Không có task nào phù hợp.";
-        tbody.innerHTML = `<tr><td colspan="8"><div class="state-box">${emptyMsg}</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9"><div class="state-box">${emptyMsg}</div></td></tr>`;
         return;
       }
       const priorityClasses = { P1: "badge-p1", P2: "badge-p2", P3: "badge-p3" };
@@ -1957,6 +2031,10 @@
         const badgesHtml = (t.assignees || []).map(a =>
           `<span class="badge badge-member" style="${getMemberStyle(a)}">${esc(a)}</span>`
         ).join("");
+
+        const projectBadge = t.project
+          ? `<span class="badge" style="${getProjectStyle(t.project)}"><i class="fa-solid fa-folder" style="font-size:10px; margin-right:3px;"></i>${esc(t.project)}</span>`
+          : `<span style="color:var(--text-muted)">—</span>`;
         
         let statusBadge = "";
         if (t.status === "Done") {
@@ -1975,6 +2053,7 @@
         <span class="drag-handle" title="Kéo để đổi vị trí"><i class="fa-solid fa-bars"></i></span>
         <span class="stt-num">${i + 1}</span>
       </td>
+      <td class="col-project">${projectBadge}</td>
       <td class="col-priority">${priorityBadge}</td>
       <td class="col-deadline"><span class="${dlClass}">${esc(dlLabel)}</span></td>
       <td class="col-issue">${esc(t.issue)}</td>
@@ -2023,6 +2102,7 @@
         return;
       }
       const fs = document.getElementById("filterStatus").value;
+      const fp = document.getElementById("filterProject") ? document.getElementById("filterProject").value : "";
       const fm = document.getElementById("filterMember").value;
       
       filteredTasks = allTasks.filter(t => {
@@ -2034,7 +2114,10 @@
           if (fs && t.status !== fs) return false;
         }
 
-        // 2. Phân loại theo thành viên phụ trách
+        // 2. Phân loại theo Dự án
+        if (fp && (t.project || "") !== fp) return false;
+
+        // 3. Phân loại theo thành viên phụ trách
         const matchMember = !fm || (t.assignees || []).includes(fm);
         return matchMember;
       });
@@ -2267,10 +2350,17 @@
             ? `<span style="background:#ef4444; color:#ffffff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-circle-exclamation"></i> Quá hạn (${formatDate(t.deadline)})</span>`
             : `<span style="background:#fef3c7; color:#92400e; font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-clock"></i> Đến hạn hôm nay</span>`;
 
+          const projectBadge = t.project
+            ? `<span class="badge" style="${getProjectStyle(t.project)} font-size:11px;"><i class="fa-solid fa-folder" style="font-size:10px; margin-right:3px;"></i>${esc(t.project)}</span>`
+            : '';
+
           return `
       <div class="due-alert-card" style="${isOverdue ? 'border-left: 4px solid #ef4444;' : 'border-left: 4px solid #f59e0b;'}">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <div class="due-alert-title" style="margin-bottom:0;">🚨 Task cần LƯU Ý</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:4px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div class="due-alert-title" style="margin-bottom:0;">🚨 Task cần LƯU Ý</div>
+            ${projectBadge}
+          </div>
           ${dlTag}
         </div>
         <div class="due-alert-issue" style="font-weight:600; color:#1f2937;">${esc(t.issue)}</div>
@@ -2310,12 +2400,41 @@
       });
     }
 
+    function populateProjectFilter() {
+      const sel = document.getElementById("filterProject");
+      if (!sel) return;
+      const cur = sel.value;
+      sel.innerHTML = `<option value="">📁 Tất cả dự án</option>`;
+      allProjects.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.name;
+        opt.textContent = p.name;
+        if (p.name === cur) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
+    function populateProjectSelect(selectedVal = "") {
+      const sel = document.getElementById("tProject");
+      if (!sel) return;
+      const curVal = (selectedVal !== undefined && selectedVal !== null) ? selectedVal : sel.value;
+      sel.innerHTML = `<option value="">-- Chọn dự án (Bắt buộc) --</option>`;
+      allProjects.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.name;
+        opt.textContent = p.name;
+        if (p.name === curVal) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
     /* ──────────────────────────────────────────────────────────────────────────
        TASK MODAL
     ────────────────────────────────────────────────────────────────────────── */
     function openTaskModal() {
       document.getElementById("taskModalTitle").textContent = "Thêm Task mới";
       document.getElementById("editId").value = "";
+      populateProjectSelect("");
       document.getElementById("tDeadline").value = "";
       document.getElementById("tIssue").value = "";
       document.getElementById("tNote").value = "";
@@ -2363,6 +2482,7 @@
       if (!t) return;
       document.getElementById("taskModalTitle").textContent = "Chỉnh sửa Task";
       document.getElementById("editId").value = id;
+      populateProjectSelect(t.project || "");
       document.getElementById("tDeadline").value = parseToIsoDate(t.deadline);
       document.getElementById("tIssue").value = t.issue || "";
       document.getElementById("tNote").value = t.note || "";
@@ -2402,6 +2522,7 @@
       btn.disabled = true; btn.textContent = "Đang lưu...";
 
       const id = document.getElementById("editId").value;
+      const project = document.getElementById("tProject").value.trim();
       const deadline = document.getElementById("tDeadline").value;
       const issue = document.getElementById("tIssue").value.trim();
       const note = document.getElementById("tNote").value.trim();
@@ -2413,8 +2534,16 @@
       const alert_days = freqHasDays ? (document.getElementById("tAlertDays").value || "") : "";
       const alert_specific_date = (alert_frequency === "once") ? (document.getElementById("tAlertSpecificDate").value || "") : "";
 
+      if (!project) {
+        toast("Vui lòng chọn Dự án cho task (bắt buộc)!", "w");
+        btn.disabled = false; btn.textContent = "Lưu Task";
+        document.getElementById("tProject").focus();
+        return;
+      }
+
       const payload = {
         action: "save_task",
+        project,
         deadline, issue, note,
         assignees: selectedAssignees,
         status, priority, alert_time, alert_frequency, alert_days, alert_specific_date
@@ -2526,6 +2655,76 @@
         if (wrap) wrap.classList.remove("focused");
       }
     });
+
+    /* ──────────────────────────────────────────────────────────────────────────
+       PROJECTS – LOAD, RENDER, CRUD
+    ────────────────────────────────────────────────────────────────────────── */
+    async function loadProjects() {
+      try {
+        const res = await apiGet("action=read_projects");
+        if (res.status === "success") {
+          allProjects = res.data || res.projects || [];
+          populateProjectFilter();
+          populateProjectSelect();
+          renderProjectList();
+        }
+      } catch { /* silent */ }
+    }
+
+    function renderProjectList() {
+      const ul = document.getElementById("projectList");
+      if (!ul) return;
+      ul.innerHTML = "";
+      if (!allProjects.length) {
+        ul.innerHTML = `<li style="text-align:center;color:var(--text-muted);padding:12px;">Chưa có dự án nào.</li>`;
+        return;
+      }
+      allProjects.forEach(p => {
+        const li = document.createElement("li");
+        li.className = "member-list-item";
+        li.innerHTML = `
+      <span class="member-name"><i class="fa-solid fa-folder" style="color:var(--accent);margin-right:6px;"></i>${esc(p.name)}</span>
+      <div class="member-actions">
+        <button class="btn-danger btn-sm" onclick="deleteProject('${esc(p.name)}')" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+    `;
+        ul.appendChild(li);
+      });
+    }
+
+    async function addProject() {
+      const input = document.getElementById("newProjectName");
+      const name = input.value.trim();
+      if (!name) { toast("Nhập tên dự án!", "w"); return; }
+      try {
+        const res = await apiPost({ action: "add_project", name });
+        if (res.status === "success") {
+          toast(`Đã thêm dự án "${name}"!`, "s");
+          input.value = "";
+          loadProjects();
+        } else { toast("Lỗi: " + (res.message || "không rõ"), "e"); }
+      } catch { toast("Lỗi kết nối!", "e"); }
+    }
+
+    async function deleteProject(name) {
+      if (!confirm(`Xóa dự án "${name}"?\nDự án sẽ bị xóa khỏi danh sách chọn nhưng task cũ vẫn giữ nguyên.`)) return;
+      try {
+        const res = await apiPost({ action: "delete_project", name });
+        if (res.status === "success") {
+          toast(`Đã xóa dự án "${name}"!`, "s");
+          loadProjects();
+        } else { toast("Lỗi: " + (res.message || "không rõ"), "e"); }
+      } catch { toast("Lỗi kết nối!", "e"); }
+    }
+
+    function openProjectModal() {
+      document.getElementById("projectModal").classList.add("show");
+      loadProjects();
+    }
+    function closeProjectModal() {
+      document.getElementById("projectModal").classList.remove("show");
+      loadProjects(); // Refresh dữ liệu bộ lọc sau khi đóng
+    }
 
     /* ──────────────────────────────────────────────────────────────────────────
        MEMBERS – LOAD, RENDER, CRUD (NAME-BASED FROM COLUMN I)
