@@ -2123,9 +2123,15 @@
       });
 
       // Nếu các task có position tùy chỉnh (> 0), sắp xếp theo position
+      // NHƯNG: task Done luôn phải xuống dưới cùng
       const hasCustomPositions = filteredTasks.some(t => t.position && t.position > 0);
       if (hasCustomPositions) {
-        filteredTasks.sort((a, b) => (a.position || 999999) - (b.position || 999999));
+        // Tách thành 2 nhóm: non-Done (giữ position) và Done (cuối danh sách)
+        const nonDone = filteredTasks.filter(t => t.status !== "Done");
+        const done    = filteredTasks.filter(t => t.status === "Done");
+        nonDone.sort((a, b) => (a.position || 999999) - (b.position || 999999));
+        done.sort((a, b) => (a.position || 999999) - (b.position || 999999));
+        filteredTasks = [...nonDone, ...done];
       } else {
         // Sắp xếp mặc định:
         // 1. Task "Pending" lên trên, "Done" xuống dưới cùng (với Cố định thì cùng nhóm)
