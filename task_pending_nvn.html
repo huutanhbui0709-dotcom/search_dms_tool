@@ -2122,16 +2122,21 @@
         return matchMember;
       });
 
-      // Nếu các task có position tùy chỉnh (> 0), sắp xếp theo position
-      // NHƯNG: task Done luôn phải xuống dưới cùng
+      // Ưu tiên sắp xếp:
+      // 1. Task có due date (non-Done) → luôn lên đầu
+      // 2. Task không có due date (non-Done)
+      // 3. Task Done → luôn xuống cuối
+      // Trong mỗi nhóm: nếu có custom position thì giữ nguyên position, ngược lại sort mặc định
       const hasCustomPositions = filteredTasks.some(t => t.position && t.position > 0);
       if (hasCustomPositions) {
-        // Tách thành 2 nhóm: non-Done (giữ position) và Done (cuối danh sách)
-        const nonDone = filteredTasks.filter(t => t.status !== "Done");
-        const done    = filteredTasks.filter(t => t.status === "Done");
-        nonDone.sort((a, b) => (a.position || 999999) - (b.position || 999999));
+        // Tách thành 3 nhóm: có deadline, không deadline, Done
+        const withDate    = filteredTasks.filter(t => t.status !== "Done" && !!(t.deadline && String(t.deadline).trim()));
+        const withoutDate = filteredTasks.filter(t => t.status !== "Done" && !(t.deadline && String(t.deadline).trim()));
+        const done        = filteredTasks.filter(t => t.status === "Done");
+        withDate.sort((a, b) => (a.position || 999999) - (b.position || 999999));
+        withoutDate.sort((a, b) => (a.position || 999999) - (b.position || 999999));
         done.sort((a, b) => (a.position || 999999) - (b.position || 999999));
-        filteredTasks = [...nonDone, ...done];
+        filteredTasks = [...withDate, ...withoutDate, ...done];
       } else {
         // Sắp xếp mặc định:
         // 1. Task "Pending" lên trên, "Done" xuống dưới cùng (với Cố định thì cùng nhóm)
