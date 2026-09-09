@@ -164,6 +164,27 @@
       color: #ef4444;
     }
 
+    .clear-all-btn {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border: 1px solid #fca5a5;
+      border-radius: var(--radius-sm);
+      background: #fff5f5;
+      color: #dc2626;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      align-self: center;
+    }
+    .clear-all-btn:hover {
+      background: #fee2e2;
+      border-color: #f87171;
+    }
+
     .search-box input:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
@@ -894,6 +915,9 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
+        <button type="button" class="clear-all-btn" id="clearAllSearchBtn" title="Xoá tìm kiếm">
+          <i class="fa-solid fa-broom"></i> Xoá tìm kiếm
+        </button>
         <div class="result-badge" id="countBadge">0 báo cáo</div>
       </div>
     </div>
@@ -1041,8 +1065,21 @@
     searchInput.addEventListener("input", handleSearch);
 
     const clearSearchBtn = document.getElementById("clearSearchBtn");
+    const clearAllSearchBtn = document.getElementById("clearAllSearchBtn");
+    function updateClearAllVisibility() {
+      const hasVal = searchInput && searchInput.value;
+      if (clearAllSearchBtn) clearAllSearchBtn.style.display = hasVal ? "inline-flex" : "none";
+    }
+    if (searchInput) searchInput.addEventListener("input", updateClearAllVisibility);
     if (clearSearchBtn) {
       clearSearchBtn.addEventListener("click", () => {
+        searchInput.value = "";
+        searchInput.focus();
+        handleSearch();
+      });
+    }
+    if (clearAllSearchBtn) {
+      clearAllSearchBtn.addEventListener("click", () => {
         searchInput.value = "";
         searchInput.focus();
         handleSearch();
@@ -1062,6 +1099,7 @@
       if (clearSearchBtn) {
         clearSearchBtn.style.display = searchInput.value ? "inline-flex" : "none";
       }
+      if (typeof updateClearAllVisibility === "function") updateClearAllVisibility();
       const query = removeDiacritics(searchInput.value.trim());
       if (!query) {
         filteredData = [...reportData];

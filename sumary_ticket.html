@@ -348,6 +348,27 @@
       color: #ef4444;
     }
 
+    .clear-all-btn {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border: 1px solid #fca5a5;
+      border-radius: var(--radius-sm);
+      background: #fff5f5;
+      color: #dc2626;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      align-self: flex-end;
+    }
+    .clear-all-btn:hover {
+      background: #fee2e2;
+      border-color: #f87171;
+    }
+
     .filter-block label.field-label {
       font-size: 11px;
       font-weight: 700;
@@ -1346,6 +1367,9 @@
                 <option value="">-- Tất cả --</option>
               </select>
             </div>
+            <button type="button" class="clear-all-btn" id="clearAllSearchBtn" title="Xoá tất cả tìm kiếm">
+              <i class="fa-solid fa-broom"></i> Xoá tất cả
+            </button>
             <div class="result-badge" id="countBadge">0 kết quả</div>
           </div>
         </div>
@@ -1636,6 +1660,26 @@
     }
     const updateCodeClear = bindClearButton(codeSearchInput, document.getElementById("clearCodeInput"));
     const updateErrorClear = bindClearButton(errorSearchInput, document.getElementById("clearErrorInput"));
+
+    const clearAllSearchBtn = document.getElementById("clearAllSearchBtn");
+    function updateClearAllVisibility() {
+      const hasAny = [codeSearchInput, errorSearchInput].some(inp => inp && inp.value);
+      if (clearAllSearchBtn) clearAllSearchBtn.style.display = hasAny ? "inline-flex" : "none";
+    }
+    [codeSearchInput, errorSearchInput].forEach(inp => {
+      if (inp) inp.addEventListener("input", updateClearAllVisibility);
+    });
+    if (clearAllSearchBtn) {
+      clearAllSearchBtn.addEventListener("click", () => {
+        [codeSearchInput, errorSearchInput].forEach(inp => {
+          if (inp) {
+            inp.value = "";
+            inp.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+        });
+        updateClearAllVisibility();
+      });
+    }
 
     codeSearchInput.addEventListener("input", scheduleRender);
     errorSearchInput.addEventListener("input", scheduleRender);
@@ -2015,6 +2059,7 @@
       clearTimeout(renderTimer);
       if (typeof updateCodeClear === "function") updateCodeClear();
       if (typeof updateErrorClear === "function") updateErrorClear();
+      if (typeof updateClearAllVisibility === "function") updateClearAllVisibility();
 
       const codeQuery = normalizeForSearch(codeSearchInput.value);
       const errorQuery = normalizeForSearch(errorSearchInput.value);

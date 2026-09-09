@@ -253,6 +253,26 @@
         background: #fee2e2;
         color: #ef4444;
       }
+      .clear-all-btn {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border: 1px solid #fca5a5;
+        border-radius: 8px;
+        background: #fff5f5;
+        color: #dc2626;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.15s ease;
+        align-self: center;
+      }
+      .clear-all-btn:hover {
+        background: #fee2e2;
+        border-color: #f87171;
+      }
       .search-row input:focus {
         outline: none;
         border-color: #2563eb;
@@ -758,6 +778,9 @@
                 <i class="fa-solid fa-xmark"></i>
               </button>
             </div>
+            <button type="button" class="clear-all-btn" id="clearAllSearchBtn" title="Xoá tất cả tìm kiếm">
+              <i class="fa-solid fa-broom"></i> Xoá tất cả
+            </button>
             <div class="badge" id="countBadge">0 kết quả</div>
           </div>
           <div class="nested-search">
@@ -1024,6 +1047,26 @@
       }
       const updateSearchClear = bindClearButton(searchInput, document.getElementById("clearSearchInput"));
       const updateRefineClear = bindClearButton(refineSearchInput, document.getElementById("clearRefineInput"));
+
+      const clearAllSearchBtn = document.getElementById("clearAllSearchBtn");
+      function updateClearAllVisibility() {
+        const hasAny = [searchInput, refineSearchInput].some(inp => inp && inp.value);
+        if (clearAllSearchBtn) clearAllSearchBtn.style.display = hasAny ? "inline-flex" : "none";
+      }
+      [searchInput, refineSearchInput].forEach(inp => {
+        if (inp) inp.addEventListener("input", updateClearAllVisibility);
+      });
+      if (clearAllSearchBtn) {
+        clearAllSearchBtn.addEventListener("click", () => {
+          [searchInput, refineSearchInput].forEach(inp => {
+            if (inp) {
+              inp.value = "";
+              inp.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+          });
+          updateClearAllVisibility();
+        });
+      }
 
       searchInput.addEventListener("input", scheduleRenderTable);
       refineSearchInput.addEventListener("input", scheduleRenderTable);
@@ -1293,6 +1336,7 @@
         clearTimeout(renderTimer);
         if (typeof updateSearchClear === "function") updateSearchClear();
         if (typeof updateRefineClear === "function") updateRefineClear();
+        if (typeof updateClearAllVisibility === "function") updateClearAllVisibility();
         const selected = getSelectedColumns();
         const rawKeyword = searchInput.value.trim();
         const keyword = normalizeForSearch(rawKeyword);

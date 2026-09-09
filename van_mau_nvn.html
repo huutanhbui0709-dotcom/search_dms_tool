@@ -142,6 +142,27 @@
       color: #ef4444;
     }
 
+    .clear-all-btn {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border: 1px solid #fca5a5;
+      border-radius: var(--radius-md);
+      background: #fff5f5;
+      color: #dc2626;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      align-self: center;
+    }
+    .clear-all-btn:hover {
+      background: #fee2e2;
+      border-color: #f87171;
+    }
+
     .search-input:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
@@ -734,6 +755,9 @@
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
+      <button type="button" class="clear-all-btn" id="clearAllSearchBtn" onclick="clearSearch()" title="Xoá tìm kiếm">
+        <i class="fa-solid fa-broom"></i> Xoá tìm kiếm
+      </button>
       <div style="display: flex; gap: 8px; align-items: center;">
         <button class="btn-outline" onclick="toggleConfigPanel()" title="Cấu hình URL API" style="padding: 9px 13px; border-radius: var(--radius-md);">
           <i class="fa-solid fa-gear"></i>
@@ -1186,9 +1210,14 @@
     function handleSearch() {
       const searchInput = document.getElementById("searchBar");
       const clearBtn = document.getElementById("clearSearchBar");
+      const clearAllBtn = document.getElementById("clearAllSearchBtn");
       const query = (searchInput ? searchInput.value : "").toLowerCase().trim();
+      const hasVal = searchInput && searchInput.value;
       if (clearBtn) {
-        clearBtn.style.display = (searchInput && searchInput.value) ? "inline-flex" : "none";
+        clearBtn.style.display = hasVal ? "inline-flex" : "none";
+      }
+      if (clearAllBtn) {
+        clearAllBtn.style.display = hasVal ? "inline-flex" : "none";
       }
       if (!query) {
         filteredTemplates = [...allTemplates];

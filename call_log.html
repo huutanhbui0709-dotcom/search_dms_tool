@@ -306,6 +306,27 @@
         color: #ef4444;
       }
 
+      .clear-all-btn {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border: 1px solid #fca5a5;
+        border-radius: var(--radius-sm);
+        background: #fff5f5;
+        color: #dc2626;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.15s ease;
+        align-self: flex-end;
+      }
+      .clear-all-btn:hover {
+        background: #fee2e2;
+        border-color: #f87171;
+      }
+
       /* Result badge */
       .result-badge {
         background: var(--accent-bg);
@@ -716,6 +737,9 @@
                   </button>
                 </div>
               </div>
+              <button type="button" class="clear-all-btn" id="clearAllSearchBtn" title="Xoá tất cả tìm kiếm">
+                <i class="fa-solid fa-broom"></i> Xoá tất cả
+              </button>
               <div class="result-badge" id="countBadge">0 kết quả</div>
             </div>
           </div>
@@ -980,6 +1004,26 @@
       const updateNvbhClear = bindClearButton(nvbhInput, document.getElementById("clearNvbhInput"));
       const updateSolutionClear = bindClearButton(solutionInput, document.getElementById("clearSolutionInput"));
       const updateHotlineClear = bindClearButton(hotlineInput, document.getElementById("clearHotlineInput"));
+
+      const clearAllSearchBtn = document.getElementById("clearAllSearchBtn");
+      function updateClearAllVisibility() {
+        const hasAny = [nppInput, nvbhInput, solutionInput, hotlineInput].some(inp => inp && inp.value);
+        if (clearAllSearchBtn) clearAllSearchBtn.style.display = hasAny ? "inline-flex" : "none";
+      }
+      [nppInput, nvbhInput, solutionInput, hotlineInput].forEach(inp => {
+        if (inp) inp.addEventListener("input", updateClearAllVisibility);
+      });
+      if (clearAllSearchBtn) {
+        clearAllSearchBtn.addEventListener("click", () => {
+          [nppInput, nvbhInput, solutionInput, hotlineInput].forEach(inp => {
+            if (inp) {
+              inp.value = "";
+              inp.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+          });
+          updateClearAllVisibility();
+        });
+      }
 
       filterInputs.forEach((inp) =>
         inp.addEventListener("input", scheduleRender),
@@ -1392,6 +1436,7 @@
         if (typeof updateNvbhClear === "function") updateNvbhClear();
         if (typeof updateSolutionClear === "function") updateSolutionClear();
         if (typeof updateHotlineClear === "function") updateHotlineClear();
+        if (typeof updateClearAllVisibility === "function") updateClearAllVisibility();
         const nppValue = nppInput.value;
         const nppIsNumeric = isNumericQuery(nppValue);
         const filters = {
