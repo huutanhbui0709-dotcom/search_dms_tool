@@ -107,12 +107,39 @@
 
     .search-input {
       width: 100%;
-      padding: 10px 16px 10px 38px;
+      padding: 10px 36px 10px 38px;
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-md);
       font-size: 14px;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .clear-input-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: none;
+      background: #f1f5f9;
+      color: #64748b;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      padding: 0;
+      line-height: 1;
+      transition: all 0.15s ease;
+      z-index: 2;
+    }
+
+    .clear-input-btn:hover {
+      background: #fee2e2;
+      color: #ef4444;
     }
 
     .search-input:focus {
@@ -703,6 +730,9 @@
         </svg>
         <input type="text" class="search-input" id="searchBar" placeholder="Tìm kiếm nhanh Tiếng Anh, Tiếng Việt, Note..."
           oninput="handleSearch()" />
+        <button type="button" class="clear-input-btn" id="clearSearchBar" title="Xóa nội dung">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
       <div style="display: flex; gap: 8px; align-items: center;">
         <button class="btn-outline" onclick="toggleConfigPanel()" title="Cấu hình URL API" style="padding: 9px 13px; border-radius: var(--radius-md);">
@@ -1154,7 +1184,12 @@
 
     // Xử lý Tìm kiếm
     function handleSearch() {
-      const query = document.getElementById("searchBar").value.toLowerCase().trim();
+      const searchInput = document.getElementById("searchBar");
+      const clearBtn = document.getElementById("clearSearchBar");
+      const query = (searchInput ? searchInput.value : "").toLowerCase().trim();
+      if (clearBtn) {
+        clearBtn.style.display = (searchInput && searchInput.value) ? "inline-flex" : "none";
+      }
       if (!query) {
         filteredTemplates = [...allTemplates];
       } else {
@@ -1166,6 +1201,15 @@
         });
       }
       renderTable();
+    }
+
+    function clearSearch() {
+      const searchInput = document.getElementById("searchBar");
+      if (searchInput) {
+        searchInput.value = "";
+        searchInput.focus();
+      }
+      handleSearch();
     }
 
     // Mở Modal Thêm mới
@@ -1310,6 +1354,10 @@
 
     // Load dữ liệu khi trang khởi động
     window.onload = async () => {
+      const clearSearchBar = document.getElementById("clearSearchBar");
+      if (clearSearchBar) {
+        clearSearchBar.addEventListener("click", clearSearch);
+      }
       // Tự động tải URL từ R2 nếu chưa cấu hình cục bộ hoặc để làm mới
       await autoDetectVanMauUrl();
       loadData();

@@ -309,6 +309,45 @@
       min-width: 180px;
     }
 
+    .search-input-wrap {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input-wrap input {
+      width: 100%;
+      padding-right: 36px !important;
+    }
+
+    .clear-input-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: none;
+      background: #f1f5f9;
+      color: #64748b;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      padding: 0;
+      line-height: 1;
+      transition: all 0.15s ease;
+      z-index: 2;
+    }
+
+    .clear-input-btn:hover {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+
     .filter-block label.field-label {
       font-size: 11px;
       font-weight: 700;
@@ -1284,12 +1323,22 @@
           <div class="filter-row">
             <div class="filter-block">
               <label class="field-label" for="codeSearchInput">Tìm kiếm Ticket</label>
-              <input id="codeSearchInput" type="text" placeholder="Tìm theo mã hoặc tên ticket..." />
+              <div class="search-input-wrap">
+                <input id="codeSearchInput" type="text" placeholder="Tìm theo mã hoặc tên ticket..." />
+                <button type="button" class="clear-input-btn" id="clearCodeInput" title="Xóa nội dung">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
             </div>
             <!-- Ô tìm kiếm Chi tiết lỗi bổ sung -->
             <div class="filter-block">
               <label class="field-label" for="errorSearchInput">Tìm kiếm Chi tiết lỗi</label>
-              <input id="errorSearchInput" type="text" placeholder="Tìm theo nội dung, mô tả lỗi..." />
+              <div class="search-input-wrap">
+                <input id="errorSearchInput" type="text" placeholder="Tìm theo nội dung, mô tả lỗi..." />
+                <button type="button" class="clear-input-btn" id="clearErrorInput" title="Xóa nội dung">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
             </div>
             <div class="filter-block">
               <label class="field-label" for="classificationFilterInput">Phân loại</label>
@@ -1569,6 +1618,24 @@
         ? "Hiện cấu hình cột"
         : "Ẩn cấu hình cột";
     });
+
+    function bindClearButton(inp, btn) {
+      if (!inp || !btn) return () => {};
+      const updateVisibility = () => {
+        btn.style.display = inp.value ? "inline-flex" : "none";
+      };
+      inp.addEventListener("input", updateVisibility);
+      btn.addEventListener("click", () => {
+        inp.value = "";
+        updateVisibility();
+        inp.focus();
+        inp.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      updateVisibility();
+      return updateVisibility;
+    }
+    const updateCodeClear = bindClearButton(codeSearchInput, document.getElementById("clearCodeInput"));
+    const updateErrorClear = bindClearButton(errorSearchInput, document.getElementById("clearErrorInput"));
 
     codeSearchInput.addEventListener("input", scheduleRender);
     errorSearchInput.addEventListener("input", scheduleRender);
@@ -1946,6 +2013,8 @@
     /* ─── Render Engine ─── */
     function renderTable() {
       clearTimeout(renderTimer);
+      if (typeof updateCodeClear === "function") updateCodeClear();
+      if (typeof updateErrorClear === "function") updateErrorClear();
 
       const codeQuery = normalizeForSearch(codeSearchInput.value);
       const errorQuery = normalizeForSearch(errorSearchInput.value);

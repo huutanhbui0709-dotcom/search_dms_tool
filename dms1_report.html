@@ -128,13 +128,40 @@
 
     .search-box input {
       width: 100%;
-      padding: 10px 14px 10px 38px;
+      padding: 10px 36px 10px 38px;
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-md);
       font-size: 14px;
       outline: none;
       background: var(--surface);
       transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .clear-input-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: none;
+      background: #f1f5f9;
+      color: #64748b;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      padding: 0;
+      line-height: 1;
+      transition: all 0.15s ease;
+      z-index: 2;
+    }
+
+    .clear-input-btn:hover {
+      background: #fee2e2;
+      color: #ef4444;
     }
 
     .search-box input:focus {
@@ -863,6 +890,9 @@
           <i class="fa-solid fa-magnifying-glass search-icon"></i>
           <input id="searchInput" type="text" placeholder="Tìm kiếm nhanh theo Tên báo cáo, Đường dẫn, hoặc Ý nghĩa..."
             autocomplete="off" />
+          <button type="button" class="clear-input-btn" id="clearSearchBtn" title="Xóa nội dung">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
         <div class="result-badge" id="countBadge">0 báo cáo</div>
       </div>
@@ -1010,6 +1040,15 @@
     // Search input handler
     searchInput.addEventListener("input", handleSearch);
 
+    const clearSearchBtn = document.getElementById("clearSearchBtn");
+    if (clearSearchBtn) {
+      clearSearchBtn.addEventListener("click", () => {
+        searchInput.value = "";
+        searchInput.focus();
+        handleSearch();
+      });
+    }
+
     function removeDiacritics(str) {
       return (str || "")
         .toString()
@@ -1020,6 +1059,9 @@
     }
 
     function handleSearch() {
+      if (clearSearchBtn) {
+        clearSearchBtn.style.display = searchInput.value ? "inline-flex" : "none";
+      }
       const query = removeDiacritics(searchInput.value.trim());
       if (!query) {
         filteredData = [...reportData];

@@ -217,6 +217,42 @@
         color: #1f2937;
         transition: border-color 0.15s;
       }
+      .search-input-wrap {
+        position: relative;
+        flex: 1;
+        width: 100%;
+        display: flex;
+        align-items: center;
+      }
+      .search-input-wrap input {
+        width: 100%;
+        padding-right: 36px;
+      }
+      .clear-input-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: none;
+        background: #f1f5f9;
+        color: #64748b;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        padding: 0;
+        line-height: 1;
+        transition: all 0.15s ease;
+        z-index: 2;
+      }
+      .clear-input-btn:hover {
+        background: #fee2e2;
+        color: #ef4444;
+      }
       .search-row input:focus {
         outline: none;
         border-color: #2563eb;
@@ -712,21 +748,31 @@
         </div>
         <div class="search-stack">
           <div class="search-row">
-            <input
-              id="searchInput"
-              type="text"
-              placeholder='Nhập từ khóa tổng, ví dụ: "kế hoạch tuyến", "hướng dẫn tạo kht"...'
-            />
+            <div class="search-input-wrap">
+              <input
+                id="searchInput"
+                type="text"
+                placeholder='Nhập từ khóa tổng, ví dụ: "kế hoạch tuyến", "hướng dẫn tạo kht"...'
+              />
+              <button type="button" class="clear-input-btn" id="clearSearchInput" title="Xóa nội dung">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
             <div class="badge" id="countBadge">0 kết quả</div>
           </div>
           <div class="nested-search">
             <div class="nested-search-label">Tìm trong kết quả</div>
             <div class="search-row">
-              <input
-                id="refineSearchInput"
-                type="text"
-                placeholder='Lọc tiếp trong kết quả ở trên, ví dụ: "Geo Tree", "đồng bộ"...'
-              />
+              <div class="search-input-wrap">
+                <input
+                  id="refineSearchInput"
+                  type="text"
+                  placeholder='Lọc tiếp trong kết quả ở trên, ví dụ: "Geo Tree", "đồng bộ"...'
+                />
+                <button type="button" class="clear-input-btn" id="clearRefineInput" title="Xóa nội dung">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -960,6 +1006,24 @@
           setImportLoading(false);
         }
       });
+
+      function bindClearButton(inp, btn) {
+        if (!inp || !btn) return () => {};
+        const updateVisibility = () => {
+          btn.style.display = inp.value ? "inline-flex" : "none";
+        };
+        inp.addEventListener("input", updateVisibility);
+        btn.addEventListener("click", () => {
+          inp.value = "";
+          updateVisibility();
+          inp.focus();
+          inp.dispatchEvent(new Event("input", { bubbles: true }));
+        });
+        updateVisibility();
+        return updateVisibility;
+      }
+      const updateSearchClear = bindClearButton(searchInput, document.getElementById("clearSearchInput"));
+      const updateRefineClear = bindClearButton(refineSearchInput, document.getElementById("clearRefineInput"));
 
       searchInput.addEventListener("input", scheduleRenderTable);
       refineSearchInput.addEventListener("input", scheduleRenderTable);
@@ -1227,6 +1291,8 @@
 
       function renderTable() {
         clearTimeout(renderTimer);
+        if (typeof updateSearchClear === "function") updateSearchClear();
+        if (typeof updateRefineClear === "function") updateRefineClear();
         const selected = getSelectedColumns();
         const rawKeyword = searchInput.value.trim();
         const keyword = normalizeForSearch(rawKeyword);
